@@ -108,6 +108,8 @@ export interface PipelineCard {
     handled_by: string | null;
     badges: Badge[];
     do_not_contact: boolean;
+    /** Not in the frozen Card contract; the pipeline table shows it only when the server sends it. */
+    pipeline_status?: PipelineStatus;
 }
 
 export type MapPointsResponse =
