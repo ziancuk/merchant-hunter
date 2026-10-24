@@ -4,18 +4,25 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Services\Sync\ProspectRescorer;
+use App\Services\Sync\WhitespaceCache;
 use Illuminate\Console\Command;
 
-/** Stub created in M2.0; implemented in M2.1. */
 class HunterScoreCommand extends Command
 {
     protected $signature = 'hunter:score {--all}';
 
     protected $description = 'Recompute prospect scores';
 
-    public function handle(): int
+    public function handle(ProspectRescorer $rescorer): int
     {
-        $this->warn('Not implemented yet.');
+        $stats = $rescorer->run((bool) $this->option('all'));
+        WhitespaceCache::bump();
+
+        $this->info(sprintf(
+            'Scored %d prospect(s), %d changed; %d "new open" flag(s) expired; %d location metric(s) refreshed.',
+            $stats['scored'], $stats['changed'], $stats['expired_new_open'], $stats['metrics_changed'],
+        ));
 
         return self::SUCCESS;
     }
