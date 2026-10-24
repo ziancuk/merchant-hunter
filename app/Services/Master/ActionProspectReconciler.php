@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Master;
 
+use App\Models\Outlet;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -22,7 +23,7 @@ final class ActionProspectReconciler implements ProspectReconciler
         }
 
         try {
-            $result = app(self::ACTION)->handle($outletIds);
+            $result = app(self::ACTION)->execute(Outlet::query()->whereIn('id', $outletIds)->get());
 
             return is_int($result) ? $result : 0;
         } catch (Throwable $e) {

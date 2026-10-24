@@ -31,3 +31,4 @@ Thumbs.db
 /coverage
 /.phpunit.cache
 .env.e2e
+.claude/worktrees/

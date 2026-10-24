@@ -11,6 +11,7 @@ use App\Models\SchedulerRun;
 use App\Models\Setting;
 use App\Services\Providers\ProviderException;
 use App\Services\Scoring\ProspectScorer;
+use App\Services\Scoring\StubProspectScorer;
 use App\Services\Sync\SyncService;
 use Illuminate\Support\Carbon;
 use Tests\Feature\Sync\FakeProvider;
@@ -22,6 +23,8 @@ function night(int $n): void
 }
 
 beforeEach(function () {
+    // These tests assert sync mechanics, not the formula: pin the stub scorer (score = category weight).
+    app()->bind(ProspectScorer::class, StubProspectScorer::class);
     night(0);
     $this->w = F::world();
     $this->outlet = F::outlet($this->w['province']);

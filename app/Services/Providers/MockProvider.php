@@ -83,8 +83,8 @@ class MockProvider implements DataProvider
 
         for ($i = 1; $i <= $count; $i++) {
             $category = $rng->weighted($categories, $weights);
-            // An exponent near 0.5 spreads points about uniformly over the disc (radial spread).
-            $distance = $maxRadius * (($rng->float()) ** 0.55);
+            // An exponent of 0.85 concentrates points toward the outlet (denser centre, so the demo shows hot prospects).
+            $distance = $maxRadius * (($rng->float()) ** 0.85);
             $bearing = $rng->float() * 2 * M_PI;
             $lat = $center->lat + rad2deg($distance * cos($bearing) / Haversine::EARTH_RADIUS_M);
             $lng = $center->lng + rad2deg($distance * sin($bearing) / (Haversine::EARTH_RADIUS_M * max(0.01, cos(deg2rad($center->lat)))));
@@ -205,14 +205,14 @@ class MockProvider implements DataProvider
 
     private function rating(SeededRandom $rng): float
     {
-        // Skewed towards 4.0-4.6 like real review data.
-        $r = 3.0 + 2.0 * (($rng->float() + $rng->float() + $rng->float()) / 3);
+        // Skewed towards 4.2-4.8 like real review data, so the demo has a visible "hot" band.
+        $r = 3.4 + 1.6 * sqrt($rng->float());
 
         return round(min(5.0, max(3.0, $r)), 1);
     }
 
     private function reviews(SeededRandom $rng): int
     {
-        return (int) round(exp($rng->float() * log(900)));
+        return (int) round(exp(sqrt($rng->float()) * log(1500)));
     }
 }

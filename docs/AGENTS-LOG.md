@@ -14,3 +14,13 @@ Catatan orkestrasi subagent (bahan slide "Proses Pengerjaan").
 | 1–4 | Orkestrator | Menulis PRD, TRD, DB-SCHEMA, ARCHITECTURE, CONTRACTS, IMPLEMENTATION-PLAN, TEST-PLAN, GIT-WORKFLOW | docs/*.md | Selesai | — |
 | 2–4 | Reviewer-Dokumen (read-only) | Periksa inkonsistensi/celah PRD+TRD+Arsitektur+Kontrak+Rencana | — (laporan) | 19 temuan (2 kritis, 11 mayor, 6 minor); semua diperbaiki di docs → DECISIONS D-60…D-73 | Temuan kritis: white space mustahil; nomor simulasi bisa di-WhatsApp |
 | 2–4 | Orkestrator | Perbaikan dokumen dari review (skema, kontrak, TRD, rencana, kepemilikan berkas) | docs/*.md | Selesai | Tidak ada tes (belum ada kode) |
+
+## Sesi 2 (Fase 5.0–5.1)
+
+| Fase | Subagent | Tugas | File disentuh | Hasil | Masalah |
+|---|---|---|---|---|---|
+| 5.0 | Orkestrator | Scaffold Laravel 12 + Inertia v2 + Vue 3/TS + Tailwind 4; 12 migrasi verbatim; model, enum, DTO, interface; seeder referensi; auth + rate limit; jadwal; CI/template GitHub; skrip standar | seluruh root, app/, database/, config/, routes/, .github/ | 18 tes Pest + 11 Vitest hijau; `migrate:fresh --seed` OK; merge `chore/scaffold` | `pest --init` interaktif menggantung (dibunuh); Inertia client v3 vs server v2 (D-80) |
+| 5.1 | BE-Provider-Scheduler (worktree) | Provider OSM/Mock/Google + registry, dedupe, sync, lifecycle, geocoding Nominatim, job, 7 command `hunter:*`, ReconcileProspectsAction | app/Services/{Providers,Sync,Dedupe,Geocoding}, app/Jobs, Commands, tests | 147 tes; seed offline 14.7 ribu prospek ±9 dtk | symlink vendor merusak autoload (D-89); tanpa pcov → cakupan belum terukur |
+| 5.1 | BE-Domain (worktree) | Seeder 190 outlet, ScoreCalculator, 51 rute (peta, prospek, pipeline, rute, ekspor, dashboard, master, pengaturan), digest | database/seeders, app/{Services,Actions,Repositories,Http}, routes/web.php, tests | 269 tes; query peta ≤ 2 | Deviasi kontrak dicatat (D-86) |
+| 5.1 | FE-Design-System (worktree) | docs/DESIGN.md, token Tailwind, 13 komponen ui, 10 komponen prospek, AppShell, composables, Login | resources/{css,js}, docs/DESIGN.md | 93 tes Vitest, lint + build hijau | Belum dilihat di browser (Sesi 3/4) |
+| 5.2→M2.2 | Orkestrator | Merge 3 cabang `--no-ff` (tanpa konflik), bind ScoreCalculator/Nominatim/ConnectionTester, perbaiki `ActionProspectReconciler` (memanggil `handle` yang tidak ada → `execute`), kalibrasi mock (D-87) | AppServiceProvider, Services/Master, MockProvider, 2 tes | 398 tes Pest + 93 Vitest, Pint, ESLint, build hijau | Skor demo awal tanpa prospek panas → D-87 |

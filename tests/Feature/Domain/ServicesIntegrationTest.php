@@ -5,7 +5,7 @@ use App\Models\Setting;
 use App\Services\Master\ActionProspectReconciler;
 use App\Services\Master\ConnectionTester;
 use App\Services\Master\ProspectReconciler;
-use App\Services\Master\UnconfiguredConnectionTester;
+use App\Services\Master\ProviderConnectionTester;
 use App\Services\Scoring\ScoreCalculator;
 use App\Services\Settings\SettingsService;
 
@@ -43,8 +43,8 @@ it('falls back to config defaults for every setting key', function () {
         ->and($s->bool('enrichment.simulated'))->toBeFalse();
 });
 
-it('resolves the seam interfaces to safe defaults until the orchestrator binds the real classes', function () {
-    expect(app(ConnectionTester::class))->toBeInstanceOf(UnconfiguredConnectionTester::class)
+it('resolves the seam interfaces to the real implementations', function () {
+    expect(app(ConnectionTester::class))->toBeInstanceOf(ProviderConnectionTester::class)
         ->and(app(ProspectReconciler::class))->toBeInstanceOf(ActionProspectReconciler::class);
 });
 
