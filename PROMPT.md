@@ -37,7 +37,8 @@ Pengguna: hanya SATU role, "manajemen". Boleh banyak akun login, semuanya role y
   Basemap harus tanpa API key berbayar (mis. OpenFreeMap atau CARTO dark; verifikasi ketersediaan dan syarat atribusi sebelum dipakai; tampilkan atribusinya).
 - Database: SQLite default (mudah dijalankan), kompatibel MySQL/PostgreSQL. Jarak dengan bounding box + haversine, tanpa PostGIS.
 - Queue/Scheduler: Laravel scheduler + queue (driver database), job dengan retry dan backoff.
-- Test: Pest atau PHPUnit (backend), Vitest (logika frontend penting). Lint: Laravel Pint, ESLint.
+- Test: Pest atau PHPUnit (backend unit + feature/integration), Vitest + Vue Test Utils (frontend), Playwright (E2E + aksesibilitas dengan @axe-core/playwright). Lint: Laravel Pint, ESLint. Strategi lengkap di bagian 11.
+- Git/CI: GitHub + GitHub Actions. Alur lengkap di bagian 12.
 
 # 4. FITUR LENGKAP (SEMUA DIBANGUN)
 
@@ -111,13 +112,13 @@ Fase 2 — TRD (docs/TRD.md): alasan pemilihan stack, model data lengkap (ERD me
 
 Fase 3 — Arsitektur (docs/ARCHITECTURE.md): diagram mermaid konteks sistem, layer (Controller → Service/Action → Repository/Model, Provider adapters), alur data scheduler, alur permintaan peta, struktur folder frontend, konvensi kode. Prinsip: controller tipis, logika di Service/Action, DTO untuk data provider, Form Request untuk validasi, API Resource untuk output.
 
-Fase 4 — Rencana implementasi (docs/IMPLEMENTATION-PLAN.md): milestone kecil yang bisa diuji, urut dependensi, kriteria selesai tiap milestone, mengikuti URUTAN BUILD (bagian 9). Bekukan dua kontrak sebelum implementasi: skema database + migrasi, dan docs/CONTRACTS.md (props Inertia/endpoint JSON dengan contoh payload).
+Fase 4 — Rencana implementasi (docs/IMPLEMENTATION-PLAN.md): milestone kecil yang bisa diuji, urut dependensi, kriteria selesai tiap milestone, mengikuti URUTAN BUILD (bagian 9). Bekukan dua kontrak sebelum implementasi: skema database + migrasi, dan docs/CONTRACTS.md (props Inertia/endpoint JSON dengan contoh payload). Tulis juga docs/TEST-PLAN.md sesuai bagian 11 dan docs/GIT-WORKFLOW.md sesuai bagian 12.
 
 Fase 5 — Implementasi (lihat bagian 8 untuk pembagian subagent). Test ditulis bersamaan dengan kode: skor, dedupe, normalisasi nomor WhatsApp, haversine, rute, provider (HTTP di-fake), scheduler, otorisasi, opt-out/batas frekuensi. Setelah tiap milestone: test + lint + build harus hijau.
 
 Fase 6 — Refactoring (docs/REFACTORING.md): review menyeluruh setelah semua fitur jadi: duplikasi, controller gemuk, N+1 dan indeks kurang, komponen Vue terlalu besar (pecah, ekstrak composable), penamaan, kode mati, kebocoran memori di layer peta, performa dengan 10.000+ titik (ukur, jangan menebak). Catat sebelum/sesudah dan alasan. Semua test tetap hijau.
 
-Fase 7 — Verifikasi nyata: jalankan `migrate:fresh --seed`, `hunter:seed-prospects --offline`, `npm run build`, serve. Pakai browser yang tersedia untuk menelusuri alur: login → intro → peta → filter → klik prospek → WhatsApp → pipeline → rute → dashboard → estimasi dampak & biaya → master data source → riwayat scheduler. Periksa console bebas error. Simpan screenshot di docs/screenshots/ (peta penuh, drawer prospek, Kanban, dashboard, white space, rute, master data source, estimasi biaya). Laporkan jujur apa yang berhasil, gagal, atau belum terverifikasi.
+Fase 7 — Verifikasi nyata: jalankan `migrate:fresh --seed`, `hunter:seed-prospects --offline`, `npm run build`, serve. Pakai browser yang tersedia untuk menelusuri alur: login → intro → peta → filter → klik prospek → WhatsApp → pipeline → rute → dashboard → estimasi dampak & biaya → master data source → riwayat scheduler. Periksa console bebas error. Jalankan seluruh suite (Pest, Vitest, Playwright E2E + axe) dan tulis docs/TEST-REPORT.md (hasil, cakupan, bug yang ditemukan dan statusnya, hal yang tidak teruji). Simpan screenshot di docs/screenshots/ (peta penuh, drawer prospek, Kanban, dashboard, white space, rute, master data source, estimasi biaya). Laporkan jujur apa yang berhasil, gagal, atau belum terverifikasi.
 
 Fase 8 — Slide deck & paket pengumpulan:
 - README.md: deskripsi, fitur, prasyarat, setup dari nol (perintah persis), akun demo, menjalankan scheduler, mengaktifkan Google provider, batasan dan lisensi data.
@@ -164,7 +165,7 @@ Fase 5:
   • "FE-Peta": halaman peta, intro globe, layer outlet/prospek/heatmap/white space/rute, cincin radius, filter, drawer kartu, performa 10.000+ titik. Hanya menyentuh resources/js/Pages/Map* dan resources/js/map/*.
   • "FE-Pipeline": Kanban, tabel, bulk action, aktivitas, peringatan dobel kontak, opt-out, WhatsApp composer + template + opsi AI.
   • "FE-Dashboard-Master": dashboard, estimasi dampak & biaya, Master Data Source/Outlet(+impor CSV+antrean verifikasi)/Kategori, Riwayat Scheduler, ringkasan harian.
-- 5.3 (orkestrator): gabungkan semua cabang, selesaikan konflik, test + lint + build hijau, commit.
+- 5.3 (orkestrator): gabungkan semua cabang, selesaikan konflik, test + lint + build hijau, commit. Lalu subagent "QA-E2E" menulis suite Playwright sesuai bagian 11 (hanya menyentuh tests/e2e dan konfigurasi Playwright), dan pipeline CI harus hijau.
 
 Fase 6: paralel read-only dulu: "Review-Backend", "Review-Frontend", "Review-Performa" (benar-benar mengukur dengan 10.000+ titik), masing-masing menghasilkan temuan berperingkat (bukti file:baris, risiko, saran). Orkestrator memilah, lalu mendelegasikan perbaikan per area (backend/frontend) secara berurutan atau di worktree tanpa tumpang tindih. Tulis di REFACTORING.md. Test tetap hijau.
 
@@ -195,7 +196,45 @@ Aturan di setiap sesi:
 Pembagian sesi:
 - Sesi 1: Fase 0-4 (persiapan, riset paralel, PRD, TRD, Arsitektur, Rencana implementasi, kontrak beku). Tanpa menulis kode aplikasi. Berhenti setelah semua dokumen di-commit.
 - Sesi 2: Fase 5.0 dan 5.1 (scaffold + backend + design system).
-- Sesi 3: Fase 5.2 dan 5.3 (peta, pipeline, dashboard/master, penggabungan).
+- Sesi 3: Fase 5.2 dan 5.3 (peta, pipeline, dashboard/master, penggabungan, suite E2E Playwright, CI hijau).
 - Sesi 4: Fase 6, 7, dan 8 (refactoring, verifikasi browser + screenshot, README, SLIDE-NOTES, kerangka PPTX, cek setup bersih).
 
 Perintah yang akan diberikan pemilik di tiap sesi berbentuk: "Baca PROMPT.md dan kerjakan Sesi N."
+
+# 11. STRATEGI TESTING & QA (WAJIB)
+
+Rancang dulu di docs/TEST-PLAN.md (Sesi 1), tulis tes bersamaan dengan kode (Sesi 2-3), lalu laporkan di docs/TEST-REPORT.md (Sesi 4).
+
+Lapisan tes:
+1. Unit (Pest): fungsi murni dan service: rumus skor (termasuk kasus batas), dedupe + fuzzy name, haversine, bounding box, normalisasi nomor WhatsApp (08..., +62..., 62..., nomor tidak valid), perencana rute, pembuatan pesan template, kalkulator biaya/dampak, aturan batas frekuensi dan opt-out. Vitest untuk composable/util frontend (filter, format, store).
+2. Feature/integration (Pest + database test): endpoint dan halaman Inertia (props sesuai CONTRACTS.md), otorisasi (tamu ditolak, user login boleh), validasi Form Request, alur pipeline (ubah status, pencatatan aktivitas, peringatan dobel kontak), master CRUD + impor CSV, enkripsi API key data source. Provider diuji dengan Http::fake (respons Overpass/Google contoh, error, timeout, rate limit). Scheduler: jalankan `hunter:sync` end-to-end dengan provider palsu, verifikasi upsert, dedupe, deteksi baru buka dan tutup, riwayat run, dan idempotensi (dijalankan dua kali tidak menggandakan data).
+3. Komponen (Vitest + Vue Test Utils): kartu prospek, tombol WhatsApp (aktif/nonaktif, href benar), badge Simulasi, filter panel, Kanban, state loading/empty/error.
+4. E2E (Playwright, Chromium; tests/e2e): berjalan terhadap aplikasi dengan data seed deterministik (MockProvider, seed tetap, tanpa internet). Skenario minimum: login/logout; tamu dialihkan ke login; intro bisa dilewati dan preferensi diingat; peta termuat (canvas ada, tanpa error console); filter provinsi/kategori mengubah jumlah titik; klik prospek membuka drawer dengan data benar; tautan WhatsApp berisi nomor ternormalisasi dan pesan terisi; klik WhatsApp mencatat aktivitas dan mengubah status; peringatan dobel kontak; opt-out menyembunyikan WhatsApp; Kanban drag & drop memindah status; perencana rute menghasilkan urutan dan tautan Google Maps; dashboard menampilkan KPI konsisten dengan data; Master Data Source: aktif/nonaktif + simpan key tidak membocorkan nilai; riwayat scheduler tampil. Catatan teknis: WebGL di headless butuh flag (mis. --use-gl=angle/swiftshader); tentukan konfigurasinya dan dokumentasikan.
+5. Aksesibilitas: @axe-core/playwright di halaman utama (tidak boleh ada pelanggaran serius/kritis tanpa catatan alasan).
+6. Performa: ukur dengan 10.000+ titik (waktu muat, frame rate saat pan/zoom, ukuran respons endpoint peta, jumlah query per request). Catat angka di TEST-REPORT.md dan tetapkan ambang batas wajar; jangan menebak.
+7. Keamanan dasar: tes mass assignment, akses tanpa login, input berbahaya (XSS pada nama bisnis dari sumber luar), rate limit login.
+8. QA eksploratori (Sesi 4, subagent "QA-Browser"): telusuri alur nyata di browser, catat bug (langkah reproduksi, ekspektasi, aktual, tingkat keparahan) di TEST-REPORT.md, perbaiki yang kritis/mayor, ulangi tes terkait.
+
+Aturan:
+- Tes harus deterministik: tanpa internet, tanpa ketergantungan waktu nyata (bekukan waktu), tanpa urutan antar-tes.
+- Bug yang diperbaiki wajib diberi tes regresi.
+- Target cakupan: ≥80% baris pada app/Services dan logika domain; laporkan angka sebenarnya, jangan membulatkan atau mengarang.
+- Jangan menandai tes "lulus" dengan melemahkan asersi atau men-skip tes tanpa alasan tercatat.
+- Skrip standar di composer.json/package.json: `composer test`, `composer lint`, `npm run test`, `npm run lint`, `npm run build`, `npm run e2e`, dan satu perintah gabungan `composer ci`.
+
+# 12. GIT & INTEGRASI GITHUB (WAJIB)
+
+Hosting repo: GitHub (bukan GitLab). Agen tidak melakukan push (pemilik yang push); semua yang lain disiapkan di repo.
+
+Dokumentasikan di docs/GIT-WORKFLOW.md (Sesi 1) dan terapkan:
+- Branch: `main` selalu hijau dan bisa didemo. Pekerjaan di branch pendek berawalan `feat/`, `fix/`, `docs/`, `refactor/`, `test/`, `chore/`. Cabang worktree subagent mengikuti pola yang sama (mis. `feat/be-domain`). Merge ke main dengan `--no-ff` setelah test + lint + build hijau, supaya riwayat tiap milestone terlihat.
+- Commit: conventional commits (feat, fix, docs, refactor, test, chore, perf, ci), kecil dan fokus, satu tujuan per commit. Jangan commit file besar/generated/secret.
+- Tag di akhir tiap sesi: `v0.1-docs` (Sesi 1), `v0.2-backend` (Sesi 2), `v0.3-app` (Sesi 3), `v1.0.0` (Sesi 4).
+- `.gitignore` benar sejak awal (vendor, node_modules, .env, database/*.sqlite, storage, build, playwright-report, test-results). `.gitattributes` untuk normalisasi line ending.
+- GitHub Actions di `.github/workflows/ci.yml` (dibuat di Fase 5.0, diperbarui bila perlu): pada push dan pull request ke main, job backend (setup PHP, composer install ber-cache, Pint, Pest), job frontend (Node, npm ci ber-cache, ESLint, Vitest, build), dan job E2E (install browser Playwright, migrate + seed deterministik, build, jalankan `npm run e2e`, unggah playwright-report dan screenshot sebagai artifact bila gagal). Pin versi aksi dan versi PHP/Node yang dipakai; gunakan matriks seperlunya, jangan berlebihan.
+- Workflow terjadwal opsional `.github/workflows/nightly-sync-demo.yml` TIDAK diperlukan; scheduler berjalan lewat Laravel (jangan bergantung pada GitHub Actions untuk sync).
+- Template: `.github/pull_request_template.md` (ringkasan, jenis perubahan, cara uji, checklist: test, lint, build, dokumen, screenshot), `.github/ISSUE_TEMPLATE/` (bug, fitur), dan `.github/dependabot.yml` (composer, npm, github-actions, mingguan).
+- Badge status CI di README (placeholder USERNAME diganti pemilik).
+- README memuat langkah pemilik: buat repo GitHub kosong, `git remote add origin`, `git push -u origin main --tags`, set repo public atau tambahkan trainer sebagai collaborator, aktifkan GitHub Actions, dan verifikasi CI hijau di tab Actions.
+- Simulasikan alur PR secara lokal: untuk tiap milestone besar, kerja di branch, tulis ringkasan PR dari template ke docs/pr/NN-judul.md, lalu merge. Ini bahan bukti proses di slide.
+- Keamanan repo: tidak ada secret di riwayat; jalankan pemindaian sederhana (mis. grep pola kunci, atau gitleaks bila tersedia) sebelum tag v1.0.0 dan laporkan hasilnya.
