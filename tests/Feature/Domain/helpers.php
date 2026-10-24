@@ -28,7 +28,9 @@ function dm_category(array $a = []): Category
 
 function dm_outlet(array $a = []): Outlet
 {
-    return Outlet::factory()->create($a + ['province_id' => dm_province()->id]);
+    $a['province_id'] ??= dm_province()->id;
+
+    return Outlet::factory()->create($a);
 }
 
 function dm_prospect(array $a = []): Prospect
