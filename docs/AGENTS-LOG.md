@@ -24,3 +24,12 @@ Catatan orkestrasi subagent (bahan slide "Proses Pengerjaan").
 | 5.1 | BE-Domain (worktree) | Seeder 190 outlet, ScoreCalculator, 51 rute (peta, prospek, pipeline, rute, ekspor, dashboard, master, pengaturan), digest | database/seeders, app/{Services,Actions,Repositories,Http}, routes/web.php, tests | 269 tes; query peta ≤ 2 | Deviasi kontrak dicatat (D-86) |
 | 5.1 | FE-Design-System (worktree) | docs/DESIGN.md, token Tailwind, 13 komponen ui, 10 komponen prospek, AppShell, composables, Login | resources/{css,js}, docs/DESIGN.md | 93 tes Vitest, lint + build hijau | Belum dilihat di browser (Sesi 3/4) |
 | 5.2→M2.2 | Orkestrator | Merge 3 cabang `--no-ff` (tanpa konflik), bind ScoreCalculator/Nominatim/ConnectionTester, perbaiki `ActionProspectReconciler` (memanggil `handle` yang tidak ada → `execute`), kalibrasi mock (D-87) | AppServiceProvider, Services/Master, MockProvider, 2 tes | 398 tes Pest + 93 Vitest, Pint, ESLint, build hijau | Skor demo awal tanpa prospek panas → D-87 |
+
+## Sesi 3 (Fase 5.2–5.3)
+
+| Fase | Subagent | Tugas | File disentuh | Hasil | Masalah |
+|---|---|---|---|---|---|
+| 5.2 | FE-Peta (worktree) | Spike M3.0, peta MapLibre + deck.gl, intro globe, layer outlet/prospek/heatmap/white space/cakupan, rute, command palette, filter, drawer | resources/js/Pages/Map, resources/js/map, 1 slot di ProspectDrawer | 195 tes Vitest, lint + build hijau; data 14,6 ribu titik 114–176 ms | FPS SwiftShader 3–14 (D-94); onClick layer tidak menembak (D-92) |
+| 5.2 | FE-Pipeline (worktree) | Kanban DnD, tabel, bulk, drawer/WhatsApp/opt-out, ekspor | resources/js/Pages/Pipeline, Components/pipeline | 137 tes Vitest hijau; DnD, WhatsApp, opt-out diverifikasi di browser | Menemukan bug normalizer nomor simulasi (D-96) dan CSS backdrop-filter (D-97) |
+| 5.2 | FE-Dashboard-Master (worktree) | Dashboard, Estimasi Dampak, Master (sumber data, outlet + impor CSV + verifikasi, kategori, pengaturan), Riwayat Scheduler, chart SVG | resources/js/Pages/{Dashboard,Impact,Master,Scheduler}, Components/{charts,master} | 127 tes Vitest hijau; 8 halaman termuat tanpa error console | Seed tanpa prospek dihubungi/deal → funnel datar |
+| 5.3 | Orkestrator | Merge 3 cabang `--no-ff` tanpa konflik; perbaiki normalizer simulasi, backdrop-filter, 3 temuan axe di AppShell/Drawer | app/Services/Contact, Resources, css, AppShell, Drawer | 399 Pest + 273 Vitest, Pint, ESLint, build hijau | — |
