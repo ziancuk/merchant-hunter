@@ -94,3 +94,14 @@ Format: keputusan · alasan · alternatif. Tanda **[V]** = terverifikasi lewat r
 | D-71 | Impor outlet baru menjalankan rekonsiliasi: prospek lama yang cocok ditutup dengan `closed_reason=hitachi_merchant` | Dedupe tidak hanya saat sync | — |
 | D-72 | Geocoding outlet memakai `GeocoderInterface` (Nominatim); Google tidak dipakai untuk geocoding di v1 (hanya Places Nearby) | Sederhana dan patuh lisensi | — |
 | D-73 | Pest coverage butuh pcov: dipasang di job backend CI (`shivammathur/setup-php` `coverage: pcov`) | Target ≥ 80% | xdebug |
+
+## Keputusan Sesi 2 (2026-10-24)
+
+| ID | Keputusan | Alasan | Alternatif |
+|---|---|---|---|
+| D-80 | Klien `@inertiajs/vue3` dipin ke **^2** (adapter server `inertia-laravel` ^2.0) | npm menarik v3 secara default, tidak cocok dengan adapter server v2 | Naik ke Inertia v3 di kedua sisi |
+| D-81 | `config('app.timezone')` tetap **UTC** (penyimpanan UTC sesuai DB-SCHEMA); zona Asia/Jakarta hanya dipakai jadwal (`->timezone()`) dan tampilan klien | Menghindari pergeseran waktu tersimpan | `APP_TIMEZONE=Asia/Jakarta` global |
+| D-82 | `Prospect::$fillable` **tidak** memuat kolom pipeline/kontak (`pipeline_status`, `do_not_contact`, `handled_by`, `last_contacted_*`, `contact_count`, `*_at` tahap); hanya Action yang mengubahnya dengan `forceFill` | Tes mass assignment (TEST-PLAN lapisan 10) | `$guarded` |
+| D-83 | Header keamanan M2.0: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`. **CSP ditunda** ke Sesi 3/4 (perlu diuji bersama MapLibre worker, blob:, OpenFreeMap, Google Fonts) | CSP ketat berisiko merusak peta tanpa pengujian browser | CSP sekarang |
+| D-84 | Tes Feature memakai `withoutVite()` (tanpa manifest build); `npm run build` menjalankan `vue-tsc --noEmit` lebih dulu | Backend CI tidak perlu build frontend | — |
+| D-85 | Seeder kategori memakai `firstOrCreate` (tidak menimpa bobot/template yang diedit di Master Kategori); template WhatsApp default satu teks umum, BE-Domain boleh menambah per kategori | Idempotensi tanpa menghapus suntingan | `updateOrCreate` |
