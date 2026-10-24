@@ -24,8 +24,9 @@ final class ContactPolicy
         $prospect->loadMissing('category');
         $rules = $this->settings->contactRules();
 
-        $normalized = WhatsAppNormalizer::normalize($prospect->phone);
-        $simulatedBlocked = $prospect->phone_simulated && ! $this->settings->bool('demo.allow_simulated_whatsapp');
+        $allowSimulated = $this->settings->bool('demo.allow_simulated_whatsapp');
+        $normalized = WhatsAppNormalizer::normalize($prospect->phone, $prospect->phone_simulated && $allowSimulated);
+        $simulatedBlocked = $prospect->phone_simulated && ! $allowSimulated;
 
         $blocked = match (true) {
             $prospect->do_not_contact => 'do_not_contact',

@@ -97,7 +97,7 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
         <!-- Floating HUD layer: only its children capture pointer events, so the map stays interactive. -->
         <div class="pointer-events-none absolute inset-0 z-20">
             <!-- Brand -->
-            <GlassPanel as="div" rounded="full" :padded="false" class="pointer-events-auto absolute left-3 top-3 flex h-12 items-center gap-2.5 pl-3 pr-4">
+            <GlassPanel as="header" rounded="full" :padded="false" class="pointer-events-auto absolute left-3 top-3 flex h-12 items-center gap-2.5 pl-3 pr-4">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="shrink-0">
                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.35" stroke-width="1.5" />
                     <circle cx="12" cy="12" r="5.5" stroke="currentColor" stroke-opacity="0.55" stroke-width="1.5" />
@@ -130,7 +130,7 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
             <!-- Controls (top right) -->
             <div class="pointer-events-auto absolute right-3 top-3 flex items-center gap-2">
                 <GlassPanel as="div" rounded="full" :padded="false" class="flex items-center gap-0.5 p-1">
-                    <button type="button" class="flex h-10 cursor-pointer items-center gap-2 rounded-full px-3 text-sm text-fg/80 transition hover:bg-fg/10 hover:text-fg" aria-label="Buka palet perintah" @click="paletteOpen = true">
+                    <button type="button" class="flex h-10 cursor-pointer items-center gap-2 rounded-full px-3 text-sm text-fg/80 transition hover:bg-fg/10 hover:text-fg" :aria-label="`Buka palet perintah (${modKey} K)`" @click="paletteOpen = true">
                         <Icon name="search" :size="16" />
                         <span class="num hidden text-xs text-muted sm:inline">{{ modKey }} K</span>
                     </button>

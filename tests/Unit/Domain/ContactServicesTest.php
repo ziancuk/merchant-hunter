@@ -49,3 +49,8 @@ it('validates templates by their placeholders', function (string $tpl, bool $val
     ['Halo {nama_bisnis} {unknown}', false],
     ['Halo {}', false],
 ]);
+
+it('accepts the simulated 0999 range only when allowed', function () {
+    expect(WhatsAppNormalizer::normalize('0999-1234-5678'))->toBeNull();
+    expect(WhatsAppNormalizer::normalize('0999-1234-5678', true))->toBe('62999'.'12345678');
+});

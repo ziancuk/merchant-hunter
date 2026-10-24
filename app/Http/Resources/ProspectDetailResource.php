@@ -71,10 +71,11 @@ class ProspectDetailResource extends JsonResource
         if ($p->do_not_contact) {
             return null;
         }
-        if ($p->phone_simulated && ! app(SettingsService::class)->bool('demo.allow_simulated_whatsapp')) {
+        $allowSimulated = app(SettingsService::class)->bool('demo.allow_simulated_whatsapp');
+        if ($p->phone_simulated && ! $allowSimulated) {
             return null;
         }
-        $normalized = WhatsAppNormalizer::normalize($p->phone);
+        $normalized = WhatsAppNormalizer::normalize($p->phone, $p->phone_simulated && $allowSimulated);
 
         return $normalized !== null ? 'https://wa.me/'.$normalized : null;
     }
