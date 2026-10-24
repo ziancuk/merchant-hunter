@@ -1,12 +1,252 @@
 @import 'tailwindcss';
 
-/* Design tokens are defined by FE-Design-System (docs/DESIGN.md). */
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+@source '../js/**/*.vue';
+@source '../js/**/*.ts';
+@source '../views/**/*.blade.php';
+
+/* Design tokens: see docs/DESIGN.md. Theme is chosen by class `dark` / `light` on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(.light, .light *));
+
+@theme inline {
+    --font-display: 'Bricolage Grotesque', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --color-ink: var(--c-bg);
+    --color-surface: var(--c-surface);
+    --color-raised: var(--c-raised);
+    --color-glass: var(--c-glass);
+    --color-line: var(--c-line);
+    --color-fg: var(--c-text);
+    --color-muted: var(--c-muted);
+    --color-focus: var(--c-focus);
+    --color-hot: var(--c-hot);
+    --color-on-hot: var(--c-on-hot);
+    --color-warm: var(--c-warm);
+    --color-medium: var(--c-medium);
+    --color-cold: var(--c-cold);
+    --color-danger: var(--c-danger);
+    --color-st-new: var(--c-st-new);
+    --color-st-contacted: var(--c-st-contacted);
+    --color-st-demo: var(--c-st-demo);
+    --color-st-won: var(--c-st-won);
+    --color-st-lost: var(--c-st-lost);
+
+    --text-2xs: 0.6875rem;
+    --text-2xs--line-height: 1rem;
+
+    --radius-panel: 1.125rem;
+    --radius-chip: 0.5rem;
+
+    --shadow-float: 0 18px 50px -12px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.25);
+    --shadow-pop: 0 10px 30px -8px rgb(0 0 0 / 0.5);
+
+    --blur-glass: 18px;
+
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --animate-pulse-ring: pulse-ring 1.8s var(--ease-out-expo) infinite;
+    --animate-sweep: sweep 6s linear infinite;
 }
 
+:root,
+.dark {
+    color-scheme: dark;
+    --c-bg: #070d0c;
+    --c-surface: #0f1917;
+    --c-raised: #172421;
+    --c-glass: rgb(12 22 20 / 0.72);
+    --c-line: rgb(190 230 215 / 0.14);
+    --c-text: #e8f0eb;
+    --c-muted: #9fb3aa;
+    --c-focus: #7de3c4;
+    --c-hot: #ff6a2b;
+    --c-on-hot: #1a0a02;
+    --c-warm: #f2b63a;
+    --c-medium: #4fc3a9;
+    --c-cold: #8ca4b8;
+    --c-danger: #ff6b6b;
+    --c-st-new: #8fa3b0;
+    --c-st-contacted: #4db6e8;
+    --c-st-demo: #e6a93b;
+    --c-st-won: #5fd07a;
+    --c-st-lost: #e0768a;
+    --d-duration-fast: 120ms;
+    --d-duration-base: 220ms;
+    --d-duration-slow: 420ms;
+}
+
+.light {
+    color-scheme: light;
+    --c-bg: #f3f1ea;
+    --c-surface: #ffffff;
+    --c-raised: #ebe8de;
+    --c-glass: rgb(255 255 255 / 0.78);
+    --c-line: rgb(16 32 27 / 0.16);
+    --c-text: #10201b;
+    --c-muted: #4a5c55;
+    --c-focus: #0a7a63;
+    --c-hot: #c23b00;
+    --c-on-hot: #ffffff;
+    --c-warm: #8a5f00;
+    --c-medium: #08705d;
+    --c-cold: #4a6277;
+    --c-danger: #b3261e;
+    --c-st-new: #52667a;
+    --c-st-contacted: #0b6e99;
+    --c-st-demo: #8a5f00;
+    --c-st-won: #1b7a38;
+    --c-st-lost: #b0304b;
+}
+
+@keyframes pulse-ring {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-hot) 55%, transparent);
+    }
+    80%,
+    100% {
+        box-shadow: 0 0 0 9px transparent;
+    }
+}
+
+@keyframes sweep {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes shimmer {
+    to {
+        background-position: -200% 0;
+    }
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+}
+
+html,
 body {
     margin: 0;
-    background: #0b0f14;
-    color: #e6edf3;
+    min-height: 100%;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* Glass surface that floats over the map. */
+.glass {
+    background: var(--c-glass);
+    backdrop-filter: blur(var(--blur-glass)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(140%);
+    border: 1px solid var(--c-line);
+    box-shadow: var(--shadow-float);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+    .glass {
+        background: var(--c-surface);
+    }
+}
+
+/* Tabular monospace for numbers (scores, KPI, distances). */
+.num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+}
+
+.hud-label {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-muted);
+}
+
+.focus-ring:focus-visible,
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--c-focus);
+    outline-offset: 2px;
+}
+
+.skeleton {
+    background: linear-gradient(90deg, var(--c-raised) 25%, color-mix(in srgb, var(--c-raised) 60%, var(--c-text) 12%) 50%, var(--c-raised) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+}
+
+/* Radar backdrop used by the login screen and empty states. */
+.radar-bg {
+    background:
+        radial-gradient(circle at 50% 50%, transparent 0 18%, var(--c-line) 18.2% 18.6%, transparent 18.8% 38%, var(--c-line) 38.2% 38.6%, transparent 38.8% 58%, var(--c-line) 58.2% 58.6%, transparent 58.8%),
+        linear-gradient(var(--c-line), var(--c-line)) 50% 0 / 1px 100% no-repeat,
+        linear-gradient(var(--c-line), var(--c-line)) 0 50% / 100% 1px no-repeat,
+        var(--c-bg);
+}
+
+.sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+
+/* Drawer / panel transitions (see Drawer.vue). */
+.drawer-enter-active,
+.drawer-leave-active {
+    transition:
+        transform var(--d-duration-base) var(--ease-out-expo),
+        opacity var(--d-duration-base) ease;
+}
+.drawer-enter-from,
+.drawer-leave-to {
+    transform: translateX(24px);
+    opacity: 0;
+}
+.drawer-left-enter-from,
+.drawer-left-leave-to {
+    transform: translateX(-24px);
+    opacity: 0;
+}
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity var(--d-duration-base) ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+.pop-enter-active,
+.pop-leave-active {
+    transition:
+        transform var(--d-duration-fast) var(--ease-out-expo),
+        opacity var(--d-duration-fast) ease;
+}
+.pop-enter-from,
+.pop-leave-to {
+    transform: translateY(-6px) scale(0.98);
+    opacity: 0;
+}
+
+/* Reduced motion: no transitions, no looping animation, no smooth scroll. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+    .skeleton {
+        animation: none;
+    }
 }
