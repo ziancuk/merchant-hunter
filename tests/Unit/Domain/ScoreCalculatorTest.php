@@ -20,7 +20,7 @@ function scoreInput(array $o = []): ScoreInput
 /** @return array<string, array{points: float, value: float, reason: string}> */
 function byKey(ScoreInput $in, ?ScoreCalculator $calc = null): array
 {
-    $result = ($calc ?? new ScoreCalculator)->score($in);
+    $result = ($calc ?? new ScoreCalculator(pure: true))->score($in);
     $out = [];
     foreach ($result->breakdown as $c) {
         $out[$c['key']] = $c;
@@ -30,19 +30,18 @@ function byKey(ScoreInput $in, ?ScoreCalculator $calc = null): array
 }
 
 it('implements the ProspectScorer contract', function () {
-    expect(new ScoreCalculator)->toBeInstanceOf(ProspectScorer::class);
+    expect(new ScoreCalculator(pure: true))->toBeInstanceOf(ProspectScorer::class);
 });
 
-it('scores 0 when every component is at its minimum except the neutral unrated quality', function () {
-    // quality of an unrated business is the neutral 0.25 => 5 points; force rating counting off? no: use worst rating.
-    $r = (new ScoreCalculator)->score(scoreInput(['rating' => 3.0, 'reviewCount' => 0]));
+it('scores 0 for the worst possible inputs (rating exactly 3.0 counts as zero quality)', function () {
+    $r = (new ScoreCalculator(pure: true))->score(scoreInput(['rating' => 3.0, 'reviewCount' => 0]));
 
     expect($r->score)->toBe(0)
         ->and(collect($r->breakdown)->sum('points'))->toBe(0.0);
 });
 
 it('scores 100 when every component is at its maximum', function () {
-    $r = (new ScoreCalculator)->score(scoreInput([
+    $r = (new ScoreCalculator(pure: true))->score(scoreInput([
         'categoryWeight' => 100, 'rating' => 5.0, 'reviewCount' => 500, 'nearestOutletDistanceM' => 0,
         'neighborOutlets500m' => 3, 'areaDensity' => 25, 'hasPhone' => true, 'hasWebsite' => true,
         'hasAddress' => true, 'isNewOpen' => true, 'ageDays' => 0,
@@ -53,7 +52,7 @@ it('scores 100 when every component is at its maximum', function () {
 });
 
 it('returns six breakdown entries with key, label, value, max, points and an Indonesian reason', function () {
-    $r = (new ScoreCalculator)->score(scoreInput(['categoryWeight' => 80, 'neighborOutlets500m' => 3, 'nearestOutletDistanceM' => 640]));
+    $r = (new ScoreCalculator(pure: true))->score(scoreInput(['categoryWeight' => 80, 'neighborOutlets500m' => 3, 'nearestOutletDistanceM' => 640]));
 
     expect($r->breakdown)->toHaveCount(6)
         ->and(array_column($r->breakdown, 'key'))->toBe(['category', 'quality', 'proximity', 'density', 'contact', 'new'])
@@ -132,7 +131,7 @@ it('decays the new-open component linearly over 30 days', function () {
 });
 
 it('forces the score to 0 for closed businesses', function () {
-    $r = (new ScoreCalculator)->score(scoreInput([
+    $r = (new ScoreCalculator(pure: true))->score(scoreInput([
         'categoryWeight' => 100, 'rating' => 5.0, 'reviewCount' => 500, 'nearestOutletDistanceM' => 0,
         'neighborOutlets500m' => 3, 'areaDensity' => 25, 'hasPhone' => true, 'isClosed' => true,
     ]));
@@ -142,13 +141,13 @@ it('forces the score to 0 for closed businesses', function () {
 
 it('rounds the total to the nearest integer', function () {
     // category 85 -> 21.25 ; quality unrated 0.25 -> 5 ; total 26.25 -> 26
-    expect((new ScoreCalculator)->score(scoreInput(['categoryWeight' => 85]))->score)->toBe(26)
+    expect((new ScoreCalculator(pure: true))->score(scoreInput(['categoryWeight' => 85]))->score)->toBe(26)
         // 21.25 + 5 + 0.5*... craft .5: category 90 -> 22.5 + 5 = 27.5 -> 28 (half away from zero)
-        ->and((new ScoreCalculator)->score(scoreInput(['categoryWeight' => 90]))->score)->toBe(28);
+        ->and((new ScoreCalculator(pure: true))->score(scoreInput(['categoryWeight' => 90]))->score)->toBe(28);
 });
 
 it('never leaves the 0..100 range', function () {
-    $r = (new ScoreCalculator)->score(scoreInput([
+    $r = (new ScoreCalculator(pure: true))->score(scoreInput([
         'categoryWeight' => 500, 'rating' => 9.0, 'reviewCount' => 999999, 'nearestOutletDistanceM' => -50,
         'neighborOutlets500m' => 99, 'areaDensity' => 9999, 'hasPhone' => true, 'hasWebsite' => true,
         'hasAddress' => true, 'isNewOpen' => true, 'ageDays' => -10,
@@ -158,7 +157,7 @@ it('never leaves the 0..100 range', function () {
 });
 
 it('lets scoring.params override the defaults', function () {
-    $calc = new ScoreCalculator(null, ['weights' => ['category' => 50], 'density_cap' => 10, 'new_days' => 10]);
+    $calc = new ScoreCalculator(null, ['weights' => ['category' => 50], 'density_cap' => 10, 'new_days' => 10], true);
 
     expect(byKey(scoreInput(['categoryWeight' => 100]), $calc)['category']['points'])->toBe(50.0)
         ->and(byKey(scoreInput(['areaDensity' => 5]), $calc)['density']['value'])->toBe(0.5)

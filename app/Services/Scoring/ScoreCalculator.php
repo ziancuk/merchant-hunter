@@ -37,10 +37,14 @@ final class ScoreCalculator implements ProspectScorer
     /** @var array<string, mixed>|null */
     private ?array $resolved = null;
 
-    /** @param array<string, mixed> $overrides */
+    /**
+     * @param  array<string, mixed>  $overrides  highest-priority parameter overrides (mostly for tests)
+     * @param  bool  $pure  true = never read `scoring.params` from settings (plain unit use)
+     */
     public function __construct(
         private readonly ?SettingsService $settings = null,
         private readonly array $overrides = [],
+        private readonly bool $pure = false,
     ) {}
 
     public function score(ScoreInput $input): ScoreResult
@@ -95,9 +99,10 @@ final class ScoreCalculator implements ProspectScorer
         }
 
         $stored = [];
-        if ($this->settings !== null) {
+        if (! $this->pure) {
             try {
-                $stored = (array) ($this->settings->get('scoring.params') ?? []);
+                $settings = $this->settings ?? app(SettingsService::class);
+                $stored = (array) ($settings->get('scoring.params') ?? []);
             } catch (Throwable) {
                 $stored = [];
             }
