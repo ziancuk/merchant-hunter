@@ -86,7 +86,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKeydown));
             <div v-if="modelValue && modal" class="fixed inset-0 z-30 bg-black/40" aria-hidden="true" data-testid="drawer-scrim" @click="close" />
         </Transition>
         <Transition :name="side === 'left' ? 'drawer-left' : 'drawer'">
-            <aside
+            <div
                 v-if="modelValue"
                 ref="panel"
                 role="dialog"
@@ -119,7 +119,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKeydown));
                 <footer v-if="$slots.footer" class="border-t border-line px-4 py-3">
                     <slot name="footer" />
                 </footer>
-            </aside>
+            </div>
         </Transition>
     </div>
 </template>

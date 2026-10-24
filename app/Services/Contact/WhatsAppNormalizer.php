@@ -7,7 +7,8 @@ namespace App\Services\Contact;
 /** Mirrors resources/js/lib/whatsapp.ts: Indonesian mobile numbers to `62…` digits, else null. */
 final class WhatsAppNormalizer
 {
-    public static function normalize(?string $raw): ?string
+    /** @param bool $allowSimulated accept the non-routable 0999 demo range (D-62; only when demo.allow_simulated_whatsapp is on) */
+    public static function normalize(?string $raw, bool $allowSimulated = false): ?string
     {
         if ($raw === null || trim($raw) === '') {
             return null;
@@ -23,6 +24,10 @@ final class WhatsAppNormalizer
             $digits = '62'.$digits;
         }
 
-        return preg_match('/^628\d{7,11}$/', $digits) === 1 ? $digits : null;
+        if (preg_match('/^628\d{7,11}$/', $digits) === 1) {
+            return $digits;
+        }
+
+        return $allowSimulated && preg_match('/^62999\d{8}$/', $digits) === 1 ? $digits : null;
     }
 }

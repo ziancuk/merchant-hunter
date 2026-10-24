@@ -215,6 +215,8 @@ const title = computed(() => detail.value?.name ?? (loadError.value ? 'Prospek' 
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <Button size="sm" variant="secondary" @click="emit('locate', { lat: detail.lat, lng: detail.lng })"><Icon name="navigation" :size="14" /> Lihat di peta</Button>
+                    <!-- Extra page-specific actions (e.g. "Tambah ke rute" on the map page). -->
+                    <slot name="actions" :prospect="detail" />
                 </div>
                 <p class="text-xs text-muted">
                     <template v-if="detail.nearest_outlet">
