@@ -330,3 +330,6 @@ export class MapEngine {
         this.introResolve = null;
     }
 }
+
+// One dynamic chunk for MapLibre + deck.gl: the page imports both through this module.
+export { buildLayers } from './layers';

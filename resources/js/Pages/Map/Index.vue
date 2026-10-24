@@ -18,7 +18,7 @@ import { api, normalizeError } from '@/lib/api';
 import { BAND_LABEL, STATUS_LABEL, scoreBand } from '@/lib/colors';
 import { formatNumber } from '@/lib/format';
 import type { MapMode, ProspectDetail, RoutePlan, SharedProps } from '@/types';
-import { ATTRIBUTION, COLOR_BY_STORAGE_KEY, GRID_ZOOM, MAP_MODES, MOVE_DEBOUNCE_MS } from '@/map/constants';
+import { ATTRIBUTION, COLOR_BY_STORAGE_KEY, COLUMN_ZOOM, GRID_ZOOM, MAP_MODES, MOVE_DEBOUNCE_MS } from '@/map/constants';
 import { drawerPadding } from '@/map/geometry';
 import { isGridPayload, isPointsPayload, parseGrid, parseOutlets, parsePoints, parseWhitespace, decodeFlags, statusFromIndex } from '@/map/payload';
 import { prepareGrid, preparePoints, recolor } from '@/map/prepare';
@@ -50,7 +50,7 @@ const reducedMotion = useReducedMotion();
 
 // --- non-reactive engine objects (D-14) -------------------------------------------------------------------------
 let engine: MapEngine | null = null;
-let buildLayersFn: typeof import('@/map/layers').buildLayers | null = null;
+let buildLayersFn: typeof import('@/map/engine').buildLayers | null = null;
 let dataController: AbortController | null = null;
 let hoverController: AbortController | null = null;
 let layerFrame = 0;
@@ -75,6 +75,7 @@ const loadError = ref('');
 const zoom = ref(4);
 const zoomBucket = ref(4);
 const tilted = ref(false);
+const columnZoom = ref(COLUMN_ZOOM);
 
 const points = shallowRef<PreparedPoints | null>(null);
 const grid = shallowRef<PreparedGrid | null>(null);
@@ -166,11 +167,12 @@ const tooltipStyle = computed(() => {
     return { left: `${flip ? t.x - 14 : t.x + 14}px`, top: `${t.y + 14}px`, transform: flip ? 'translateX(-100%)' : undefined };
 });
 
+/** Index of the outlet under the cursor (-1: none). A number so unrelated mouse moves do not retrigger layer builds. */
+const hoverOutletIndex = computed(() => (hover.value?.kind === 'outlet' && outlets.value && hover.value.index < outlets.value.count ? hover.value.index : -1));
+
 const focusOutlet = computed(() => {
-    const h = hover.value;
-    if (h?.kind === 'outlet' && outlets.value && h.index < outlets.value.count) {
-        return { lng: outlets.value.positions[2 * h.index], lat: outlets.value.positions[2 * h.index + 1] };
-    }
+    const i = hoverOutletIndex.value;
+    if (i >= 0 && outlets.value) return { lng: outlets.value.positions[2 * i], lat: outlets.value.positions[2 * i + 1] };
     return selectedOutlet.value ? { lng: selectedOutlet.value.lng, lat: selectedOutlet.value.lat } : null;
 });
 
@@ -181,6 +183,7 @@ function applyLayers(): void {
         buildLayersFn({
             mode: mode.value,
             zoom: zoomBucket.value,
+            columnZoom: columnZoom.value,
             colorBy: colorBy.value,
             points: points.value,
             grid: grid.value,
@@ -225,7 +228,7 @@ function pulseTick(now: number): void {
     pulseFrame = requestAnimationFrame(pulseTick);
 }
 
-watch([points, grid, outlets, whitespace, mode, zoomBucket, routeStops, routePlan, selectedPos, focusOutlet], scheduleLayers);
+watch([points, grid, outlets, whitespace, mode, zoomBucket, columnZoom, routeStops, routePlan, selectedPos, focusOutlet], scheduleLayers);
 watch(colorBy, (v) => {
     writePref(COLOR_BY_STORAGE_KEY, v);
     if (points.value) points.value = recolor(points.value, v);
@@ -287,7 +290,10 @@ async function loadViewport(): Promise<void> {
     }
 }
 
-const loadViewportDebounced = useDebounceFn(() => void loadViewport(), MOVE_DEBOUNCE_MS);
+let loadsFrozen = false; // performance harness only (window.__hunterMap.freezeLoads)
+const loadViewportDebounced = useDebounceFn(() => {
+    if (!loadsFrozen) void loadViewport();
+}, MOVE_DEBOUNCE_MS);
 
 async function loadOutlets(): Promise<void> {
     try {
@@ -324,8 +330,11 @@ function onHover(pick: MapPick | null): void {
     engine?.setCursor(pick ? 'pointer' : '');
 }
 
-watch(hover, (h, prev) => {
-    if (h?.kind === 'outlet' || prev?.kind === 'outlet') scheduleLayers();
+/** Identity of the hovered object: stable while the cursor moves over the same prospect/outlet/cell. */
+const hoverKey = computed(() => (hover.value ? `${hover.value.kind}:${hover.value.index}` : ''));
+
+watch(hoverKey, () => {
+    const h = hover.value;
     hoverController?.abort();
     hoverMeta.value = null;
     if (!h || h.kind !== 'prospect' || !points.value || h.index >= points.value.count) return;
@@ -599,9 +608,9 @@ async function startMap(): Promise<void> {
     if (!container.value) return;
     let EngineCtor: typeof import('@/map/engine').MapEngine;
     try {
-        const [eng, lay] = await Promise.all([import('@/map/engine'), import('@/map/layers')]);
+        const eng = await import('@/map/engine');
         EngineCtor = eng.MapEngine;
-        buildLayersFn = lay.buildLayers;
+        buildLayersFn = eng.buildLayers;
     } catch (e) {
         mapError.value = e instanceof Error ? e.message : 'Modul peta gagal dimuat.';
         return;
@@ -653,6 +662,13 @@ function exposeDebugHooks(): void {
         },
         flyTo: (lng: number, lat: number, z = 12) => engine?.flyTo({ center: [lng, lat], zoom: z, duration: 0 }),
         setMode: (m: MapMode) => (mode.value = m),
+        /** Performance harness: request an arbitrary viewport (e.g. the whole country at zoom 6) without moving the camera. */
+        loadAt: async (bbox: [number, number, number, number], z: number) => {
+            if (currentViewport) currentViewport = { ...currentViewport, bbox, zoom: z };
+            await loadViewport();
+        },
+        setColumnZoom: (z: number) => (columnZoom.value = z),
+        freezeLoads: (v: boolean) => (loadsFrozen = v),
     };
 }
 
@@ -754,7 +770,7 @@ const liveSummary = computed(() => (count.value === null ? '' : `${formatNumber(
         </div>
 
         <template #top-left>
-            <div v-if="ready && !introActive" class="flex w-[min(22rem,calc(100vw-1.5rem))] flex-col gap-2">
+            <section v-if="ready && !introActive" class="flex w-[min(22rem,calc(100vw-1.5rem))] flex-col gap-2" aria-label="Mode, filter, dan rute">
                 <ModeSwitcher v-model="mode" />
                 <div class="flex items-center gap-2">
                     <Button size="sm" variant="secondary" class="glass !h-9" :aria-expanded="filterOpen" aria-controls="map-filter" data-testid="filter-toggle" @click="toggleFilter">
@@ -785,7 +801,7 @@ const liveSummary = computed(() => (count.value === null ? '' : `${formatNumber(
                         @close="routeOpen = false"
                     />
                 </div>
-            </div>
+            </section>
         </template>
 
         <template #top-right>
@@ -793,26 +809,26 @@ const liveSummary = computed(() => (count.value === null ? '' : `${formatNumber(
         </template>
 
         <template #bottom-left>
-            <div v-if="ready" class="flex flex-col items-start gap-2">
-                <p class="glass max-w-[calc(100vw-1.5rem)] rounded-chip px-2 py-1 text-2xs text-muted" data-testid="map-attribution">
+            <section v-if="ready" class="flex flex-col items-start gap-2" aria-label="Atribusi peta">
+                <p class="glass max-w-[calc(100vw-5.5rem)] rounded-chip px-2 py-1 text-2xs text-muted sm:max-w-[calc(100vw-21rem)]" data-testid="map-attribution">
                     {{ ATTRIBUTION.text }} ·
                     <template v-for="(l, i) in ATTRIBUTION.links" :key="l.href">
                         <a :href="l.href" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 hover:text-fg">{{ l.label }}</a
                         ><span v-if="i < ATTRIBUTION.links.length - 1">, </span>
                     </template>
                 </p>
-            </div>
+            </section>
         </template>
 
         <template #bottom-right>
             <div v-if="ready && !introActive" class="flex items-end gap-2">
             <MapLegend v-model:color-by="colorBy" />
-            <div class="glass flex flex-col gap-1 rounded-full p-1" role="group" aria-label="Kontrol peta">
+            <section class="glass flex flex-col gap-1 rounded-full p-1" aria-label="Kontrol peta">
                 <Button icon-only variant="ghost" aria-label="Perbesar" data-testid="zoom-in" @click="engine?.zoomBy(1)"><span aria-hidden="true" class="text-lg leading-none">+</span></Button>
                 <Button icon-only variant="ghost" aria-label="Perkecil" data-testid="zoom-out" @click="engine?.zoomBy(-1)"><span aria-hidden="true" class="text-lg leading-none">−</span></Button>
-                <Button icon-only variant="ghost" :aria-label="tilted ? 'Tampilan datar' : 'Tampilan 3D miring'" :aria-pressed="tilted" data-testid="tilt" @click="engine?.toggleTilt()"><span aria-hidden="true" class="text-2xs font-semibold">3D</span></Button>
+                <Button icon-only variant="ghost" aria-label="Tampilan 3D miring" :aria-pressed="tilted" data-testid="tilt" @click="engine?.toggleTilt()"><span aria-hidden="true" class="text-2xs font-semibold">3D</span></Button>
                 <Button icon-only variant="ghost" aria-label="Kembali ke Indonesia" data-testid="reset-view" @click="engine?.resetView()"><Icon name="globe" :size="16" /></Button>
-            </div>
+            </section>
             </div>
         </template>
     </AppShell>

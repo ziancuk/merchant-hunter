@@ -18,6 +18,8 @@ export interface LayerHandlers {
 export interface LayerInputs {
     mode: MapMode;
     zoom: number;
+    /** Zoom from which prospects become 3D columns (defaults to COLUMN_ZOOM). */
+    columnZoom?: number;
     colorBy: ColorBy;
     points: PreparedPoints | null;
     grid: PreparedGrid | null;
@@ -31,11 +33,42 @@ export interface LayerInputs {
     handlers: LayerHandlers;
 }
 
+const dataCache = new WeakMap<object, Record<string, unknown>>();
+
+/**
+ * Memoises a deck.gl `data` object on the typed array that owns it. deck.gl re-uploads every attribute whenever the
+ * `data` reference changes, so the pulse animation (layers rebuilt ~20x/s) must keep handing back the same object.
+ */
+function memo<T>(owner: object, key: string, make: () => T): T {
+    let bucket = dataCache.get(owner);
+    if (!bucket) {
+        bucket = {};
+        dataCache.set(owner, bucket);
+    }
+    return (bucket[key] ??= make()) as T;
+}
+
 /** deck.gl binary `data` object: no per-row JS objects, attributes go straight to the GPU. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- deck.gl's generic `data` prop cannot express the binary form
 function binary(length: number, attributes: Record<string, { value: ArrayLike<number>; size: number; normalized?: boolean }>): any {
     return { length, attributes };
 }
+
+/** Overlay rings/labels ignore the depth buffer so extruded columns never hide them. */
+const ON_TOP = { depthCompare: 'always', depthWriteEnabled: false } as never;
+
+const positionsData = (positions: Float64Array) => memo(positions, 'positions', () => binary(positions.length / 2, { getPosition: { value: positions, size: 2 } }));
+const heatData = (p: PreparedPoints) => memo(p.weights, 'heat', () => binary(p.count, { getPosition: { value: p.positions, size: 2 }, getWeight: { value: p.weights, size: 1 } }));
+const gridHeatData = (g: PreparedGrid) => memo(g.weights, 'grid-heat', () => binary(g.count, { getPosition: { value: g.positions, size: 2 }, getWeight: { value: g.weights, size: 1 } }));
+const gridBubbleData = (g: PreparedGrid) =>
+    memo(g.colors, 'grid-bubbles', () =>
+        binary(g.count, { getPosition: { value: g.positions, size: 2 }, getRadius: { value: g.radii, size: 1 }, getFillColor: { value: g.colors, size: 4, normalized: true } }),
+    );
+const columnData = (p: PreparedPoints) =>
+    memo(p.colors, 'columns', () =>
+        binary(p.count, { getPosition: { value: p.positions, size: 2 }, getFillColor: { value: p.colors, size: 4, normalized: true }, getElevation: { value: p.elevations, size: 1 } }),
+    );
+const discData = (p: PreparedPoints) => memo(p.colors, 'discs', () => binary(p.count, { getPosition: { value: p.positions, size: 2 }, getFillColor: { value: p.colors, size: 4, normalized: true } }));
 
 function pickOf(kind: HoverKind, info: PickingInfo): MapPick | null {
     if (info.index === undefined || info.index < 0) return null;
@@ -60,6 +93,7 @@ function ringLayer(id: string, at: { lng: number; lat: number }, radiusM: number
         lineWidthUnits: 'pixels',
         getLineWidth: width,
         pickable: false,
+        parameters: ON_TOP,
     });
 }
 
@@ -76,9 +110,13 @@ export function buildLayers(i: LayerInputs): Layer[] {
         whitespaceLayers.push(
             new PolygonLayer({
                 id: 'whitespace-cells',
+                parameters: ON_TOP,
                 data: i.whitespace.cells,
                 getPolygon: (c: { lng: number; lat: number }) => whitespacePolygon(c),
-                getFillColor: (c: { prospects: number }) => whitespaceColor(c.prospects, max),
+                getFillColor: (c: { prospects: number }) => {
+                    const k = whitespaceColor(c.prospects, max);
+                    return [k[0], k[1], k[2], Math.round(k[3] * 0.4)];
+                },
                 getLineColor: [125, 227, 196, 220],
                 lineWidthUnits: 'pixels',
                 getLineWidth: 1,
@@ -88,6 +126,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
             }),
             new ScatterplotLayer({
                 id: 'whitespace-dots',
+                parameters: ON_TOP,
                 data: i.whitespace.cells,
                 getPosition: (c: { lng: number; lat: number }) => [c.lng, c.lat],
                 radiusUnits: 'pixels',
@@ -110,7 +149,8 @@ export function buildLayers(i: LayerInputs): Layer[] {
         layers.push(
             new ScatterplotLayer({
                 id: 'coverage-rings',
-                data: binary(i.outlets.count, { getPosition: { value: i.outlets.positions, size: 2 } }),
+                parameters: ON_TOP,
+                data: positionsData(i.outlets.positions),
                 radiusUnits: 'meters',
                 getRadius: COVERAGE_RADIUS_M,
                 stroked: true,
@@ -130,7 +170,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
             layers.push(
                 new HeatmapLayer({
                     id: 'heatmap',
-                    data: binary(i.points.count, { getPosition: { value: i.points.positions, size: 2 }, getWeight: { value: i.points.weights, size: 1 } }),
+                    data: heatData(i.points),
                     radiusPixels: i.zoom < 8 ? 30 : i.zoom < 12 ? 48 : 64,
                     intensity: 2.6,
                     threshold: 0.02,
@@ -143,7 +183,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
             layers.push(
                 new HeatmapLayer({
                     id: 'heatmap',
-                    data: binary(i.grid.count, { getPosition: { value: i.grid.positions, size: 2 }, getWeight: { value: i.grid.weights, size: 1 } }),
+                    data: gridHeatData(i.grid),
                     radiusPixels: 56,
                     intensity: 3,
                     threshold: 0.02,
@@ -161,11 +201,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
             layers.push(
                 new ScatterplotLayer({
                     id: 'grid-bubbles',
-                    data: binary(i.grid.count, {
-                        getPosition: { value: i.grid.positions, size: 2 },
-                        getRadius: { value: i.grid.radii, size: 1 },
-                        getFillColor: { value: i.grid.colors, size: 4, normalized: true },
-                    }),
+                    data: gridBubbleData(i.grid),
                     radiusUnits: 'pixels',
                     opacity: dim,
                     stroked: true,
@@ -179,12 +215,8 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 }),
             );
         } else if (i.points && i.points.count > 0) {
-            const data = binary(i.points.count, {
-                getPosition: { value: i.points.positions, size: 2 },
-                getFillColor: { value: i.points.colors, size: 4, normalized: true },
-                getElevation: { value: i.points.elevations, size: 1 },
-            });
-            if (i.zoom >= COLUMN_ZOOM) {
+            const data = columnData(i.points);
+            if (i.zoom >= (i.columnZoom ?? COLUMN_ZOOM)) {
                 layers.push(
                     new ColumnLayer({
                         id: 'prospect-columns',
@@ -205,7 +237,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 layers.push(
                     new ScatterplotLayer({
                         id: 'prospect-discs',
-                        data: binary(i.points.count, { getPosition: { value: i.points.positions, size: 2 }, getFillColor: { value: i.points.colors, size: 4, normalized: true } }),
+                        data: discData(i.points),
                         radiusUnits: 'meters',
                         getRadius: discRadiusM(i.zoom),
                         radiusMinPixels: 2.2,
@@ -223,7 +255,8 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 layers.push(
                     new ScatterplotLayer({
                         id: 'newopen-pulse',
-                        data: binary(i.points.newOpen.length / 2, { getPosition: { value: i.points.newOpen, size: 2 } }),
+                        parameters: ON_TOP,
+                        data: positionsData(i.points.newOpen),
                         radiusUnits: 'pixels',
                         getRadius: 7 + 20 * i.pulse,
                         filled: false,
@@ -239,7 +272,8 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 layers.push(
                     new ScatterplotLayer({
                         id: 'newopen-static',
-                        data: binary(i.points.newOpen.length / 2, { getPosition: { value: i.points.newOpen, size: 2 } }),
+                        parameters: ON_TOP,
+                        data: positionsData(i.points.newOpen),
                         radiusUnits: 'pixels',
                         getRadius: 9,
                         filled: false,
@@ -256,7 +290,8 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 layers.push(
                     new ScatterplotLayer({
                         id: 'simulated-ring',
-                        data: binary(i.points.simulated.length / 2, { getPosition: { value: i.points.simulated, size: 2 } }),
+                        parameters: ON_TOP,
+                        data: positionsData(i.points.simulated),
                         radiusUnits: 'pixels',
                         getRadius: 6,
                         filled: false,
@@ -278,6 +313,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
         layers.push(
             new PathLayer({
                 id: 'route-glow',
+                parameters: ON_TOP,
                 data: [{ path }],
                 getPath: (d: { path: [number, number][] }) => d.path,
                 getColor: [125, 227, 196, 70],
@@ -289,6 +325,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
             }),
             new PathLayer({
                 id: 'route-path',
+                parameters: ON_TOP,
                 data: [{ path }],
                 getPath: (d: { path: [number, number][] }) => d.path,
                 getColor: MAP_COLORS.route,
@@ -305,6 +342,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
         layers.push(
             new ScatterplotLayer({
                 id: 'route-stops',
+                parameters: ON_TOP,
                 data: labelled,
                 getPosition: (s: RouteStop) => [s.lng, s.lat],
                 radiusUnits: 'pixels',
@@ -318,6 +356,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
             }),
             new TextLayer({
                 id: 'route-labels',
+                parameters: ON_TOP,
                 data: labelled,
                 getPosition: (s: RouteStop) => [s.lng, s.lat],
                 getText: (s: { label: string }) => s.label,
@@ -337,6 +376,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
         layers.push(
             new ScatterplotLayer({
                 id: 'selected-ring',
+                parameters: ON_TOP,
                 data: [i.selected],
                 getPosition: (d: { lng: number; lat: number }) => [d.lng, d.lat],
                 radiusUnits: 'pixels',
@@ -356,12 +396,13 @@ export function buildLayers(i: LayerInputs): Layer[] {
         layers.push(ringLayer('outlet-focus-ring', i.focusOutlet, COVERAGE_RADIUS_M, [125, 227, 196, 255], [125, 227, 196, 26], 2));
     }
     if (i.outlets && i.outlets.count > 0) {
-        const od = binary(i.outlets.count, { getPosition: { value: i.outlets.positions, size: 2 } });
+        const od = positionsData(i.outlets.positions);
         layers.push(
-            new ScatterplotLayer({ id: 'outlet-halo', data: od, radiusUnits: 'pixels', getRadius: 17, getFillColor: [125, 227, 196, 34], pickable: false }),
-            new ScatterplotLayer({ id: 'outlet-glow', data: od, radiusUnits: 'pixels', getRadius: 10, getFillColor: [125, 227, 196, 90], pickable: false }),
+            new ScatterplotLayer({ id: 'outlet-halo', parameters: ON_TOP, data: od, radiusUnits: 'pixels', getRadius: 17, getFillColor: [125, 227, 196, 34], pickable: false }),
+            new ScatterplotLayer({ id: 'outlet-glow', parameters: ON_TOP, data: od, radiusUnits: 'pixels', getRadius: 10, getFillColor: [125, 227, 196, 90], pickable: false }),
             new ScatterplotLayer({
                 id: 'outlet-core',
+                parameters: ON_TOP,
                 data: od,
                 radiusUnits: 'pixels',
                 getRadius: 5,
