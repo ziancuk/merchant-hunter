@@ -13,10 +13,11 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ProvinceSeeder::class,
             CategorySeeder::class,
+            CategoryTemplateSeeder::class,
             RejectionReasonSeeder::class,
             DataSourceSeeder::class,
             DemoUserSeeder::class,
-            // OutletSeeder is added by BE-Domain (M2.1).
+            OutletSeeder::class,
         ]);
     }
 }
