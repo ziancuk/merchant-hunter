@@ -2,7 +2,7 @@
 
 Date: 2026-10-25. Environment: Playwright Chromium headless shell 156 with SwiftShader, `APP_ENV=e2e`, seed 42 (14.639 open prospects).
 
-## Open application findings
+## Application findings (F-001 and F-002 FIXED by the orchestrator, e2e tests enabled; 42/42 green)
 
 ### F-001 Label in Name (WCAG 2.5.3, axe `label-content-name-mismatch`, serious by axe)
 - Steps: log in, open `/pipeline` (or `/dashboard`) and run axe.
@@ -10,7 +10,7 @@ Date: 2026-10-25. Environment: Playwright Chromium headless shell 156 with Swift
 - Actual: `aria-label` replaces the visible text on (a) the command palette button in the dock (`Buka palet perintah (⌘ K)`), (b) Kanban/table prospect cards (`Prospek <nama>, skor N` while category/city text is also visible), (c) cartogram tiles on the dashboard.
 - Severity: Low to Medium (speech-control users cannot target these by visible text; no blocker).
 - Suspected files: `resources/js/Layouts/AppShell.vue` (palette button), `resources/js/Components/prospect/ProspectCard.vue`, `resources/js/Components/charts/Cartogram.vue`.
-- Test: `a11y.spec.ts` "F-001 ..." is `test.fixme`; the rule is excluded from the generic scans only in `support/axe.ts` (`DISABLED_RULES`).
+- Status: FIXED (palette button now uses sr-only text, ProspectCard drops aria-label, Cartogram tile text carries the full label); `DISABLED_RULES` is empty; regression test `a11y.spec.ts` F-001.
 
 ### F-002 Invalid definition list on data-source cards (axe `definition-list`, serious)
 - Steps: open `/master/data-sources` and run axe.
@@ -18,9 +18,9 @@ Date: 2026-10-25. Environment: Playwright Chromium headless shell 156 with Swift
 - Actual: a `dd` carrying `role="progressbar"` (quota bar) inside the `<dl>` of `ds-row-google` (visible when a quota is set).
 - Severity: Low.
 - Suspected file: `resources/js/Components/master/DataSourceRow.vue` (line with `role="progressbar"`); move the bar outside the `dl` or wrap it in a valid `dd`.
-- Test: `a11y.spec.ts` "F-002 ..." is `test.fixme`.
+- Status: FIXED (progressbar wrapped in a valid `dd`); regression test `a11y.spec.ts` F-002.
 
-No other application bug was found. The only `test.fixme` tests are the two above.
+No other application bug was found. There are no `test.fixme` tests left.
 
 ## Observations (not bugs)
 - Only `console.warn` from luma.gl was seen; no `console.error`/`pageerror` on map, pipeline, dashboard or master pages.
