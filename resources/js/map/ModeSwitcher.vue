@@ -8,7 +8,7 @@ const emit = defineEmits<{ 'update:modelValue': [mode: MapMode] }>();
 </script>
 
 <template>
-    <div class="glass grid grid-cols-4 gap-0.5 rounded-full p-1 sm:w-auto" role="radiogroup" aria-label="Mode peta" data-testid="map-modes">
+    <div class="glass relative z-10 grid grid-cols-4 gap-0.5 rounded-full p-1 sm:w-auto" role="radiogroup" aria-label="Mode peta" data-testid="map-modes">
         <Tooltip v-for="m in MAP_MODES" :key="m.key" :text="`${m.hint} (${m.shortcut})`" placement="bottom">
             <button
                 type="button"

@@ -103,6 +103,11 @@ describe('ModeSwitcher', () => {
         await w.get('[data-testid="map-mode-heatmap"]').trigger('click');
         expect(w.emitted('update:modelValue')?.[0]).toEqual(['heatmap']);
     });
+
+    it('sits above the Filter/Rute row so its tooltips are not covered (B-12)', () => {
+        const w = mount(ModeSwitcher, { props: { modelValue: 'prospects' } });
+        expect(w.get('[data-testid="map-modes"]').classes()).toEqual(expect.arrayContaining(['relative', 'z-10']));
+    });
 });
 
 describe('MapHud', () => {
