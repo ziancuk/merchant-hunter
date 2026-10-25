@@ -50,11 +50,13 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     needs: [backend, frontend]
+    timeout-minutes: 25
     env:
+      # Same values scripts/e2e-serve.sh and tests/e2e/support/env.ts use locally.
       APP_ENV: e2e
       HUNTER_BASEMAP: local
-      DB_DATABASE: database/e2e.sqlite
       DEMO_USER_PASSWORD: e2e-password-123
+      CI: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -68,13 +70,11 @@ jobs:
       - run: composer install --no-interaction --prefer-dist --no-progress
       - run: npm ci
       - run: cp .env.example .env && php artisan key:generate
-      - run: touch database/e2e.sqlite && php artisan migrate:fresh --seed --force && php artisan hunter:seed-prospects --offline --seed=42
-      - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: |
-          php artisan serve --host=127.0.0.1 --port=8001 &
-          npx wait-on http://127.0.0.1:8001/up
-          npm run e2e
+      # `npm run e2e` starts scripts/e2e-serve.sh through Playwright's webServer: it creates database/e2e.sqlite
+      # (migrate:fresh --seed, hunter:demo-reset -> hunter:seed-prospects --offline --seed=42), snapshots it,
+      # runs `npm run build` and serves on 127.0.0.1:8001. Specs restore the snapshot per file (workers=1).
+      - run: npm run e2e
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -82,3 +82,9 @@ jobs:
           path: |
             playwright-report
             test-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-perf-results
+          path: tests/e2e/perf-results.json
+          if-no-files-found: ignore
