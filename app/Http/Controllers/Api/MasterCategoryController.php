@@ -22,7 +22,7 @@ class MasterCategoryController extends Controller
     {
         $data = $request->validated();
         $category = Category::query()->create($data + [
-            'osm_filters' => [],
+            'osm_filters' => [], // only applied when the request omitted it
             'is_active' => true,
             'sort_order' => (int) Category::query()->max('sort_order') + 1,
         ]);

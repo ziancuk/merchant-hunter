@@ -7,6 +7,7 @@ namespace App\Repositories;
 use App\Enums\GeocodeStatus;
 use App\Http\Resources\OutletResource;
 use App\Models\Outlet;
+use App\Support\LikeEscape;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final class OutletRepository
@@ -21,10 +22,10 @@ final class OutletRepository
         return Outlet::query()
             ->with('province:id,name')
             ->when($search !== '', function ($q) use ($search) {
-                $like = '%'.addcslashes($search, '%_\\').'%';
-                $q->where(fn ($w) => $w->whereRaw("name LIKE ? ESCAPE '\\'", [$like])
-                    ->orWhereRaw("code LIKE ? ESCAPE '\\'", [$like])
-                    ->orWhereRaw("city LIKE ? ESCAPE '\\'", [$like]));
+                $like = LikeEscape::contains($search);
+                $q->where(fn ($w) => $w->whereRaw(LikeEscape::clause('name'), [$like])
+                    ->orWhereRaw(LikeEscape::clause('code'), [$like])
+                    ->orWhereRaw(LikeEscape::clause('city'), [$like]));
             })
             ->when(! empty($filters['province_id']), fn ($q) => $q->where('province_id', (int) $filters['province_id']))
             ->when(! empty($filters['geocode_status']), fn ($q) => $q->where('geocode_status', $filters['geocode_status']))

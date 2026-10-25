@@ -7,9 +7,8 @@ namespace App\Actions;
 use App\Enums\GeocodeStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Outlet;
-use App\Repositories\WhiteSpaceQuery;
 use App\Services\Master\ProspectReconciler;
-use Illuminate\Support\Facades\Cache;
+use App\Services\Sync\WhitespaceCache;
 
 /** Resolves a needs_review outlet by choosing a geocoding candidate or entering coordinates (status manual). */
 final class ResolveOutletAction
@@ -38,7 +37,7 @@ final class ResolveOutletAction
         ])->save();
 
         $this->reconciler->reconcile([$outlet->id]);
-        Cache::forever(WhiteSpaceQuery::VERSION_KEY, (int) Cache::get(WhiteSpaceQuery::VERSION_KEY, 1) + 1);
+        WhitespaceCache::bump();
 
         return $outlet->refresh();
     }

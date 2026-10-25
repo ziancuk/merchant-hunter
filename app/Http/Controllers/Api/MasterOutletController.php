@@ -6,15 +6,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\ImportOutletsAction;
 use App\Actions\ResolveOutletAction;
+use App\Actions\RetryGeocodeAction;
 use App\Actions\SaveOutletAction;
-use App\Enums\GeocodeStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ImportOutletsRequest;
 use App\Http\Requests\OutletIndexRequest;
 use App\Http\Requests\OutletRequest;
 use App\Http\Requests\ResolveOutletRequest;
 use App\Http\Resources\OutletResource;
-use App\Jobs\GeocodeOutletJob;
 use App\Models\Outlet;
 use App\Repositories\OutletRepository;
 use Illuminate\Http\JsonResponse;
@@ -41,9 +40,9 @@ class MasterOutletController extends Controller
     }
 
     /** Soft delete: the outlet stays for history but is no longer active. */
-    public function destroy(Outlet $outlet): JsonResponse
+    public function destroy(Outlet $outlet, SaveOutletAction $action): JsonResponse
     {
-        $outlet->forceFill(['is_active' => false])->save();
+        $outlet = $action->deactivate($outlet);
 
         return response()->json(OutletResource::make($outlet->load('province:id,name'))->resolve());
     }
@@ -53,10 +52,9 @@ class MasterOutletController extends Controller
         return response()->json($action->handle($request->file('file')->getRealPath()));
     }
 
-    public function retryGeocode(Outlet $outlet): JsonResponse
+    public function retryGeocode(Outlet $outlet, RetryGeocodeAction $action): JsonResponse
     {
-        $outlet->forceFill(['geocode_status' => GeocodeStatus::Ok->value, 'geocode_candidates' => null])->save();
-        GeocodeOutletJob::dispatch($outlet->id);
+        $outlet = $action->handle($outlet);
 
         return response()->json(['queued' => true, 'outlet' => OutletResource::make($outlet->load('province:id,name'))->resolve()]);
     }

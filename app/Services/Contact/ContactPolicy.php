@@ -77,14 +77,13 @@ final class ContactPolicy
         ];
     }
 
-    /** Number of "contacted" activities that used an override. */
+    /** Number of "contacted" activities that used an override (counted in SQL, no meta is loaded). */
     public function overrideCount(Prospect $prospect): int
     {
         return ProspectActivity::query()
             ->where('prospect_id', $prospect->id)
             ->where('type', ActivityType::Contacted->value)
-            ->get(['meta'])
-            ->filter(fn (ProspectActivity $a) => (bool) ($a->meta['override'] ?? false))
+            ->where('meta->override', true)
             ->count();
     }
 }

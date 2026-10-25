@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
+use App\Enums\PipelineStatus;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\DataSourceResource;
 use App\Http\Resources\SchedulerRunResource;
@@ -33,7 +34,7 @@ final class PageProps
             'cities' => Outlet::query()->whereNotNull('city')->distinct()->orderBy('city')->pluck('city')->all(),
             'categories' => Category::query()->active()->orderBy('sort_order')->orderBy('name')->get(['id', 'key', 'name'])
                 ->map(fn ($c) => ['id' => $c->id, 'key' => $c->key, 'name' => $c->name])->all(),
-            'pipeline_statuses' => ['new', 'contacted', 'demo', 'won', 'lost'],
+            'pipeline_statuses' => array_map(fn (PipelineStatus $s) => $s->value, PipelineStatus::cases()),
         ];
     }
 

@@ -15,6 +15,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Google Places API (New) `places:searchNearby` (D-47, D-66).
@@ -97,10 +98,24 @@ class GoogleProvider implements DataProvider
                 'locationRestriction' => ['circle' => ['center' => ['latitude' => -6.2, 'longitude' => 106.8], 'radius' => 500.0]],
             ]);
         } catch (ProviderException $e) {
-            return new ConnectionStatus(false, $e->getMessage(), (int) round((microtime(true) - $start) * 1000));
+            // The detail (Google's own error text, transport errors) goes to the log only; the client gets a generic message.
+            Log::warning('Google connection test failed', ['reason' => $this->redact($e->getMessage()), 'status' => $e->status, 'retryable' => $e->retryable]);
+            $message = $e instanceof QuotaExceededException
+                ? 'Kuota bulanan Google sudah habis.'
+                : 'Koneksi ke Google gagal. Periksa API key dan kuota; detail ada di log server.';
+
+            return new ConnectionStatus(false, $message, (int) round((microtime(true) - $start) * 1000));
         }
 
         return new ConnectionStatus(true, 'Google Places API reachable', (int) round((microtime(true) - $start) * 1000));
+    }
+
+    /** Strips the API key from text destined for logs (defence in depth; the key only travels in a header). */
+    private function redact(string $text): string
+    {
+        $key = (string) $this->source()?->api_key;
+
+        return $key === '' ? $text : str_replace($key, '[redacted]', $text);
     }
 
     private function requireSource(): DataSource

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\Settings\SettingsService;
 use Illuminate\Database\Eloquent\Model;
 
 class Setting extends Model
@@ -19,6 +20,12 @@ class Setting extends Model
     protected function casts(): array
     {
         return ['value' => 'json'];
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => SettingsService::invalidate());
+        static::deleted(fn () => SettingsService::invalidate());
     }
 
     public static function read(string $key, mixed $default = null): mixed

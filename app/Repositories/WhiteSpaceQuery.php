@@ -9,6 +9,7 @@ use App\Models\Outlet;
 use App\Models\Prospect;
 use App\Services\Geo\BoundingBox;
 use App\Services\Geo\Haversine;
+use App\Services\Sync\WhitespaceCache;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -17,8 +18,6 @@ use Illuminate\Support\Facades\Cache;
  */
 final class WhiteSpaceQuery
 {
-    public const VERSION_KEY = 'hunter.whitespace.version';
-
     public const CELL_DEG = 0.01;
 
     public const MIN_PROSPECTS = 15;
@@ -36,7 +35,7 @@ final class WhiteSpaceQuery
         sort($categoryIds);
         $key = sprintf(
             'hunter.whitespace:v%d:%s:%s',
-            (int) Cache::get(self::VERSION_KEY, 1),
+            WhitespaceCache::version(),
             implode(',', [round($bbox->west, 2), round($bbox->south, 2), round($bbox->east, 2), round($bbox->north, 2)]),
             implode(',', $categoryIds),
         );

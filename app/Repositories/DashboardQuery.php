@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Enums\LifecycleStatus;
+use App\Enums\ScoreBand;
 use App\Models\Outlet;
 use App\Models\Prospect;
 use App\Models\Province;
@@ -20,19 +21,63 @@ final class DashboardQuery
         private readonly WhiteSpaceQuery $whiteSpace,
     ) {}
 
+    /**
+     * One aggregate statement over prospects (plus the active-outlet count as a scalar subquery) feeds the HUD,
+     * the KPIs and the funnel. Counts are cumulative (D-64); `new_7d` excludes baseline rows.
+     */
+    private function stats(): object
+    {
+        return Prospect::query()->toBase()->selectRaw(
+            'count(*) as found, '
+            .'sum(case when lifecycle_status = ? then 1 else 0 end) as active, '
+            .'sum(case when is_baseline = ? and first_seen_at >= ? then 1 else 0 end) as new_7d, '
+            .'sum(case when lifecycle_status = ? and score >= ? then 1 else 0 end) as hot, '
+            .'count(contacted_at) as contacted, count(demo_at) as demo, count(won_at) as won, count(lost_at) as lost, '
+            .'sum(case when won_at >= ? then 1 else 0 end) as deals_month, '
+            .'(select count(*) from outlets where is_active = ?) as outlets',
+            [
+                LifecycleStatus::Open->value, false, now()->subDays(7),
+                LifecycleStatus::Open->value, ScoreBand::HOT_MIN,
+                now()->startOfMonth(), true,
+            ],
+        )->first();
+    }
+
     /** @return array<string, int> */
     public function hud(): array
     {
-        $open = LifecycleStatus::Open->value;
-        $row = Prospect::query()->toBase()->selectRaw(
-            'sum(case when lifecycle_status = ? then 1 else 0 end) as active, '
-            .'sum(case when is_baseline = ? and first_seen_at >= ? then 1 else 0 end) as new_7d, '
-            .'sum(case when lifecycle_status = ? and score >= 75 then 1 else 0 end) as hot',
-            [$open, false, now()->subDays(7), $open],
-        )->first();
+        return $this->hudFrom($this->stats());
+    }
 
+    /** @return array<string, mixed> */
+    public function kpis(): array
+    {
+        return $this->kpisFrom($this->stats());
+    }
+
+    /** @return array<string, int> cumulative funnel (D-64) */
+    public function funnel(): array
+    {
+        return $this->funnelFrom($this->stats());
+    }
+
+    /**
+     * KPIs and funnel from a single query.
+     *
+     * @return array{kpis: array<string, mixed>, funnel: array<string, int>}
+     */
+    public function kpisAndFunnel(): array
+    {
+        $row = $this->stats();
+
+        return ['kpis' => $this->kpisFrom($row), 'funnel' => $this->funnelFrom($row)];
+    }
+
+    /** @return array<string, int> */
+    private function hudFrom(object $row): array
+    {
         return [
-            'outlets' => Outlet::query()->active()->count(),
+            'outlets' => (int) $row->outlets,
             'prospects_active' => (int) $row->active,
             'new_7d' => (int) $row->new_7d,
             'hot' => (int) $row->hot,
@@ -40,21 +85,12 @@ final class DashboardQuery
     }
 
     /** @return array<string, mixed> */
-    public function kpis(): array
+    private function kpisFrom(object $row): array
     {
-        $open = LifecycleStatus::Open->value;
-        $row = Prospect::query()->toBase()->selectRaw(
-            'sum(case when lifecycle_status = ? then 1 else 0 end) as active, '
-            .'sum(case when is_baseline = ? and first_seen_at >= ? then 1 else 0 end) as new_7d, '
-            .'count(contacted_at) as contacted, count(won_at) as won, '
-            .'sum(case when won_at >= ? then 1 else 0 end) as deals_month',
-            [$open, false, now()->subDays(7), now()->startOfMonth()],
-        )->first();
-
         $contacted = (int) $row->contacted;
 
         return [
-            'outlets' => Outlet::query()->active()->count(),
+            'outlets' => (int) $row->outlets,
             'prospects_active' => (int) $row->active,
             'new_7d' => (int) $row->new_7d,
             'conversion_rate' => $contacted > 0 ? round((int) $row->won / $contacted, 4) : 0.0,
@@ -62,13 +98,9 @@ final class DashboardQuery
         ];
     }
 
-    /** @return array<string, int> cumulative funnel (D-64) */
-    public function funnel(): array
+    /** @return array<string, int> */
+    private function funnelFrom(object $row): array
     {
-        $row = Prospect::query()->toBase()->selectRaw(
-            'count(*) as found, count(contacted_at) as contacted, count(demo_at) as demo, count(won_at) as won, count(lost_at) as lost',
-        )->first();
-
         return [
             'found' => (int) $row->found,
             'contacted' => (int) $row->contacted,
@@ -179,9 +211,11 @@ final class DashboardQuery
     /** @return array<string, mixed> */
     public function all(): array
     {
+        $summary = $this->kpisAndFunnel();
+
         return [
-            'kpis' => $this->kpis(),
-            'funnel' => $this->funnel(),
+            'kpis' => $summary['kpis'],
+            'funnel' => $summary['funnel'],
             'penetration' => $this->penetration(),
             'top_categories' => $this->topCategories(),
             'whitespace_top' => $this->whitespaceTop(),

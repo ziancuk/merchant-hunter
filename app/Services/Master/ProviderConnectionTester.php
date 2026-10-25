@@ -7,6 +7,7 @@ namespace App\Services\Master;
 use App\DTO\ConnectionStatus;
 use App\Models\DataSource;
 use App\Services\Providers\ProviderRegistry;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /** Real "Uji koneksi" implementation: delegates to the provider adapter (D-60 exception). */
@@ -24,7 +25,10 @@ final class ProviderConnectionTester implements ConnectionTester
         try {
             return $provider->testConnection();
         } catch (Throwable $e) {
-            return new ConnectionStatus(false, 'Uji koneksi gagal: '.$e->getMessage());
+            // Never echo exception text to the client: it may carry URLs or upstream error bodies.
+            Log::warning('Provider connection test crashed', ['source' => $source->key, 'exception' => $e::class, 'reason' => $e->getMessage()]);
+
+            return new ConnectionStatus(false, 'Uji koneksi gagal. Detail ada di log server.');
         }
     }
 }

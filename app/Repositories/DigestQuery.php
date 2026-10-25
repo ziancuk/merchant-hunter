@@ -49,7 +49,7 @@ final class DigestQuery
     /** Stored digest for a date, or null. @return array<string, mixed>|null */
     public function stored(CarbonInterface $date): ?array
     {
-        return DailyDigest::query()->whereDate('digest_date', $date->format('Y-m-d'))->first()?->payload;
+        return DailyDigest::query()->where('digest_date', $date->format('Y-m-d'))->first()?->payload;
     }
 
     /** @return Builder<Prospect> */

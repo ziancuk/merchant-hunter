@@ -7,9 +7,8 @@ namespace App\Actions;
 use App\Enums\GeocodeStatus;
 use App\Jobs\GeocodeOutletJob;
 use App\Models\Outlet;
-use App\Repositories\WhiteSpaceQuery;
 use App\Services\Master\ProspectReconciler;
-use Illuminate\Support\Facades\Cache;
+use App\Services\Sync\WhitespaceCache;
 
 /** Create/update one outlet from the master form; missing coordinates queue a geocoding job. */
 final class SaveOutletAction
@@ -35,11 +34,26 @@ final class SaveOutletAction
 
         if ($hasCoords) {
             $this->reconciler->reconcile([$outlet->id]);
-            Cache::forever(WhiteSpaceQuery::VERSION_KEY, (int) Cache::get(WhiteSpaceQuery::VERSION_KEY, 1) + 1);
-        } elseif ($outlet->lat === null || $outlet->lng === null) {
+        }
+        // (De)activation changes which outlets count as coverage, so cached white-space cells go stale too.
+        if ($hasCoords || (! $creating && $outlet->wasChanged('is_active'))) {
+            WhitespaceCache::bump();
+        }
+        if (! $hasCoords && ($outlet->lat === null || $outlet->lng === null)) {
             GeocodeOutletJob::dispatch($outlet->id);
         }
 
         return $creating ? $outlet->refresh() : $outlet;
+    }
+
+    /** Soft delete: the outlet stays for history but stops counting as coverage. */
+    public function deactivate(Outlet $outlet): Outlet
+    {
+        $outlet->forceFill(['is_active' => false])->save();
+        if ($outlet->wasChanged('is_active')) {
+            WhitespaceCache::bump();
+        }
+
+        return $outlet;
     }
 }
