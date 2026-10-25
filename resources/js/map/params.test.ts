@@ -122,3 +122,11 @@ describe('withProspectParam', () => {
         expect(withProspectParam('/', 3)).toBe('/?prospect=3');
     });
 });
+
+describe('focus and mode deep links', () => {
+    it('parses valid lat/lng/mode and rejects bad values', () => {
+        expect(parseMapParams('?lat=-6.2&lng=106.8&mode=whitespace')).toMatchObject({ focus: { lat: -6.2, lng: 106.8 }, mode: 'whitespace' });
+        expect(parseMapParams('?lat=99&lng=106.8&mode=nope')).toMatchObject({ focus: null, mode: null });
+        expect(parseMapParams('?lat=-6.2')).toMatchObject({ focus: null });
+    });
+});

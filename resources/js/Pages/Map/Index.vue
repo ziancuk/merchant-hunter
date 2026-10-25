@@ -98,7 +98,7 @@ const routeError = ref('');
 
 const urlParams = typeof window !== 'undefined' ? parseMapParams(window.location.search) : parseMapParams('');
 const flags = computed(() => resolveMotionFlags({ params: urlParams, env: app.value?.env, introSkipped: readIntroSkipped(), reducedMotion: reducedMotion.value }));
-const hasDeepLink = urlParams.prospect !== null || urlParams.route.length > 0;
+const hasDeepLink = urlParams.prospect !== null || urlParams.route.length > 0 || urlParams.focus !== null;
 
 // --- derived -------------------------------------------------------------------------------------------------------
 const count = computed<number | null>(() => {
@@ -586,6 +586,8 @@ function onMove(vp: Viewport): void {
 }
 
 function handleDeepLinks(): void {
+    if (urlParams.mode) mode.value = urlParams.mode;
+    if (urlParams.focus) engine?.flyTo({ center: [urlParams.focus.lng, urlParams.focus.lat], zoom: 13, duration: flags.value.motion ? 1400 : 0 });
     if (urlParams.prospect !== null) openProspect(urlParams.prospect);
     if (urlParams.route.length > 0) {
         routeOpen.value = true;
