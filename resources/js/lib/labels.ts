@@ -35,3 +35,20 @@ export const ACTIVITY_LABEL: Record<ActivityType, string> = {
     rejected: 'Ditolak',
     system: 'Sistem',
 };
+
+/** Scheduler run / per-outlet sync statuses (B-03). */
+export const RUN_STATUS_LABEL: Record<string, string> = {
+    success: 'Berhasil',
+    completed: 'Selesai',
+    ok: 'Berhasil',
+    cached: 'Dari cache',
+    partial: 'Sebagian gagal',
+    failed: 'Gagal',
+    running: 'Berjalan',
+    skipped: 'Dilewati',
+};
+
+export function runStatusLabel(status: string | null | undefined): string {
+    if (!status) return 'Belum pernah';
+    return RUN_STATUS_LABEL[status] ?? status;
+}

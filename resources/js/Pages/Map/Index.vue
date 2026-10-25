@@ -11,7 +11,7 @@ import { useReducedMotion } from '@/composables/useReducedMotion';
 import { formatNumber } from '@/lib/format';
 import type { MapMode, SharedProps } from '@/types';
 import { ATTRIBUTION, COLOR_BY_STORAGE_KEY, COLUMN_ZOOM, GRID_ZOOM } from '@/map/constants';
-import { parseMapParams, readIntroSkipped, readPref, resolveMotionFlags, writeIntroSkipped } from '@/map/params';
+import { parseMapParams, readIntroSkipped, readPref, resolveMotionFlags, withRouteParam, writeIntroSkipped } from '@/map/params';
 import { removeStop, moveStop } from '@/map/route';
 import type { MapEngine } from '@/map/engine';
 import { toMapPick, type MapPick } from '@/map/picking';
@@ -74,6 +74,17 @@ const { points, grid, outlets, whitespace, loading, loadError, count, truncated,
 
 const planner = useRoutePlanner({ getEngine, zoom, filterOpen, fetchMeta: (id) => tip.fetchMeta(id) });
 const { routeOpen, routePicking, routeStops, routePlan, routePlanning, routeError } = planner;
+
+// Keep `?route=` in step with the planner so clearing the route is not undone by a reload (B-05).
+watch(
+    () => planner.routeStops.value.map((s) => s.id),
+    (ids) => {
+        if (typeof window === 'undefined') return;
+        const current = new URLSearchParams(window.location.search).has('route');
+        if (ids.length === 0 && !current) return;
+        window.history.replaceState(window.history.state, '', withRouteParam(window.location.pathname + window.location.search + window.location.hash, ids));
+    },
+);
 
 const tip = useMapTooltip({ container, mode, points, outlets, grid, whitespace, routePicking, setCursor: (c) => engine?.setCursor(c) });
 const { tooltip, tooltipStyle, onHover, nameCache } = tip;
@@ -291,7 +302,7 @@ const liveSummary = computed(() => (count.value === null ? '' : `${formatNumber(
                     </Button>
                     <div class="sm:hidden"><MapHud :hud="hud" :count="count" :mode="mode" :loading="loading" :truncated="truncated" compact /></div>
                 </div>
-                <div v-show="filterOpen" id="map-filter" class="max-h-[calc(100dvh-15rem)] overflow-y-auto rounded-panel">
+                <div v-show="filterOpen" id="map-filter" class="max-h-[calc(100dvh-21rem)] overflow-y-auto overscroll-contain rounded-panel sm:max-h-[calc(100dvh-15rem)]" data-testid="filter-scroll">
                     <FilterPanel v-model="filter" :options="filter_options" :collapsible="false" />
                 </div>
                 <div v-if="routeOpen" id="map-route">

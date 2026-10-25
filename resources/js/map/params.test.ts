@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { INTRO_STORAGE_KEY } from './constants';
-import { parseMapParams, readIntroSkipped, readPref, resolveMotionFlags, withProspectParam, writeIntroSkipped, writePref } from './params';
+import { parseMapParams, readIntroSkipped, readPref, resolveMotionFlags, withProspectParam, withRouteParam, writeIntroSkipped, writePref } from './params';
 
 function memoryStorage(initial: Record<string, string> = {}) {
     const data = new Map(Object.entries(initial));
@@ -128,5 +128,15 @@ describe('focus and mode deep links', () => {
         expect(parseMapParams('?lat=-6.2&lng=106.8&mode=whitespace')).toMatchObject({ focus: { lat: -6.2, lng: 106.8 }, mode: 'whitespace' });
         expect(parseMapParams('?lat=99&lng=106.8&mode=nope')).toMatchObject({ focus: null, mode: null });
         expect(parseMapParams('?lat=-6.2')).toMatchObject({ focus: null });
+    });
+});
+
+describe('withRouteParam (B-05)', () => {
+    it('sets the route ids and keeps the other params', () => {
+        expect(withRouteParam('/?intro=0', [3, 4, 5])).toBe('/?intro=0&route=3,4,5');
+    });
+    it('removes the route param when the route is emptied', () => {
+        expect(withRouteParam('/?route=3,4&mode=heatmap', [])).toBe('/?mode=heatmap');
+        expect(withRouteParam('/?route=3,4', [])).toBe('/');
     });
 });

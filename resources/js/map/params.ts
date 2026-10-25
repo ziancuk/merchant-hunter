@@ -126,6 +126,15 @@ export function writePref(key: string, value: string, storage: StorageLike | nul
     }
 }
 
+/** Builds the page URL with `route` set (comma separated ids) or removed when empty, keeping the other parameters (B-05). */
+export function withRouteParam(href: string, ids: number[]): string {
+    const url = new URL(href, 'http://localhost');
+    if (ids.length === 0) url.searchParams.delete('route');
+    else url.searchParams.set('route', ids.join(','));
+    const qs = url.searchParams.toString().replace(/%2C/g, ',');
+    return `${url.pathname}${qs ? `?${qs}` : ''}${url.hash}`;
+}
+
 /** Builds the page URL with `prospect` set/removed, keeping the other parameters (history.replaceState helper). */
 export function withProspectParam(href: string, id: number | null): string {
     const url = new URL(href, 'http://localhost');

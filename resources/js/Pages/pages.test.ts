@@ -91,6 +91,16 @@ describe('Scheduler runs page', () => {
         expect(wrapper.find('[data-testid="scheduler-health"]').exists()).toBe(true);
     });
 
+    it('shows Indonesian run statuses and a labelled age/failure cell (B-03)', () => {
+        wrapper = mount(Runs, { props: { runs: { data: [run, { ...run, id: 8, status: 'partial' }, { ...run, id: 9, status: 'failed' }], meta }, health: { last_run_at: null, status: 'success', age_hours: 6.2, failed_last_7d: 2 } } });
+        expect(wrapper.get('[data-testid="scheduler-row-7"]').text()).toContain('Berhasil');
+        expect(wrapper.get('[data-testid="scheduler-row-8"]').text()).toContain('Sebagian gagal');
+        expect(wrapper.get('[data-testid="scheduler-row-9"]').text()).toContain('Gagal');
+        expect(wrapper.get('[data-testid="scheduler-health"]').text()).toContain('Berhasil');
+        expect(wrapper.get('[data-testid="scheduler-age"]').text()).toContain('6,2 jam lalu');
+        expect(wrapper.get('[data-testid="scheduler-age"]').text()).toContain('2 run gagal');
+    });
+
     it('shows the loading state, then the empty state', async () => {
         let resolve!: (v: unknown) => void;
         mocked.get.mockReturnValue(new Promise((r) => (resolve = r)));

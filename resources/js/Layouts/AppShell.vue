@@ -156,7 +156,7 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
             </div>
 
             <!-- Corner HUD slots -->
-            <div v-if="$slots['top-left']" class="pointer-events-auto absolute left-3 top-[4.5rem] max-w-[calc(100vw-1.5rem)]"><slot name="top-left" /></div>
+            <div v-if="$slots['top-left']" class="pointer-events-auto absolute left-3 top-[4.5rem] z-10 max-w-[calc(100vw-1.5rem)]"><slot name="top-left" /></div>
             <div v-if="$slots['top-right']" class="pointer-events-auto absolute right-3 top-[4.5rem] max-w-[calc(100vw-1.5rem)]"><slot name="top-right" /></div>
             <div v-if="$slots['bottom-left']" class="pointer-events-auto absolute bottom-24 left-3 max-w-[calc(100vw-1.5rem)] md:bottom-3"><slot name="bottom-left" /></div>
             <div v-if="$slots['bottom-right']" class="pointer-events-auto absolute bottom-24 right-3 max-w-[calc(100vw-1.5rem)] md:bottom-3"><slot name="bottom-right" /></div>

@@ -27,6 +27,8 @@ describe('Cartogram', () => {
         // WCAG 2.5.3: the accessible name must contain the visible tile text.
         expect(tiles[0].text()).toContain('DKI Jakarta: Penetrasi 2.0%, Prospek: 310');
         expect(tiles[0].text()).toMatch(/^JKT2\.0%/);
+        // B-08: the screen-reader text must not begin with a stray comma.
+        expect(tiles[0].get('.sr-only').text().startsWith(',')).toBe(false);
         expect(wrapper.findAll('[data-testid="cartogram-table"] tbody tr')).toHaveLength(3);
     });
 
@@ -94,6 +96,13 @@ describe('FunnelChart', () => {
         expect(wrapper.get('[data-testid="funnel-won"]').text()).toContain('0,0%');
         expect(wrapper.get('[data-testid="funnel-lost"]').text()).toContain('40');
         expect(wrapper.findAll('ol > li')).toHaveLength(3);
+    });
+
+    it('does not show a misleading 0,0% for a tiny non-zero conversion (B-08)', () => {
+        wrapper = mount(FunnelChart, { props: { stages: [{ key: 'found', label: 'Ditemukan', value: 14696, color: 'red' }, { key: 'contacted', label: 'Dihubungi', value: 7, color: 'red' }], label: 'Corong' } });
+        const text = wrapper.get('[data-testid="funnel-contacted"]').text();
+        expect(text).toContain('<0,1% dari tahap sebelumnya');
+        expect(text).not.toContain('0,0%');
     });
 });
 
