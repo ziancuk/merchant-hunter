@@ -97,15 +97,15 @@ Perintah terpisah: `composer test`, `composer lint`, `npm run test`, `npm run li
 
 Agen tidak melakukan `git push`. Setelah memastikan `git status` bersih:
 
-1. Buat repo **kosong** di GitHub (tanpa README/.gitignore/lisensi), mis. `pos-merchant-hunter`.
+1. Buat repo **kosong** di GitHub (tanpa README/.gitignore/lisensi), mis. `merchant-hunter` (sudah dibuat: ziancuk/merchant-hunter).
 2. Hubungkan dan kirim:
    ```bash
    git remote add origin https://github.com/ziancuk/merchant-hunter.git
    git push -u origin main --tags
    ```
-4. Akses trainer: **Settings → General → Danger Zone → Change visibility → Public**, atau **Settings → Collaborators → Add people** untuk menambahkan trainer.
-5. Aktifkan **Actions** (tab Actions → "I understand my workflows, go ahead and enable them") dan pastikan CI hijau (job backend, frontend, e2e). CI belum pernah dijalankan di GitHub; periksa log bila ada kegagalan.
-6. Aktifkan Dependabot dan Secret scanning bila tersedia (Settings → Code security).
+3. Akses trainer: **Settings → General → Danger Zone → Change visibility → Public**, atau **Settings → Collaborators → Add people** untuk menambahkan trainer.
+4. Aktifkan **Actions** (tab Actions → "I understand my workflows, go ahead and enable them") dan pastikan CI hijau (job backend, frontend, e2e). CI belum pernah dijalankan di GitHub; periksa log bila ada kegagalan.
+5. Aktifkan Dependabot dan Secret scanning bila tersedia (Settings → Code security).
 
 ## Struktur singkat
 
