@@ -171,6 +171,18 @@ export class MapEngine {
         this.overlay?.setProps({ layers } as never);
     }
 
+    /** Ids of the layers deck.gl currently renders (debug/E2E only). Reads a private deck.gl field, so it is fully guarded. */
+    getLayerIds(): string[] {
+        try {
+            const deck = (this.overlay as unknown as { _deck?: { props?: { layers?: unknown } } } | null)?._deck;
+            const layers = deck?.props?.layers;
+            if (!Array.isArray(layers)) return [];
+            return layers.map((l) => (l as { id?: unknown })?.id).filter((id): id is string => typeof id === 'string');
+        } catch {
+            return [];
+        }
+    }
+
     get hasOverlay(): boolean {
         return this.overlay !== null;
     }

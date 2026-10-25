@@ -3,7 +3,8 @@ import { computed } from 'vue';
 import Button from '@/Components/ui/Button.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { PIPELINE_STATUSES, type PipelineStatus } from '@/types';
-import { COLUMN_LABEL, MAX_ROUTE_STOPS, MIN_ROUTE_STOPS } from './pipeline';
+import { COLUMN_LABEL } from '@/lib/labels';
+import { MAX_ROUTE_STOPS, MIN_ROUTE_STOPS } from './pipeline';
 
 const props = defineProps<{ count: number; busy?: boolean }>();
 const emit = defineEmits<{ status: [status: PipelineStatus]; 'opt-out': []; route: []; clear: [] }>();

@@ -20,28 +20,9 @@ export interface TableMeta {
     per_page: number;
 }
 
-/** Pipeline wording: "Deal"/"Ditolak" (PRD US-13); the drawer keeps Menang/Kalah from lib/colors. */
-export const COLUMN_LABEL: Record<PipelineStatus, string> = {
-    new: 'Baru',
-    contacted: 'Dihubungi',
-    demo: 'Demo',
-    won: 'Deal',
-    lost: 'Ditolak',
-};
-
 export const MAX_ROUTE_STOPS = 30;
 export const MIN_ROUTE_STOPS = 2;
 export const CARDS_PER_STATUS = 50;
-
-export const SKIP_REASON_LABEL: Record<string, string> = {
-    not_found: 'Prospek tidak ditemukan',
-    already_opted_out: 'Sudah ditandai jangan hubungi',
-    same_status: 'Status sudah sama',
-};
-
-export function skipReasonLabel(reason: string): string {
-    return SKIP_REASON_LABEL[reason] ?? reason;
-}
 
 export function emptyColumns(): BoardColumns {
     return Object.fromEntries(PIPELINE_STATUSES.map((s) => [s, { total: 0, cards: [], next_cursor: null }])) as unknown as BoardColumns;

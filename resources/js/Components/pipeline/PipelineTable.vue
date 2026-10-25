@@ -7,10 +7,11 @@ import EmptyState from '@/Components/ui/EmptyState.vue';
 import ErrorState from '@/Components/ui/ErrorState.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import Skeleton from '@/Components/ui/Skeleton.vue';
-import { BAND_CLASSES, BAND_LABEL, STATUS_CLASSES } from '@/lib/colors';
+import { BAND_CLASSES, STATUS_CLASSES } from '@/lib/colors';
+import { BAND_LABEL, COLUMN_LABEL } from '@/lib/labels';
 import { formatNumber, relativeTime } from '@/lib/format';
 import type { PipelineCard } from '@/types';
-import { buildMapUrl, COLUMN_LABEL, type SortDir, type SortKey, type TableMeta } from './pipeline';
+import { buildMapUrl, type SortDir, type SortKey, type TableMeta } from './pipeline';
 
 const props = withDefaults(
     defineProps<{

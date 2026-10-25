@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, useId } from 'vue';
 import Icon from '@/Components/ui/Icon.vue';
+import { useDismissable } from '@/composables/useDismissable';
 import { STATUS_CLASSES } from '@/lib/colors';
 import { PIPELINE_STATUSES, type PipelineStatus } from '@/types';
-import { COLUMN_LABEL } from './pipeline';
+import { COLUMN_LABEL } from '@/lib/labels';
 
 const props = defineProps<{ prospectId: number; name: string; current: PipelineStatus }>();
 const emit = defineEmits<{ move: [to: PipelineStatus] }>();
@@ -32,7 +33,6 @@ function items(): HTMLElement[] {
 async function show(): Promise<void> {
     place();
     open.value = true;
-    document.addEventListener('click', onOutside, true);
     window.addEventListener('scroll', dismiss, true);
     window.addEventListener('resize', dismiss);
     await nextTick();
@@ -42,7 +42,6 @@ async function show(): Promise<void> {
 function hide(returnFocus = false): void {
     if (!open.value) return;
     open.value = false;
-    document.removeEventListener('click', onOutside, true);
     window.removeEventListener('scroll', dismiss, true);
     window.removeEventListener('resize', dismiss);
     if (returnFocus) trigger.value?.focus();
@@ -52,11 +51,7 @@ function dismiss(): void {
     hide(false);
 }
 
-function onOutside(e: MouseEvent): void {
-    const t = e.target as Node;
-    if (menu.value?.contains(t) || trigger.value?.contains(t)) return;
-    hide();
-}
+useDismissable([menu, trigger], () => hide(), { enabled: open, escape: false, capture: true });
 
 function choose(to: PipelineStatus): void {
     hide(true);

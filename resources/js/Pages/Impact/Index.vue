@@ -12,7 +12,7 @@ import GlassPanel from '@/Components/ui/GlassPanel.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { useDebounceFn } from '@/composables/useDebounce';
 import { api, normalizeError } from '@/lib/api';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatRupiah } from '@/lib/format';
 
 const props = defineProps<{ assumptions: Assumptions; defaults: Assumptions; results: ImpactResults }>();
 
@@ -135,7 +135,6 @@ const hintFor = (f: FieldDef) => (isDefault(f.key) ? f.hint : `${f.hint} Diubah 
 const fieldError = (k: string) => errors.value[k]?.[0] ?? null;
 
 const r = computed(() => results.value);
-const idr = (n: number | undefined) => `Rp ${formatNumber(n ?? 0)}`;
 const costBars = computed(() => [
     { label: 'Google Places (per bulan)', value: r.value?.google_cost_idr ?? 0, color: 'var(--c-warm)' },
     { label: 'OpenStreetMap (per bulan)', value: r.value?.osm_cost_idr ?? 0, color: 'var(--c-medium)' },
@@ -198,12 +197,12 @@ const status = computed(() => (saveError.value ? 'error' : saving.value ? 'savin
                                 </div>
                                 <div>
                                     <dt class="hud-label">Biaya Google / bulan</dt>
-                                    <dd class="num m-0 mt-0.5 text-xl font-semibold" data-testid="result-google-cost">{{ idr(r?.google_cost_idr) }}</dd>
+                                    <dd class="num m-0 mt-0.5 text-xl font-semibold" data-testid="result-google-cost">{{ formatRupiah(r?.google_cost_idr) }}</dd>
                                     <dd class="num m-0 text-2xs text-muted">≈ USD {{ formatNumber(r?.google_cost_usd, 2) }}</dd>
                                 </div>
                                 <div>
                                     <dt class="hud-label">Biaya OpenStreetMap</dt>
-                                    <dd class="num m-0 mt-0.5 text-xl font-semibold text-medium" data-testid="result-osm-cost">{{ idr(r?.osm_cost_idr) }}</dd>
+                                    <dd class="num m-0 mt-0.5 text-xl font-semibold text-medium" data-testid="result-osm-cost">{{ formatRupiah(r?.osm_cost_idr) }}</dd>
                                 </div>
                                 <div>
                                     <dt class="hud-label">Prospek ditemukan</dt>
@@ -215,7 +214,7 @@ const status = computed(() => (saveError.value ? 'error' : saving.value ? 'savin
                                 </div>
                                 <div>
                                     <dt class="hud-label">Perkiraan pendapatan</dt>
-                                    <dd class="num m-0 mt-0.5 text-xl font-semibold" data-testid="result-revenue">{{ idr(r?.expected_revenue_idr) }}</dd>
+                                    <dd class="num m-0 mt-0.5 text-xl font-semibold" data-testid="result-revenue">{{ formatRupiah(r?.expected_revenue_idr) }}</dd>
                                 </div>
                                 <div>
                                     <dt class="hud-label">Jam hemat / bulan</dt>
@@ -223,13 +222,13 @@ const status = computed(() => (saveError.value ? 'error' : saving.value ? 'savin
                                 </div>
                                 <div v-if="r?.hours_saved_value_idr !== undefined">
                                     <dt class="hud-label">Nilai jam yang dihemat</dt>
-                                    <dd class="num m-0 mt-0.5 text-xl font-semibold" data-testid="result-hours-value">{{ idr(r.hours_saved_value_idr) }}</dd>
+                                    <dd class="num m-0 mt-0.5 text-xl font-semibold" data-testid="result-hours-value">{{ formatRupiah(r.hours_saved_value_idr) }}</dd>
                                 </div>
                             </dl>
                         </Panel>
 
                         <Panel title="Biaya sumber data per bulan" hint="OpenStreetMap gratis; Google Places berbayar menurut pemakaian.">
-                            <BarList :items="costBars" label="Perbandingan biaya per bulan (Rupiah)" :format="idr" />
+                            <BarList :items="costBars" label="Perbandingan biaya per bulan (Rupiah)" :format="formatRupiah" />
                             <p v-if="roi !== null" class="text-xs text-muted">
                                 Perkiraan pendapatan sekitar <span class="num text-fg">{{ formatNumber(roi, 1) }}×</span> biaya Google bulanan, bila semua asumsi tercapai.
                             </p>

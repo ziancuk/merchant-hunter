@@ -7,16 +7,14 @@ import ErrorState from '@/Components/ui/ErrorState.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import Skeleton from '@/Components/ui/Skeleton.vue';
 import ActivityTimeline from './ActivityTimeline.vue';
-import ProspectBadges from './ProspectBadges.vue';
+import ProspectActions from './ProspectActions.vue';
+import ProspectHeader from './ProspectHeader.vue';
+import ProspectNotes from './ProspectNotes.vue';
 import ScoreBreakdown from './ScoreBreakdown.vue';
-import ScoreRing from './ScoreRing.vue';
 import SimulasiBadge from './SimulasiBadge.vue';
-import WhatsAppButton from './WhatsAppButton.vue';
-import WhatsAppComposer from './WhatsAppComposer.vue';
 import { api, normalizeError } from '@/lib/api';
-import { BAND_LABEL, STATUS_CLASSES, STATUS_LABEL } from '@/lib/colors';
 import { formatCoordinates, formatDateTime, formatDistance, formatNumber, relativeTime } from '@/lib/format';
-import { PIPELINE_STATUSES, type Activity, type PipelineStatus, type ProspectDetail } from '@/types';
+import type { Activity, PipelineStatus, ProspectDetail } from '@/types';
 
 export interface RejectionReason {
     id: number;
@@ -184,15 +182,7 @@ const title = computed(() => detail.value?.name ?? (loadError.value ? 'Prospek' 
         <ErrorState v-else-if="loadError && !detail" title="Gagal memuat prospek" :message="loadError" :retrying="loading" @retry="load" />
 
         <div v-else-if="detail" class="space-y-6 p-4" data-testid="drawer-content">
-            <!-- Header -->
-            <section class="flex items-start gap-4">
-                <ScoreRing :score="detail.score" :band="detail.score_band" :size="64" />
-                <div class="min-w-0 flex-1 space-y-1.5">
-                    <p class="text-sm text-muted">{{ detail.category.name }}</p>
-                    <ProspectBadges :badges="detail.badges" />
-                    <p class="hud-label">Skor {{ BAND_LABEL[detail.score_band] }}</p>
-                </div>
-            </section>
+            <ProspectHeader :detail="detail" />
 
             <p v-if="actionError" class="rounded-chip border border-danger/40 bg-danger/10 p-3 text-sm text-danger" role="alert" data-testid="action-error">{{ actionError }}</p>
 
@@ -263,95 +253,21 @@ const title = computed(() => detail.value?.name ?? (loadError.value ? 'Prospek' 
                 </dl>
             </section>
 
-            <!-- Pipeline -->
-            <section aria-labelledby="sec-pipeline" class="space-y-3">
-                <h3 id="sec-pipeline" class="hud-label">Status pipeline</h3>
-                <div class="flex flex-wrap gap-1.5" role="group" aria-label="Ubah status pipeline">
-                    <button
-                        v-for="s in PIPELINE_STATUSES"
-                        :key="s"
-                        type="button"
-                        class="cursor-pointer rounded-full border px-3 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-                        :class="detail.pipeline_status === s ? [STATUS_CLASSES[s].soft, STATUS_CLASSES[s].text, STATUS_CLASSES[s].border] : 'border-line text-muted hover:text-fg'"
-                        :aria-pressed="detail.pipeline_status === s"
-                        :disabled="busy"
-                        :data-testid="`status-${s}`"
-                        @click="setStatus(s)"
-                    >
-                        {{ STATUS_LABEL[s] }}
-                    </button>
-                </div>
-                <p v-if="detail.pipeline_status === 'lost' && detail.rejection_reason" class="text-xs text-muted">Alasan: {{ detail.rejection_reason.label }}</p>
-                <div v-if="pendingLost" class="space-y-2 rounded-chip border border-st-lost/40 bg-st-lost/10 p-3" data-testid="lost-picker">
-                    <label class="block text-xs text-muted" for="rej-reason">Alasan penolakan (wajib)</label>
-                    <select id="rej-reason" v-model="rejectionId" class="h-10 w-full rounded-chip border border-line bg-ink/60 px-2 text-sm text-fg">
-                        <option value="">Pilih alasan…</option>
-                        <option v-for="r in rejectionReasons" :key="r.id" :value="r.id">{{ r.label }}</option>
-                    </select>
-                    <div class="flex gap-2">
-                        <Button size="sm" variant="danger" :disabled="rejectionId === ''" :loading="busy" data-testid="confirm-lost" @click="confirmLost">Tandai kalah</Button>
-                        <Button size="sm" variant="ghost" @click="pendingLost = false">Batal</Button>
-                    </div>
-                </div>
-                <p class="text-xs text-muted">
-                    <template v-if="detail.handled_by">Ditangani oleh <strong class="text-fg">{{ detail.handled_by.name }}</strong>. </template>
-                    <template v-if="detail.last_contacted_at">
-                        Terakhir dihubungi {{ relativeTime(detail.last_contacted_at) }}<template v-if="detail.last_contacted_by"> oleh {{ detail.last_contacted_by.name }}</template>
-                        (<span class="num">{{ detail.contact_count }}x</span>).
-                    </template>
-                    <template v-else>Belum pernah dihubungi.</template>
-                </p>
-            </section>
+            <ProspectActions
+                v-model:pending-lost="pendingLost"
+                v-model:rejection-id="rejectionId"
+                v-model:show-composer="showComposer"
+                :detail="detail"
+                :busy="busy"
+                :rejection-reasons="rejectionReasons"
+                :ai-enabled="aiEnabled"
+                @set-status="setStatus"
+                @confirm-lost="confirmLost"
+                @toggle-opt-out="toggleOptOut"
+                @contacted="onContacted"
+            />
 
-            <!-- WhatsApp -->
-            <section aria-labelledby="sec-wa" class="space-y-3">
-                <h3 id="sec-wa" class="hud-label">Hubungi</h3>
-                <WhatsAppButton
-                    :phone="detail.phone"
-                    :phone-simulated="detail.phone_simulated"
-                    :whatsapp-url="detail.whatsapp_url"
-                    :do-not-contact="detail.do_not_contact"
-                    :lifecycle-status="detail.lifecycle_status"
-                    intercept
-                    @click="showComposer = true"
-                />
-                <WhatsAppComposer
-                    v-if="showComposer && !detail.do_not_contact"
-                    :key="detail.id"
-                    :prospect-id="detail.id"
-                    :ai-enabled="aiEnabled"
-                    @contacted="onContacted"
-                    @closed="showComposer = false"
-                />
-                <div class="flex items-center justify-between rounded-chip border border-line p-3">
-                    <div>
-                        <p class="text-sm text-fg">Jangan hubungi (opt-out)</p>
-                        <p class="text-xs text-muted">Sembunyikan aksi WhatsApp untuk prospek ini.</p>
-                    </div>
-                    <button
-                        type="button"
-                        role="switch"
-                        :aria-checked="detail.do_not_contact"
-                        aria-label="Jangan hubungi"
-                        :disabled="busy"
-                        class="relative h-6 w-11 shrink-0 cursor-pointer rounded-full border border-line transition disabled:opacity-50"
-                        :class="detail.do_not_contact ? 'bg-danger/40' : 'bg-fg/10'"
-                        data-testid="optout-toggle"
-                        @click="toggleOptOut"
-                    >
-                        <span class="absolute left-0.5 top-0.5 h-4.5 w-4.5 rounded-full bg-fg transition-transform" :class="detail.do_not_contact ? 'translate-x-5' : ''" />
-                    </button>
-                </div>
-            </section>
-
-            <!-- Notes -->
-            <section aria-labelledby="sec-note" class="space-y-2">
-                <h3 id="sec-note" class="hud-label">Catatan</h3>
-                <p v-if="detail.latest_note" class="whitespace-pre-line rounded-chip bg-fg/5 p-3 text-sm" data-testid="latest-note">{{ detail.latest_note }}</p>
-                <label class="sr-only" for="note-input">Tambah catatan</label>
-                <textarea id="note-input" v-model="noteText" rows="2" maxlength="2000" placeholder="Tambah catatan…" class="w-full rounded-chip border border-line bg-ink/60 p-2 text-sm text-fg" />
-                <Button size="sm" variant="secondary" :disabled="!noteText.trim()" :loading="busy" data-testid="save-note" @click="saveNote"><Icon name="note" :size="14" /> Simpan catatan</Button>
-            </section>
+            <ProspectNotes v-model="noteText" :latest-note="detail.latest_note" :busy="busy" @save="saveNote" />
 
             <!-- Timeline -->
             <section aria-labelledby="sec-timeline">

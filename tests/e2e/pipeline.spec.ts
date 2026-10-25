@@ -32,7 +32,7 @@ test.describe('Pipeline', () => {
         expect(collected.pageErrors).toEqual([]);
     });
 
-    test('10b. memindah ke Kalah meminta alasan penolakan (drag & drop)', async ({ page }) => {
+    test('10b. memindah ke Ditolak meminta alasan penolakan (drag & drop)', async ({ page }) => {
         const p = pickContactable(1);
         await page.goto('/pipeline');
         await page.getByTestId(`kanban-card-${p.id}`).dragTo(page.getByTestId('kanban-col-lost'));

@@ -8,16 +8,6 @@ export function scoreBand(score: number): ScoreBand {
     return 'cold';
 }
 
-export const BAND_LABEL: Record<ScoreBand, string> = { hot: 'Panas', warm: 'Hangat', medium: 'Sedang', cold: 'Dingin' };
-
-export const STATUS_LABEL: Record<PipelineStatus, string> = {
-    new: 'Baru',
-    contacted: 'Dihubungi',
-    demo: 'Demo',
-    won: 'Menang',
-    lost: 'Kalah',
-};
-
 /** CSS variable references (theme-aware). */
 export const BAND_VAR: Record<ScoreBand, string> = {
     hot: 'var(--c-hot)',

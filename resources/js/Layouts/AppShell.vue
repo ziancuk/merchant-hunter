@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import CommandPalette, { type CommandItem } from '@/Components/ui/CommandPalette.vue';
 import GlassPanel from '@/Components/ui/GlassPanel.vue';
@@ -7,6 +7,7 @@ import Icon, { type IconName } from '@/Components/ui/Icon.vue';
 import ShortcutHelp from '@/Components/ui/ShortcutHelp.vue';
 import Toast from '@/Components/ui/Toast.vue';
 import Tooltip from '@/Components/ui/Tooltip.vue';
+import { useDismissable } from '@/composables/useDismissable';
 import { shortcutHelpOpen, useShortcuts } from '@/composables/useShortcuts';
 import { useTheme } from '@/composables/useTheme';
 import { useToasts } from '@/composables/useToasts';
@@ -68,20 +69,7 @@ watch(
     { immediate: true },
 );
 
-function onDocClick(e: MouseEvent): void {
-    if (userMenuOpen.value && userMenuRoot.value && !userMenuRoot.value.contains(e.target as Node)) userMenuOpen.value = false;
-}
-function onDocKey(e: KeyboardEvent): void {
-    if (e.key === 'Escape' && userMenuOpen.value) userMenuOpen.value = false;
-}
-onMounted(() => {
-    document.addEventListener('click', onDocClick);
-    document.addEventListener('keydown', onDocKey);
-});
-onBeforeUnmount(() => {
-    document.removeEventListener('click', onDocClick);
-    document.removeEventListener('keydown', onDocKey);
-});
+useDismissable(userMenuRoot, () => (userMenuOpen.value = false), { enabled: userMenuOpen });
 
 const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full text-fg/80 transition hover:bg-fg/10 hover:text-fg';
 </script>

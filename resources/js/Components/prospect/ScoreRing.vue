@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { BAND_LABEL, BAND_VAR, scoreBand } from '@/lib/colors';
+import { BAND_VAR, scoreBand } from '@/lib/colors';
+import { BAND_LABEL } from '@/lib/labels';
 import type { ScoreBand } from '@/types';
 
 const props = withDefaults(defineProps<{ score: number; band?: ScoreBand; size?: number }>(), { band: undefined, size: 56 });

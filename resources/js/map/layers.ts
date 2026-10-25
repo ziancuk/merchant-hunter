@@ -49,9 +49,14 @@ function memo<T>(owner: object, key: string, make: () => T): T {
 }
 
 /** deck.gl binary `data` object: no per-row JS objects, attributes go straight to the GPU. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- deck.gl's generic `data` prop cannot express the binary form
-function binary(length: number, attributes: Record<string, { value: ArrayLike<number>; size: number; normalized?: boolean }>): any {
-    return { length, attributes };
+interface BinaryData {
+    length: number;
+    attributes: Record<string, { value: ArrayLike<number>; size: number; normalized?: boolean }>;
+}
+
+// deck.gl's generic `data` prop cannot express the binary form; layer props are cast at the boundary instead of using `any`.
+function binary(length: number, attributes: BinaryData['attributes']): BinaryData & never[] {
+    return { length, attributes } as BinaryData & never[];
 }
 
 /** Overlay rings/labels ignore the depth buffer so extruded columns never hide them. */
@@ -70,6 +75,38 @@ const columnData = (p: PreparedPoints) =>
     );
 const discData = (p: PreparedPoints) => memo(p.colors, 'discs', () => binary(p.count, { getPosition: { value: p.positions, size: 2 }, getFillColor: { value: p.colors, size: 4, normalized: true } }));
 
+const stopsCache = new WeakMap<RouteStop[], (RouteStop & { label: string })[]>();
+/** Numbered stops, memoised on the stops array so unrelated rebuilds (pulse) do not hand deck.gl new row objects. */
+export function labelledStops(stops: RouteStop[]): (RouteStop & { label: string })[] {
+    let out = stopsCache.get(stops);
+    if (!out) {
+        out = stops.map((s, n) => ({ ...s, label: String(n + 1) }));
+        stopsCache.set(stops, out);
+    }
+    return out;
+}
+
+const singleCache = new WeakMap<object, object[]>();
+/** One-element `data` array memoised on its source object (selection / focus rings). */
+export function single<T extends object>(at: T): T[] {
+    let out = singleCache.get(at) as T[] | undefined;
+    if (!out) {
+        out = [at];
+        singleCache.set(at, out);
+    }
+    return out;
+}
+
+const pathCache = new WeakMap<object, { path: [number, number][] }[]>();
+function pathData(path: [number, number][]): { path: [number, number][] }[] {
+    let out = pathCache.get(path);
+    if (!out) {
+        out = [{ path }];
+        pathCache.set(path, out);
+    }
+    return out;
+}
+
 function pickOf(kind: HoverKind, info: PickingInfo): MapPick | null {
     if (info.index === undefined || info.index < 0) return null;
     return { kind, index: info.index, x: info.x, y: info.y };
@@ -82,7 +119,7 @@ function emit(kind: HoverKind, h: LayerHandlers) {
 function ringLayer(id: string, at: { lng: number; lat: number }, radiusM: number, line: number[], fill: number[], width: number): Layer {
     return new ScatterplotLayer({
         id,
-        data: [at],
+        data: single(at),
         getPosition: (d: { lng: number; lat: number }) => [d.lng, d.lat],
         radiusUnits: 'meters',
         getRadius: radiusM,
@@ -314,7 +351,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
             new PathLayer({
                 id: 'route-glow',
                 parameters: ON_TOP,
-                data: [{ path }],
+                data: pathData(path),
                 getPath: (d: { path: [number, number][] }) => d.path,
                 getColor: [125, 227, 196, 70],
                 widthUnits: 'pixels',
@@ -326,7 +363,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
             new PathLayer({
                 id: 'route-path',
                 parameters: ON_TOP,
-                data: [{ path }],
+                data: pathData(path),
                 getPath: (d: { path: [number, number][] }) => d.path,
                 getColor: MAP_COLORS.route,
                 widthUnits: 'pixels',
@@ -338,7 +375,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
         );
     }
     if (stops.length > 0) {
-        const labelled = stops.map((s, n) => ({ ...s, label: String(n + 1) }));
+        const labelled = labelledStops(stops);
         layers.push(
             new ScatterplotLayer({
                 id: 'route-stops',
@@ -377,7 +414,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
             new ScatterplotLayer({
                 id: 'selected-ring',
                 parameters: ON_TOP,
-                data: [i.selected],
+                data: single(i.selected),
                 getPosition: (d: { lng: number; lat: number }) => [d.lng, d.lat],
                 radiusUnits: 'pixels',
                 getRadius: 15,

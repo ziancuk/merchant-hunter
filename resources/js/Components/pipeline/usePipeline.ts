@@ -1,11 +1,11 @@
 import { ref, type Ref } from 'vue';
 import { useToasts } from '@/composables/useToasts';
 import { api, normalizeError } from '@/lib/api';
+import { COLUMN_LABEL } from '@/lib/labels';
 import { PIPELINE_STATUSES, type PipelineCard, type PipelineStatus, type ProspectDetail, type ProspectFilter } from '@/types';
 import {
     buildCardsUrl,
     buildTableUrl,
-    COLUMN_LABEL,
     insertSorted,
     mergeDetail,
     normalizeColumns,
