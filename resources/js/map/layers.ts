@@ -399,7 +399,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 getText: (s: { label: string }) => s.label,
                 getSize: 12,
                 getColor: MAP_COLORS.routeText,
-                fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                fontFamily: "'Inter', system-ui, sans-serif",
                 fontWeight: 700,
                 getTextAnchor: 'middle',
                 getAlignmentBaseline: 'center',

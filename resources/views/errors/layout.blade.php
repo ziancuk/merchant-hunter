@@ -15,8 +15,8 @@
         body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 16px; background: var(--bg); color: var(--text); font-family: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.5; }
         main { width: 100%; max-width: 30rem; padding: 32px 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); text-align: center; }
         .brand { margin: 0 0 20px; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-        .code { margin: 0; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 4.5rem; font-weight: 700; line-height: 1; color: var(--hot); font-variant-numeric: tabular-nums; }
-        h1 { margin: 12px 0 8px; font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 1.5rem; }
+        .code { margin: 0; font-family: "Plus Jakarta Sans", system-ui, sans-serif; font-size: 4.5rem; font-weight: 700; line-height: 1; color: var(--hot); font-variant-numeric: tabular-nums; }
+        h1 { margin: 12px 0 8px; font-family: "Plus Jakarta Sans", system-ui, sans-serif; font-size: 1.5rem; }
         p.msg { margin: 0 0 24px; color: var(--muted); }
         .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
         a.btn { display: inline-block; min-height: 40px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 12px; color: var(--text); text-decoration: none; font-weight: 600; }

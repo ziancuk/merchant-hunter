@@ -14,11 +14,10 @@ Tim sales memandang satu layar peta penuh; semua UI **melayang di atas peta** (p
 
 | Peran | Font | Alasan |
 |---|---|---|
-| Display (judul, nama prospek, brand) | **Bricolage Grotesque** 500–800 | Grotesk berkarakter dengan sedikit "kerut" optik; tidak generik seperti Inter/Space Grotesk, tetap terbaca pada ukuran kecil. |
-| Teks (UI, paragraf) | **Instrument Sans** 400–700 | Netral, rapat, sangat terbaca di panel padat. |
-| Angka & kode (skor, KPI, jarak, kbd) | **JetBrains Mono** 400–600 | Angka tabular (`font-variant-numeric: tabular-nums`) agar KPI tidak "bergoyang" saat count-up; kesan instrumen. |
+| Display (judul, nama prospek, brand) | **Plus Jakarta Sans** 500–800 | Sans bulat dan ramah, dirancang di Jakarta; jelas untuk judul tanpa terasa kaku. |
+| Teks dan angka (UI, paragraf, skor, KPI, jarak) | **Inter** 400–700 | Font antarmuka paling mudah dibaca pada ukuran kecil. Angka memakai `font-variant-numeric: tabular-nums` agar KPI tidak "bergoyang" saat count-up. Tidak ada font monospace. |
 
-Skala (Tailwind): `text-2xs` 11/16 (label HUD, badge) · `text-xs` 12 · `text-sm` 14 (default UI) · `text-base` 16 · `text-lg` 18 (judul panel) · `text-3xl` 30 (KPI) · judul login 30/1.15 bold. Kelas util: `.num` (mono tabular), `.hud-label` (mono 11px, kapital, tracking 0.12em, warna muted). Ukuran input minimal 16px pada ponsel (hindari zoom iOS) — field login memakai `text-base`.
+Skala (Tailwind): `text-2xs` 11/16 (label HUD, badge) · `text-xs` 12 · `text-sm` 14 (default UI) · `text-base` 16 · `text-lg` 18 (judul panel) · `text-3xl` 30 (KPI) · judul login 30/1.15 bold. Kelas util: `.num` (Inter, angka tabular), `.hud-label` (Inter 12px semibold, kapital, tracking 0.12em, warna muted). Ukuran input minimal 16px pada ponsel (hindari zoom iOS) — field login memakai `text-base`.
 
 Fallback font: `ui-sans-serif, system-ui` (tampilan tetap utuh jika Google Fonts diblokir; CSP ditunda per D-83, saat CSP aktif izinkan `fonts.googleapis.com` dan `fonts.gstatic.com`).
 
