@@ -22,7 +22,7 @@ Final project training Claude Code (Hacktiv8). Dokumen lengkap ada di [`docs/`](
 
 ## Prasyarat
 
-PHP ≥ 8.2 (ekstensi `pdo_sqlite`, `mbstring`, `intl`, `bcmath`), Composer 2, Node.js ≥ 22 (npm). Diuji dengan PHP 8.2.29 dan Node 22.19. Database SQLite bawaan; tanpa layanan eksternal.
+PHP ≥ 8.2 (ekstensi `pdo_sqlite`, `mbstring`, `intl`, `bcmath`), Composer 2, Node.js ≥ 22 (npm). Diuji dengan PHP 8.2.29 dan Node 22.19. Database SQLite bawaan; tanpa layanan eksternal. `npm install` dapat menampilkan peringatan `EBADENGINE` pada Node 22.19 (aman diabaikan, atau pakai Node ≥ 22.22).
 
 ## Setup dari nol
 
@@ -39,7 +39,7 @@ npm run build
 php artisan serve
 ```
 
-Buka <http://127.0.0.1:8000>. `hunter:seed-prospects --offline` memakai MockProvider (tanpa internet, deterministik, ±9 detik) dan menghasilkan ±14,6 ribu prospek. `php artisan hunter:demo-reset` mengembalikan data demo ke kondisi seed.
+Buka <http://127.0.0.1:8000>. `hunter:seed-prospects --offline` memakai MockProvider (tanpa internet, deterministik, ±25 detik) dan menghasilkan ±14,6 ribu prospek. `php artisan hunter:demo-reset` mengembalikan data demo ke kondisi seed.
 
 ### Akun demo (dummy, hanya lokal)
 
@@ -47,7 +47,7 @@ Buka <http://127.0.0.1:8000>. `hunter:seed-prospects --offline` memakai MockProv
 |---|---|
 | `ayu@hunter.test`, `budi@hunter.test`, `citra@hunter.test` | `demo-password-123` (ubah dengan `DEMO_USER_PASSWORD` di `.env` **sebelum** seeding) |
 
-Seeder akun tidak berjalan di `APP_ENV=production`. Tidak ada registrasi publik; tambah akun dengan `php artisan hunter:create-user email nama`. Semua akun berperan sama ("manajemen").
+Jika repo di-clone ke folder bernama lain, `package-lock.json` bisa berubah pada field `name`; abaikan atau `git checkout package-lock.json`. Seeder akun tidak berjalan di `APP_ENV=production`. Tidak ada registrasi publik; tambah akun dengan `php artisan hunter:create-user email nama --password=KATA-SANDI` (tanpa opsi `--password` akan diminta interaktif). Semua akun berperan sama ("manajemen").
 
 ### Mode pengembangan
 
@@ -62,10 +62,10 @@ Sinkronisasi memakai antrean database. Jalankan worker (antrean `sync` wajib iku
 ```bash
 php artisan queue:work --queue=sync,default
 php artisan schedule:work                      # lokal; di server: cron "* * * * * php artisan schedule:run"
-php artisan hunter:sync --provider=mock        # pemicu manual (mock hanya bila HUNTER_DEMO_MODE=true)
+php artisan hunter:sync --provider=mock        # pemicu manual; hanya mengantre, worker harus berjalan (mock hanya bila HUNTER_DEMO_MODE=true)
 ```
 
-Jadwal (zona Asia/Jakarta): `hunter:sync` 01:00, `hunter:geocode` tiap jam (reverse geocoding Nominatim, ≤ 4 permintaan/menit), `hunter:score --all` 05:00, `hunter:digest` 06:30, `hunter:purge-expired` 02:30. Panggilan API eksternal **tidak pernah** terjadi di request pengguna, kecuali dua aksi sadar: "Uji koneksi" data source dan "Buat pesan dengan AI".
+Jadwal (zona Asia/Jakarta; `php artisan schedule:list` menampilkan jam dalam UTC, jadi 01:00 WIB tampil 18:00): `hunter:sync` 01:00, `hunter:geocode` tiap jam (reverse geocoding Nominatim, ≤ 4 permintaan/menit), `hunter:score --all` 05:00, `hunter:digest` 06:30, `hunter:purge-expired` 02:30. Panggilan API eksternal **tidak pernah** terjadi di request pengguna, kecuali dua aksi sadar: "Uji koneksi" data source dan "Buat pesan dengan AI".
 
 Variabel penting di `.env` (lihat `.env.example`): `HUNTER_OVERPASS_ENDPOINT`, `HUNTER_CONTACT_EMAIL` (dikirim sebagai User-Agent ke Nominatim/Overpass; isi dengan alamat Anda), `HUNTER_BASEMAP` (`openfreemap` default atau `local`), `HUNTER_DEMO_MODE`, `ANTHROPIC_API_KEY`/`ANTHROPIC_MODEL`.
 
@@ -77,7 +77,7 @@ Nonaktif secara bawaan. Buka **Master → Data Source → Google**, isi API key 
 
 ```bash
 composer ci        # Pint + Pest + ESLint + Vitest + build
-npm run e2e        # Playwright (Chromium, data seed deterministik, tanpa internet, ±6 menit)
+npm run e2e        # Playwright (Chromium, data seed deterministik, tanpa internet, ±7 menit; memakai database terpisah `database/e2e.sqlite` dan membangun ulang frontend, jadi data dev tidak tersentuh)
 ```
 
 Perintah terpisah: `composer test`, `composer lint`, `npm run test`, `npm run lint`, `npm run build`. Instal browser E2E sekali: `npx playwright install chromium`. Detail dan angka: [docs/TEST-REPORT.md](docs/TEST-REPORT.md), konfigurasi E2E: [tests/e2e/README.md](tests/e2e/README.md).
