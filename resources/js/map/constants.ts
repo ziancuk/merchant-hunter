@@ -22,7 +22,7 @@ export const MOVE_DEBOUNCE_MS = 250;
 /** Basemap style fetch/source error budget before the local fallback style takes over (D-23). */
 export const BASEMAP_TIMEOUT_MS = 5000;
 
-export const OPENFREEMAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/dark';
+export const OPENFREEMAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
 export const INTRO_STORAGE_KEY = 'hunter.map.intro-skipped';
 export const COLOR_BY_STORAGE_KEY = 'hunter.map.color-by';

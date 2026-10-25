@@ -23,13 +23,13 @@ const pill = 'cursor-pointer rounded-full px-2.5 py-1 text-2xs font-medium trans
         <ul class="mt-2 grid gap-1 text-xs">
             <template v-if="colorBy === 'score'">
                 <li v-for="b in bands" :key="b" class="flex items-center gap-2">
-                    <span class="h-2.5 w-2.5 rounded-full" :style="{ background: BAND_HEX.dark[b] }" aria-hidden="true" />
+                    <span class="h-2.5 w-2.5 rounded-full" :style="{ background: BAND_HEX.map[b] }" aria-hidden="true" />
                     {{ BAND_LABEL[b] }}
                 </li>
             </template>
             <template v-else>
                 <li v-for="s in PIPELINE_STATUSES" :key="s" class="flex items-center gap-2">
-                    <span class="h-2.5 w-2.5 rounded-full" :style="{ background: STATUS_HEX.dark[s] }" aria-hidden="true" />
+                    <span class="h-2.5 w-2.5 rounded-full" :style="{ background: STATUS_HEX.map[s] }" aria-hidden="true" />
                     {{ STATUS_LABEL[s] }}
                 </li>
             </template>

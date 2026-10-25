@@ -14,26 +14,26 @@ describe('hexToRgb', () => {
 describe('pointColor', () => {
     it('colours by score band (hot/warm/medium/cold)', () => {
         const rgb = (c: number[]) => c.slice(0, 3);
-        expect(rgb(pointColor(80, 0, 0, 'score'))).toEqual(hexToRgb(BAND_HEX.dark.hot));
-        expect(rgb(pointColor(60, 0, 0, 'score'))).toEqual(hexToRgb(BAND_HEX.dark.warm));
-        expect(rgb(pointColor(40, 0, 0, 'score'))).toEqual(hexToRgb(BAND_HEX.dark.medium));
-        expect(rgb(pointColor(10, 0, 0, 'score'))).toEqual(hexToRgb(BAND_HEX.dark.cold));
+        expect(rgb(pointColor(80, 0, 0, 'score'))).toEqual(hexToRgb(BAND_HEX.map.hot));
+        expect(rgb(pointColor(60, 0, 0, 'score'))).toEqual(hexToRgb(BAND_HEX.map.warm));
+        expect(rgb(pointColor(40, 0, 0, 'score'))).toEqual(hexToRgb(BAND_HEX.map.medium));
+        expect(rgb(pointColor(10, 0, 0, 'score'))).toEqual(hexToRgb(BAND_HEX.map.cold));
     });
 
     it('uses the frozen band edges: 75 is hot, 74 is warm, 55 warm, 54 medium, 35 medium, 34 cold', () => {
         const rgb = (s: number) => pointColor(s, 0, 0, 'score').slice(0, 3);
-        expect(rgb(75)).toEqual(hexToRgb(BAND_HEX.dark.hot));
-        expect(rgb(74)).toEqual(hexToRgb(BAND_HEX.dark.warm));
-        expect(rgb(55)).toEqual(hexToRgb(BAND_HEX.dark.warm));
-        expect(rgb(54)).toEqual(hexToRgb(BAND_HEX.dark.medium));
-        expect(rgb(35)).toEqual(hexToRgb(BAND_HEX.dark.medium));
-        expect(rgb(34)).toEqual(hexToRgb(BAND_HEX.dark.cold));
+        expect(rgb(75)).toEqual(hexToRgb(BAND_HEX.map.hot));
+        expect(rgb(74)).toEqual(hexToRgb(BAND_HEX.map.warm));
+        expect(rgb(55)).toEqual(hexToRgb(BAND_HEX.map.warm));
+        expect(rgb(54)).toEqual(hexToRgb(BAND_HEX.map.medium));
+        expect(rgb(35)).toEqual(hexToRgb(BAND_HEX.map.medium));
+        expect(rgb(34)).toEqual(hexToRgb(BAND_HEX.map.cold));
     });
 
     it('colours by pipeline status', () => {
-        expect(pointColor(90, 2, 0, 'status').slice(0, 3)).toEqual(hexToRgb(STATUS_HEX.dark.demo));
-        expect(pointColor(90, 3, 0, 'status').slice(0, 3)).toEqual(hexToRgb(STATUS_HEX.dark.won));
-        expect(pointColor(90, 99, 0, 'status').slice(0, 3)).toEqual(hexToRgb(STATUS_HEX.dark.new));
+        expect(pointColor(90, 2, 0, 'status').slice(0, 3)).toEqual(hexToRgb(STATUS_HEX.map.demo));
+        expect(pointColor(90, 3, 0, 'status').slice(0, 3)).toEqual(hexToRgb(STATUS_HEX.map.won));
+        expect(pointColor(90, 99, 0, 'status').slice(0, 3)).toEqual(hexToRgb(STATUS_HEX.map.new));
     });
 
     it('dims closed and opted-out prospects', () => {
@@ -50,8 +50,8 @@ describe('attribute builders', () => {
         const c = buildColors(data, 'score');
         expect(c).toBeInstanceOf(Uint8Array);
         expect(c.length).toBe(8);
-        expect(Array.from(c.slice(0, 3))).toEqual(hexToRgb(BAND_HEX.dark.hot));
-        expect(Array.from(buildColors(data, 'status').slice(4, 7))).toEqual(hexToRgb(STATUS_HEX.dark.won));
+        expect(Array.from(c.slice(0, 3))).toEqual(hexToRgb(BAND_HEX.map.hot));
+        expect(Array.from(buildColors(data, 'status').slice(4, 7))).toEqual(hexToRgb(STATUS_HEX.map.won));
     });
 
     it('derives column heights and heat weights from the score', () => {
@@ -86,8 +86,8 @@ describe('zoom-dependent sizes', () => {
     });
 
     it('grid colour turns hot whenever the cell holds a hot prospect', () => {
-        expect(gridColor(40, 3).slice(0, 3)).toEqual(hexToRgb(BAND_HEX.dark.hot));
-        expect(gridColor(40, 0).slice(0, 3)).toEqual(hexToRgb(BAND_HEX.dark.medium));
+        expect(gridColor(40, 3).slice(0, 3)).toEqual(hexToRgb(BAND_HEX.map.hot));
+        expect(gridColor(40, 0).slice(0, 3)).toEqual(hexToRgb(BAND_HEX.map.medium));
     });
 
     it('white space colour gets stronger with more prospects', () => {
