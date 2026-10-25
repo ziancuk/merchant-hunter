@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCoordinates, formatDate, formatDateTime, formatDistance, formatNumber, formatPercent, relativeTime } from './format';
+import { formatCoordinates, formatDate, formatDateTime, formatDistance, formatNumber, formatPercent, formatRupiah, relativeTime } from './format';
 
 describe('format', () => {
     it('formats numbers with Indonesian grouping', () => {
@@ -42,6 +42,11 @@ describe('format', () => {
         expect(relativeTime(ago(90 * 86_400_000), now)).toBe('3 bulan lalu');
         expect(relativeTime(new Date(now + 2 * 3_600_000).toISOString(), now)).toBe('dalam 2 jam');
         expect(relativeTime(null, now)).toBe('–');
+    });
+
+    it('formats rupiah and treats a missing amount as zero', () => {
+        expect(formatRupiah(1250000)).toBe('Rp 1.250.000');
+        expect(formatRupiah(undefined)).toBe('Rp 0');
     });
 
     it('formats coordinates', () => {

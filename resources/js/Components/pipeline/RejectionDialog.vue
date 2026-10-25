@@ -37,7 +37,7 @@ watch(
     },
 );
 
-function confirm(): void {
+function submit(): void {
     if (reasonId.value === '' || props.busy) return;
     emit('confirm', reasonId.value);
 }
@@ -93,7 +93,7 @@ function onKeydown(e: KeyboardEvent): void {
             </div>
             <div class="flex justify-end gap-2">
                 <Button variant="ghost" data-testid="rejection-cancel" @click="emit('cancel')">Batal</Button>
-                <Button variant="danger" :disabled="reasonId === ''" :loading="busy" data-testid="rejection-confirm" @click="confirm">Tandai ditolak</Button>
+                <Button variant="danger" :disabled="reasonId === ''" :loading="busy" data-testid="rejection-confirm" @click="submit">Tandai ditolak</Button>
             </div>
         </div>
     </div>

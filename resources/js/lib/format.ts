@@ -24,6 +24,11 @@ export function formatNumber(value: number | null | undefined, decimals = 0): st
     return new Intl.NumberFormat('id-ID', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(value);
 }
 
+/** 1250000 → "Rp 1.250.000"; a missing amount reads as zero. */
+export function formatRupiah(value: number | null | undefined): string {
+    return `Rp ${formatNumber(value ?? 0)}`;
+}
+
 /** 0.034 → "3,4%" */
 export function formatPercent(ratio: number | null | undefined, decimals = 1): string {
     if (ratio === null || ratio === undefined || Number.isNaN(ratio)) return '–';
