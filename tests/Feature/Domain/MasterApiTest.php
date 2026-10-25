@@ -289,8 +289,19 @@ it('re-queues forward geocoding for a failed outlet', function () {
     $this->postJson("/api/master/outlets/{$o->id}/retry-geocode")->assertOk()->assertJsonPath('queued', true);
 
     Queue::assertPushed(GeocodeOutletJob::class, 1);
-    expect($o->fresh()->geocode_status->value)->toBe('ok');
+    // The job (not the endpoint) moves the status, so a coordinate-less outlet is never reported "ok".
+    expect($o->fresh()->geocode_status->value)->toBe('failed');
 });
+
+it('refuses to retry geocoding for outlets that are not failed', function (string $status) {
+    Queue::fake();
+    $o = dm_outlet(['geocode_status' => $status]);
+
+    $this->postJson("/api/master/outlets/{$o->id}/retry-geocode")->assertStatus(422)->assertJsonPath('code', 'geocode_not_failed');
+
+    Queue::assertNothingPushed();
+    expect($o->fresh()->geocode_status->value)->toBe($status);
+})->with(['ok', 'needs_review', 'manual']);
 
 it('lists the review queue with candidates and resolves by candidate or coordinates', function () {
     $fake = dm_fake_reconciler();
