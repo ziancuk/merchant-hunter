@@ -32,3 +32,5 @@ Thumbs.db
 /.phpunit.cache
 .env.e2e
 .claude/worktrees/
+/.playwright-mcp
+/.claude
