@@ -130,9 +130,10 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
             <!-- Controls (top right) -->
             <div class="pointer-events-auto absolute right-3 top-3 flex items-center gap-2">
                 <GlassPanel as="div" rounded="full" :padded="false" class="flex items-center gap-0.5 p-1">
-                    <button type="button" class="flex h-10 cursor-pointer items-center gap-2 rounded-full px-3 text-sm text-fg/80 transition hover:bg-fg/10 hover:text-fg" :aria-label="`Buka palet perintah (${modKey} K)`" @click="paletteOpen = true">
+                    <button type="button" class="flex h-10 cursor-pointer items-center gap-2 rounded-full px-3 text-sm text-fg/80 transition hover:bg-fg/10 hover:text-fg" @click="paletteOpen = true">
                         <Icon name="search" :size="16" />
-                        <span class="num hidden text-xs text-muted sm:inline">{{ modKey }} K</span>
+                        <span class="sr-only">Buka palet perintah</span>
+                        <span class="num hidden text-xs text-muted sm:inline" aria-hidden="false">{{ modKey }} K</span>
                     </button>
                     <button type="button" :class="hudBtn" :aria-label="isDark ? 'Ganti ke tema terang' : 'Ganti ke tema gelap'" @click="toggleTheme">
                         <Icon :name="isDark ? 'sun' : 'moon'" />

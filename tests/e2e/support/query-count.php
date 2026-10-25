@@ -1,4 +1,5 @@
 <?php
+
 // Counts SQL queries (and wall time) for in-process GET requests as an authenticated user, without an HTTP server.
 // Usage: APP_ENV=e2e DB_DATABASE=... php query-count.php <user-email> <uri> [<uri> ...]
 // Output: JSON [{uri,status,queries,app_queries,ms,bytes}]; app_queries excludes framework infrastructure stored in the DB (session driver, throttle/cache store), whose count varies with warm/cold buckets. The user is attached directly to the guard, so the 2 session/user

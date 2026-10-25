@@ -64,7 +64,6 @@ function hide(): void {
                     :class="level(item.value) >= highlightAbove && item.value > 0 ? 'border-hot' : 'border-line'"
                     :style="tileStyle(item.value)"
                     :data-testid="`cartogram-tile-${item.id}`"
-                    :aria-label="`${item.label}: ${metric} ${format(item.value)}${item.details?.length ? ', ' + item.details.join(', ') : ''}`"
                     @mouseenter="show(item, $event)"
                     @focus="show(item, $event)"
                     @blur="hide"
@@ -72,6 +71,7 @@ function hide(): void {
                 >
                     <span class="font-display text-sm font-semibold leading-none tracking-tight">{{ item.short }}</span>
                     <span class="num text-2xs leading-none text-fg/80">{{ format(item.value) }}</span>
+                    <span class="sr-only">{{ `, ${item.label}: ${metric} ${format(item.value)}${item.details?.length ? ', ' + item.details.join(', ') : ''}` }}</span>
                 </button>
             </li>
         </ul>

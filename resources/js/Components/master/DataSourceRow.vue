@@ -148,8 +148,10 @@ async function runTest(): Promise<void> {
                 <dd class="num m-0 mt-0.5">
                     {{ formatNumber(source.calls_this_month ?? 0) }}<span v-if="source.monthly_quota" class="text-muted"> / {{ formatNumber(source.monthly_quota) }}</span>
                 </dd>
-                <dd v-if="quotaPct !== null" class="m-0 mt-1 h-1.5 overflow-hidden rounded-full bg-fg/10" role="progressbar" :aria-valuenow="Math.round(quotaPct)" aria-valuemin="0" aria-valuemax="100" aria-label="Pemakaian kuota bulanan">
-                    <span class="block h-full rounded-full" :class="quotaPct >= 90 ? 'bg-danger' : quotaPct >= 70 ? 'bg-warm' : 'bg-medium'" :style="{ width: `${quotaPct}%` }" />
+                <dd v-if="quotaPct !== null" class="m-0 mt-1">
+                    <div class="h-1.5 overflow-hidden rounded-full bg-fg/10" role="progressbar" :aria-valuenow="Math.round(quotaPct)" aria-valuemin="0" aria-valuemax="100" aria-label="Pemakaian kuota bulanan">
+                        <span class="block h-full rounded-full" :class="quotaPct >= 90 ? 'bg-danger' : quotaPct >= 70 ? 'bg-warm' : 'bg-medium'" :style="{ width: `${quotaPct}%` }" />
+                    </div>
                 </dd>
             </div>
             <div>

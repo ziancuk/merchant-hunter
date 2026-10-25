@@ -18,7 +18,6 @@ const subtitle = computed(() => [props.prospect.category, props.prospect.city].f
         class="group flex w-full cursor-pointer items-start gap-3 rounded-panel border bg-surface/80 p-3 text-left transition hover:border-fg/30 hover:bg-raised/80"
         :class="[selected ? 'border-focus' : 'border-line', prospect.do_not_contact ? 'opacity-70' : '']"
         :aria-pressed="selected"
-        :aria-label="`Prospek ${prospect.name}, skor ${prospect.score}`"
         data-testid="prospect-card"
         @click="emit('select', prospect.id)"
     >

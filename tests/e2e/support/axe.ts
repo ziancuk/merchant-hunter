@@ -6,20 +6,7 @@ import type { Page } from '@playwright/test';
  * Keep this list empty unless a violation is a documented false positive; real app violations are reported in
  * tests/e2e/FINDINGS.md instead of being hidden here.
  */
-export const DISABLED_RULES: { id: string; reason: string }[] = [
-    {
-        id: 'label-content-name-mismatch',
-        reason:
-            'NOT a false positive: real WCAG 2.5.3 (Label in Name) failures in the app, tracked as FINDING F-001 in tests/e2e/FINDINGS.md. ' +
-            'Excluded here ONLY so the remaining rules stay enforced on every page; the rule is asserted by the dedicated test.fixme in a11y.spec.ts, which fails until the app is fixed.',
-    },
-    {
-        id: 'definition-list',
-        reason:
-            'NOT a false positive: <dl> on the data-source cards has a child with role=progressbar (invalid dl structure), tracked as FINDING F-002 in tests/e2e/FINDINGS.md. ' +
-            'Asserted by the dedicated test.fixme in a11y.spec.ts.',
-    },
-];
+export const DISABLED_RULES: { id: string; reason: string }[] = [];
 
 /** CSS selectors excluded from scanning, each with a reason. */
 export const EXCLUDED_SELECTORS: { selector: string; reason: string }[] = [

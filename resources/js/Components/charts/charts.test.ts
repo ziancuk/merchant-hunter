@@ -23,8 +23,10 @@ describe('Cartogram', () => {
     it('renders one accessible tile per item in the given order, with a table alternative', () => {
         wrapper = mount(Cartogram, { props: { items, metric: 'Penetrasi', format: fmt, label: 'Penetrasi per provinsi' } });
         const tiles = wrapper.findAll('button');
-        expect(tiles.map((t) => t.text())).toEqual(['JKT2.0%', 'BAL1.0%', 'ACE0.0%']);
-        expect(tiles[0].attributes('aria-label')).toBe('DKI Jakarta: Penetrasi 2.0%, Prospek: 310');
+        expect(tiles.map((t) => t.text().slice(0, 7))).toEqual(['JKT2.0%', 'BAL1.0%', 'ACE0.0%']);
+        // WCAG 2.5.3: the accessible name must contain the visible tile text.
+        expect(tiles[0].text()).toContain('DKI Jakarta: Penetrasi 2.0%, Prospek: 310');
+        expect(tiles[0].text()).toMatch(/^JKT2\.0%/);
         expect(wrapper.findAll('[data-testid="cartogram-table"] tbody tr')).toHaveLength(3);
     });
 

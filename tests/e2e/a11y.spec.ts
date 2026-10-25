@@ -58,7 +58,7 @@ test.describe('a11y: temuan terbuka', () => {
         await loginAs(context, 'ayu');
     });
 
-    test.fixme('F-001 label-in-name (WCAG 2.5.3): nama aksesibel memuat teks yang terlihat di dock, kartu Kanban, kartogram', async ({ page }) => {
+    test('F-001 label-in-name (WCAG 2.5.3): nama aksesibel memuat teks yang terlihat di dock, kartu Kanban, kartogram', async ({ page }) => {
         for (const path of ['/pipeline', '/dashboard']) {
             await page.goto(path);
             await page.waitForTimeout(800);
@@ -67,7 +67,7 @@ test.describe('a11y: temuan terbuka', () => {
         }
     });
 
-    test.fixme('F-002 definition-list: kartu sumber data memakai struktur dl yang valid', async ({ page }) => {
+    test('F-002 definition-list: kartu sumber data memakai struktur dl yang valid', async ({ page }) => {
         await page.goto('/master/data-sources');
         await page.getByTestId('ds-list').waitFor();
         const { blocking } = await scan(page, { onlyRules: ['definition-list', 'dlitem'] });

@@ -1,4 +1,5 @@
 <?php
+
 // Tiny PDO bridge used by Playwright helpers (no framework boot): php query.php <sqlite-file> <sql> [json-params]
 // SELECT-like statements print a JSON array of rows; other statements print {"changes": n}.
 $db = new PDO('sqlite:'.$argv[1]);
