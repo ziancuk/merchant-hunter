@@ -75,14 +75,14 @@ jobs:
       # (migrate:fresh --seed, hunter:demo-reset -> hunter:seed-prospects --offline --seed=42), snapshots it,
       # runs `npm run build` and serves on 127.0.0.1:8001. Specs restore the snapshot per file (workers=1).
       - run: npm run e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
           path: |
             playwright-report
             test-results
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: e2e-perf-results
