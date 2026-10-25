@@ -24,6 +24,11 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    public function ipThrottleKey(): string
+    {
+        return 'login-ip|'.$this->ip();
+    }
+
     public function throttleKey(): string
     {
         return Str::lower((string) $this->input('email')).'|'.$this->ip();

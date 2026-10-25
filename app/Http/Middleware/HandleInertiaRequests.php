@@ -27,7 +27,8 @@ class HandleInertiaRequests extends Middleware
                 'name' => config('app.name'),
                 'basemap' => config('hunter.basemap') === 'local' ? 'local' : 'openfreemap',
                 'ai_enabled' => filled(config('hunter.ai.key')),
-                'env' => config('app.env'),
+                // Server-decided switch for ?intro/?motion overrides and window.__hunterMap (D-93, D-119); the client never sees APP_ENV.
+                'debug_hooks' => ! app()->isProduction(),
             ],
         ];
     }

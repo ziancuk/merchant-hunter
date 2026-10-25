@@ -64,7 +64,7 @@ const tilted = ref(false);
 const columnZoom = ref(COLUMN_ZOOM);
 
 const urlParams = typeof window !== 'undefined' ? parseMapParams(window.location.search) : parseMapParams('');
-const flags = computed(() => resolveMotionFlags({ params: urlParams, env: app.value?.env, introSkipped: readIntroSkipped(), reducedMotion: reducedMotion.value }));
+const flags = computed(() => resolveMotionFlags({ params: urlParams, debugHooks: app.value?.debug_hooks, introSkipped: readIntroSkipped(), reducedMotion: reducedMotion.value }));
 const hasDeepLink = urlParams.prospect !== null || urlParams.route.length > 0 || urlParams.focus !== null;
 const motion = computed(() => flags.value.motion);
 
@@ -118,7 +118,7 @@ const layers = useMapLayers({
     onHover,
 });
 
-const debugApi = useMapDebugApi({ env: () => app.value?.env, getEngine, getLastLoad: data.getLastLoad, mode, columnZoom, loadAt: data.loadAt, freezeLoads: data.freezeLoads });
+const debugApi = useMapDebugApi({ debugHooks: () => app.value?.debug_hooks, getEngine, getLastLoad: data.getLastLoad, mode, columnZoom, loadAt: data.loadAt, freezeLoads: data.freezeLoads });
 
 watch(
     () => filter.value.province_id,

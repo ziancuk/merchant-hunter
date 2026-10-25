@@ -3,6 +3,7 @@
 return [
     'radius_m' => 2000,
     'demo_mode' => env('HUNTER_DEMO_MODE', false),
+    'demo_user_password' => env('DEMO_USER_PASSWORD'),
     'basemap' => env('HUNTER_BASEMAP', 'openfreemap'),
     'schedule_timezone' => 'Asia/Jakarta',
 

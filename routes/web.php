@@ -36,8 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/master/settings', [PagesController::class, 'settings'])->name('master.settings');
 
     // CSV exports
-    Route::get('/prospects/export.csv', [ExportController::class, 'prospects']);
-    Route::get('/dashboard/export.csv', [ExportController::class, 'dashboard']);
+    Route::get('/prospects/export.csv', [ExportController::class, 'prospects'])->middleware('throttle:10,1,export');
+    Route::get('/dashboard/export.csv', [ExportController::class, 'dashboard'])->middleware('throttle:10,1,export');
 
     // JSON API (session + CSRF, not tokens)
     Route::prefix('api')->group(function () {
@@ -74,7 +74,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/master/outlets', [MasterOutletController::class, 'index']);
         Route::post('/master/outlets', [MasterOutletController::class, 'store']);
-        Route::post('/master/outlets/import', [MasterOutletController::class, 'import']);
+        Route::post('/master/outlets/import', [MasterOutletController::class, 'import'])->middleware('throttle:10,1,import');
         Route::get('/master/outlets/review', [MasterOutletController::class, 'review']);
         Route::put('/master/outlets/{outlet}', [MasterOutletController::class, 'update']);
         Route::delete('/master/outlets/{outlet}', [MasterOutletController::class, 'destroy']);

@@ -4,7 +4,7 @@ import type { MapEngine } from './engine';
 import type { LoadStats } from './useMapData';
 
 export interface DebugApiDeps {
-    env: () => string | undefined;
+    debugHooks: () => boolean | undefined;
     getEngine: () => MapEngine | null;
     getLastLoad: () => LoadStats | null;
     mode: Ref<MapMode>;
@@ -14,14 +14,14 @@ export interface DebugApiDeps {
 }
 
 /** Pure: the debug surface exists everywhere except production (D-93). */
-export function debugApiEnabled(env: string | undefined): boolean {
-    return env !== 'production';
+export function debugApiEnabled(debugHooks: boolean | undefined): boolean {
+    return debugHooks === true;
 }
 
 /** `window.__hunterMap`: hooks for the E2E/performance harness. Installed only outside production; removed on unmount. */
 export function useMapDebugApi(deps: DebugApiDeps) {
     function install(): void {
-        if (!debugApiEnabled(deps.env())) return;
+        if (!debugApiEnabled(deps.debugHooks())) return;
         (window as unknown as Record<string, unknown>).__hunterMap = {
             get map() {
                 return deps.getEngine()?.map ?? null;
