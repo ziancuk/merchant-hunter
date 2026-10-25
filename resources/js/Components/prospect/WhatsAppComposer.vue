@@ -5,8 +5,8 @@ import Button from '@/Components/ui/Button.vue';
 import ErrorState from '@/Components/ui/ErrorState.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import Skeleton from '@/Components/ui/Skeleton.vue';
+import { useI18n } from '@/i18n';
 import { api, normalizeError, postKeepalive, type ApiError } from '@/lib/api';
-import { BLOCKED_REASON_TEXT } from '@/lib/contact';
 import { daysAgoText, formatDateTime } from '@/lib/format';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import type { ContactCheck, ProspectDetail, SharedProps } from '@/types';
@@ -14,6 +14,7 @@ import type { ContactCheck, ProspectDetail, SharedProps } from '@/types';
 const props = withDefaults(defineProps<{ prospectId: number; aiEnabled?: boolean; autoCheck?: boolean }>(), { aiEnabled: undefined, autoCheck: true });
 const emit = defineEmits<{ contacted: [prospect: ProspectDetail]; closed: [] }>();
 
+const { t } = useI18n();
 const MAX_LEN = 1000;
 const MIN_OVERRIDE_REASON = 5;
 const page = usePage();
@@ -38,7 +39,7 @@ const overrideExhausted = computed(() => needsOverride.value && overridesLeft.va
 const blocked = computed(() => !!check.value && (!check.value.allowed || !!check.value.blocked_reason || !check.value.phone_normalized));
 const blockedText = computed(() => {
     const r = check.value?.blocked_reason;
-    return r ? BLOCKED_REASON_TEXT[r] : 'Prospek ini tidak dapat dihubungi.';
+    return t(r ? `prospect.wa.blocked.${r}` : 'prospect.wa.blocked.default');
 });
 const trimmed = computed(() => message.value.trim());
 const canSend = computed(
@@ -79,7 +80,7 @@ async function record(body: { message: string; override_reason?: string }): Prom
         lastBody = null;
         emit('contacted', res.prospect);
     } catch (e) {
-        logError.value = (e as ApiError).message ?? 'Gagal mencatat kontak.';
+        logError.value = (e as ApiError).message ?? t('prospect.wa.record_failed');
     } finally {
         sending.value = false;
     }
@@ -128,14 +129,14 @@ defineExpose({ runCheck });
 </script>
 
 <template>
-    <section class="space-y-3 rounded-panel border border-line bg-surface/60 p-4" aria-label="Kirim pesan WhatsApp">
+    <section class="space-y-3 rounded-panel border border-line bg-surface/60 p-4" :aria-label="t('prospect.wa.composer_aria')">
         <header class="flex items-center justify-between">
-            <h3 class="flex items-center gap-2 font-display text-sm font-semibold"><Icon name="whatsapp" class="text-st-won" /> Hubungi lewat WhatsApp</h3>
-            <button type="button" class="cursor-pointer text-xs text-muted hover:text-fg" @click="emit('closed')">Tutup</button>
+            <h3 class="flex items-center gap-2 font-display text-sm font-semibold"><Icon name="whatsapp" class="text-st-won" /> {{ t('prospect.wa.composer_title') }}</h3>
+            <button type="button" class="cursor-pointer text-xs text-muted hover:text-fg" @click="emit('closed')">{{ t('prospect.wa.close') }}</button>
         </header>
 
         <Skeleton v-if="phase === 'loading' || phase === 'idle'" :lines="3" height="1.25rem" />
-        <ErrorState v-else-if="phase === 'error'" title="Pengecekan kontak gagal" :message="loadError" @retry="runCheck" />
+        <ErrorState v-else-if="phase === 'error'" :title="t('prospect.wa.check_failed')" :message="loadError" @retry="runCheck" />
 
         <template v-else-if="check">
             <p v-if="blocked" class="flex items-start gap-2 rounded-chip border border-danger/40 bg-danger/10 p-3 text-sm text-danger" role="alert" data-testid="wa-blocked">
@@ -151,26 +152,26 @@ defineExpose({ runCheck });
             >
                 <Icon name="alert" class="mt-0.5" />
                 <span>
-                    Sudah dihubungi oleh <strong>{{ check.warning.by }}</strong> {{ daysAgoText(check.warning.days_ago) }} ({{ formatDateTime(check.warning.at) }}).
-                    Pastikan tidak terjadi kontak ganda.
+                    {{ t('prospect.wa.already_contacted') }} <strong>{{ check.warning.by }}</strong> {{ daysAgoText(check.warning.days_ago) }} ({{ formatDateTime(check.warning.at) }}).
+                    {{ t('prospect.wa.avoid_double') }}
                 </span>
             </p>
 
             <div v-if="needsOverride && !blocked && phase !== 'sent'" class="space-y-2 rounded-chip border border-hot/40 bg-hot/10 p-3 text-sm" data-testid="wa-override">
                 <p class="text-fg">
-                    Kontak ini melanggar jeda minimal antar kontak.
-                    <span v-if="!overrideExhausted">Isi alasan untuk melanjutkan.</span>
-                    <strong v-else class="text-danger">Batas override untuk prospek ini sudah habis.</strong>
+                    {{ t('prospect.wa.override_violation') }}
+                    <span v-if="!overrideExhausted">{{ t('prospect.wa.override_fill') }}</span>
+                    <strong v-else class="text-danger">{{ t('prospect.wa.override_exhausted') }}</strong>
                 </p>
-                <p class="num text-xs text-muted" data-testid="wa-overrides-left">Sisa override: {{ overridesLeft }} dari {{ check.max_overrides }}</p>
+                <p class="num text-xs text-muted" data-testid="wa-overrides-left">{{ t('prospect.wa.overrides_left', { left: overridesLeft, max: check.max_overrides }) }}</p>
                 <label v-if="!overrideExhausted" class="block text-xs text-muted">
-                    Alasan override (wajib, minimal {{ MIN_OVERRIDE_REASON }} karakter)
+                    {{ t('prospect.wa.override_reason', { min: MIN_OVERRIDE_REASON }) }}
                     <textarea v-model="overrideReason" rows="2" class="mt-1 w-full rounded-chip border border-line bg-ink/60 p-2 text-sm text-fg" data-testid="wa-override-reason" />
                 </label>
             </div>
 
             <template v-if="!blocked">
-                <label class="block text-xs text-muted" for="wa-message">Pesan (dapat diedit)</label>
+                <label class="block text-xs text-muted" for="wa-message">{{ t('prospect.wa.message_label') }}</label>
                 <textarea
                     id="wa-message"
                     v-model="message"
@@ -183,21 +184,21 @@ defineExpose({ runCheck });
                 <div class="flex items-center justify-between text-xs text-muted">
                     <span class="num">{{ message.length }}/{{ MAX_LEN }}</span>
                     <Button v-if="aiOn && phase !== 'sent'" size="sm" variant="ghost" :loading="aiLoading" data-testid="wa-ai" @click="generateAi">
-                        <Icon name="sparkle" :size="14" /> Buat pesan dengan AI
+                        <Icon name="sparkle" :size="14" /> {{ t('prospect.wa.ai') }}
                     </Button>
                 </div>
                 <p v-if="aiError" class="text-xs text-danger" role="alert">{{ aiError }}</p>
 
                 <p v-if="phase === 'sent'" class="flex items-center gap-2 rounded-chip border border-st-won/40 bg-st-won/10 p-3 text-sm text-st-won" role="status" data-testid="wa-sent">
-                    <Icon name="check" /> WhatsApp dibuka dan kontak sudah dicatat.
+                    <Icon name="check" /> {{ t('prospect.wa.sent') }}
                 </p>
                 <div v-if="logError" class="space-y-2 rounded-chip border border-danger/40 bg-danger/10 p-3 text-sm text-danger" role="alert" data-testid="wa-log-error">
-                    <p>WhatsApp sudah dibuka, tetapi pencatatan gagal: {{ logError }}</p>
-                    <Button size="sm" variant="secondary" :loading="sending" @click="retryRecord">Catat ulang</Button>
+                    <p>{{ t('prospect.wa.log_error', { error: logError }) }}</p>
+                    <Button size="sm" variant="secondary" :loading="sending" @click="retryRecord">{{ t('prospect.wa.record_again') }}</Button>
                 </div>
 
                 <Button v-if="phase !== 'sent'" variant="primary" class="w-full" :disabled="!canSend" :loading="sending" data-testid="wa-send" @click="send">
-                    <Icon name="send" :size="16" /> Buka WhatsApp &amp; catat
+                    <Icon name="send" :size="16" /> {{ t('prospect.wa.send') }}
                 </Button>
             </template>
         </template>

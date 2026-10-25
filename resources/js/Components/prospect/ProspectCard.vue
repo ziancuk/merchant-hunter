@@ -3,11 +3,13 @@ import { computed } from 'vue';
 import Icon from '@/Components/ui/Icon.vue';
 import ProspectBadges from './ProspectBadges.vue';
 import ScoreRing from './ScoreRing.vue';
+import { useI18n } from '@/i18n';
 import { relativeTime } from '@/lib/format';
 import type { PipelineCard } from '@/types';
 
 const props = withDefaults(defineProps<{ prospect: PipelineCard; selected?: boolean }>(), { selected: false });
 const emit = defineEmits<{ select: [id: number] }>();
+const { t } = useI18n();
 
 const subtitle = computed(() => [props.prospect.category, props.prospect.city].filter(Boolean).join(' · '));
 </script>
@@ -28,11 +30,11 @@ const subtitle = computed(() => [props.prospect.category, props.prospect.city].f
             <span class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                 <ProspectBadges :badges="prospect.badges" />
                 <span v-if="!prospect.phone_present" class="inline-flex items-center gap-1 text-2xs text-muted" data-testid="no-phone">
-                    <Icon name="phone" :size="12" /> Tanpa telepon
+                    <Icon name="phone" :size="12" /> {{ t('prospect.card.no_phone') }}
                 </span>
             </span>
             <span v-if="prospect.last_contacted_at || prospect.handled_by" class="num mt-1 block truncate text-2xs text-muted">
-                <template v-if="prospect.last_contacted_at">Dihubungi {{ relativeTime(prospect.last_contacted_at) }}</template>
+                <template v-if="prospect.last_contacted_at">{{ t('prospect.card.contacted', { when: relativeTime(prospect.last_contacted_at) }) }}</template>
                 <template v-if="prospect.handled_by"> · {{ prospect.handled_by }}</template>
             </span>
         </span>

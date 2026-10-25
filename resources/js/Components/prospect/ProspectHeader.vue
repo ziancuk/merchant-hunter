@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { useI18n } from '@/i18n';
 import { BAND_LABEL } from '@/lib/labels';
 import type { ProspectDetail } from '@/types';
 import ProspectBadges from './ProspectBadges.vue';
 import ScoreRing from './ScoreRing.vue';
 
 defineProps<{ detail: ProspectDetail }>();
+const { t } = useI18n();
 </script>
 
 <template>
@@ -13,7 +15,7 @@ defineProps<{ detail: ProspectDetail }>();
         <div class="min-w-0 flex-1 space-y-1.5">
             <p class="text-sm text-muted">{{ detail.category.name }}</p>
             <ProspectBadges :badges="detail.badges" />
-            <p class="hud-label">Skor {{ BAND_LABEL[detail.score_band] }}</p>
+            <p class="hud-label">{{ t('prospect.score.band', { band: BAND_LABEL[detail.score_band] }) }}</p>
         </div>
     </section>
 </template>

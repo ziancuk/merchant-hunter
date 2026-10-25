@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import type { RoutePlan } from '@/types';
 import { MAX_ROUTE_STOPS, MIN_ROUTE_STOPS } from './constants';
 import type { Bbox, RouteStop } from './types';
@@ -33,10 +34,10 @@ export function canPlan(list: readonly RouteStop[]): boolean {
     return list.length >= MIN_ROUTE_STOPS && list.length <= MAX_ROUTE_STOPS;
 }
 
-/** Why planning is not possible (Indonesian), or null when it is. */
+/** Why planning is not possible (translated), or null when it is. */
 export function planBlocker(list: readonly RouteStop[]): string | null {
-    if (list.length < MIN_ROUTE_STOPS) return `Pilih minimal ${MIN_ROUTE_STOPS} prospek.`;
-    if (list.length > MAX_ROUTE_STOPS) return `Maksimal ${MAX_ROUTE_STOPS} prospek per rute.`;
+    if (list.length < MIN_ROUTE_STOPS) return t('map.route.need_min', { min: MIN_ROUTE_STOPS });
+    if (list.length > MAX_ROUTE_STOPS) return t('map.route.max_stops', { max: MAX_ROUTE_STOPS });
     return null;
 }
 
@@ -73,7 +74,7 @@ export function planBounds(plan: Pick<RoutePlan, 'path' | 'stops'>): Bbox | null
 
 /** "Bagian 1 dari 3" for multi-link routes, "Buka di Google Maps" for a single link. */
 export function mapsLinkLabel(index: number, total: number): string {
-    return total <= 1 ? 'Buka di Google Maps' : `Google Maps, bagian ${index + 1} dari ${total}`;
+    return total <= 1 ? t('map.route.gmaps_single') : t('map.route.gmaps_part', { n: index + 1, total });
 }
 
 /** Only https Google Maps links are rendered as anchors. */

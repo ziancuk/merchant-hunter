@@ -1,6 +1,8 @@
 import { computed, ref, shallowRef, watch, type Ref } from 'vue';
+import { t } from '@/i18n';
 import { api, normalizeError } from '@/lib/api';
 import type { ProspectDetail, RoutePlan } from '@/types';
+import { MAX_ROUTE_STOPS } from './constants';
 import { addStop, applyPlan, planBody, planBounds, toggleStop } from './route';
 import type { MapEngine } from './engine';
 import type { ProspectMeta } from './useMapTooltip';
@@ -29,7 +31,7 @@ export function useRoutePlanner(deps: RoutePlannerDeps) {
     function pickForRoute(stop: RouteStop): void {
         const r = toggleStop(routeStops.value, stop);
         routeStops.value = r.list;
-        if (!r.added && !r.removed && r.reason === 'limit') routeError.value = 'Maksimal 30 prospek per rute.';
+        if (!r.added && !r.removed && r.reason === 'limit') routeError.value = t('map.route.max_stops', { max: MAX_ROUTE_STOPS });
         else routeError.value = '';
         if (r.added && stop.name === null) void fillStopName(stop.id);
     }
@@ -39,7 +41,7 @@ export function useRoutePlanner(deps: RoutePlannerDeps) {
         filterOpen.value = false;
         const r = addStop(routeStops.value, { id: p.id, name: p.name, lat: p.lat, lng: p.lng });
         routeStops.value = r.list;
-        routeError.value = r.reason === 'limit' ? 'Maksimal 30 prospek per rute.' : '';
+        routeError.value = r.reason === 'limit' ? t('map.route.max_stops', { max: MAX_ROUTE_STOPS }) : '';
     }
 
     async function fillStopName(id: number): Promise<void> {
