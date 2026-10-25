@@ -3,6 +3,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { MapLibreOverlay } from '@deck.gl/maplibre';
 import type { Layer } from '@deck.gl/core';
+import { t } from '@/i18n';
 import { BasemapGuard, createLocalStyle, resolveStyle, type BasemapKind } from './basemap';
 import { INDONESIA_CENTER, INTRO_START } from './constants';
 import { clampBbox } from './query';
@@ -68,7 +69,7 @@ export class MapEngine {
                 fadeDuration: opts.motion ? 300 : 0,
             } as never);
         } catch (e) {
-            opts.onError?.(e instanceof Error ? e.message : 'Peta tidak dapat dibuat.');
+            opts.onError?.(e instanceof Error ? e.message : t('map.create_failed'));
             return;
         }
         this.wire();

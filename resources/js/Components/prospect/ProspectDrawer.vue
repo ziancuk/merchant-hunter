@@ -12,6 +12,7 @@ import ProspectHeader from './ProspectHeader.vue';
 import ProspectNotes from './ProspectNotes.vue';
 import ScoreBreakdown from './ScoreBreakdown.vue';
 import SimulasiBadge from './SimulasiBadge.vue';
+import { useI18n } from '@/i18n';
 import { api, normalizeError } from '@/lib/api';
 import { formatCoordinates, formatDateTime, formatDistance, formatNumber, relativeTime } from '@/lib/format';
 import type { Activity, PipelineStatus, ProspectDetail } from '@/types';
@@ -41,6 +42,7 @@ const emit = defineEmits<{
     locate: [coords: { lat: number; lng: number }];
 }>();
 
+const { t } = useI18n();
 const detail = ref<ProspectDetail | null>(null);
 const loading = ref(false);
 const loadError = ref('');
@@ -165,7 +167,7 @@ function onContacted(next: ProspectDetail): void {
 }
 
 const safeWebsite = computed(() => (detail.value?.website && /^https?:\/\//i.test(detail.value.website) ? detail.value.website : null));
-const title = computed(() => detail.value?.name ?? (loadError.value ? 'Prospek' : 'Memuat prospek…'));
+const title = computed(() => detail.value?.name ?? (loadError.value ? t('prospect.drawer.fallback_title') : t('prospect.drawer.loading')));
 </script>
 
 <template>
@@ -179,7 +181,7 @@ const title = computed(() => detail.value?.name ?? (loadError.value ? 'Prospek' 
             <Skeleton height="5rem" />
         </div>
 
-        <ErrorState v-else-if="loadError && !detail" title="Gagal memuat prospek" :message="loadError" :retrying="loading" @retry="load" />
+        <ErrorState v-else-if="loadError && !detail" :title="t('prospect.drawer.load_failed')" :message="loadError" :retrying="loading" @retry="load" />
 
         <div v-else-if="detail" class="space-y-6 p-4" data-testid="drawer-content">
             <ProspectHeader :detail="detail" />
@@ -188,67 +190,67 @@ const title = computed(() => detail.value?.name ?? (loadError.value ? 'Prospek' 
 
             <!-- Score -->
             <section aria-labelledby="sec-skor">
-                <h3 id="sec-skor" class="hud-label mb-2">Rincian skor</h3>
+                <h3 id="sec-skor" class="hud-label mb-2">{{ t('prospect.drawer.score_title') }}</h3>
                 <ScoreBreakdown :components="detail.score_breakdown" :band="detail.score_band" />
             </section>
 
             <!-- Location -->
             <section aria-labelledby="sec-lokasi" class="space-y-2">
-                <h3 id="sec-lokasi" class="hud-label">Lokasi</h3>
+                <h3 id="sec-lokasi" class="hud-label">{{ t('prospect.drawer.location') }}</h3>
                 <p v-if="detail.address" class="text-sm text-fg">{{ detail.address }}</p>
                 <div v-else class="flex items-start gap-2 rounded-chip border border-dashed border-line p-3 text-sm" data-testid="address-missing">
                     <Icon name="pin" class="mt-0.5 text-muted" />
                     <div>
-                        <p class="text-fg">Alamat belum tersedia</p>
+                        <p class="text-fg">{{ t('prospect.drawer.no_address') }}</p>
                         <p class="num text-xs text-muted">{{ formatCoordinates(detail.lat, detail.lng) }}</p>
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <Button size="sm" variant="secondary" @click="emit('locate', { lat: detail.lat, lng: detail.lng })"><Icon name="navigation" :size="14" /> Lihat di peta</Button>
+                    <Button size="sm" variant="secondary" @click="emit('locate', { lat: detail.lat, lng: detail.lng })"><Icon name="navigation" :size="14" /> {{ t('prospect.drawer.view_on_map') }}</Button>
                     <!-- Extra page-specific actions (e.g. "Tambah ke rute" on the map page). -->
                     <slot name="actions" :prospect="detail" />
                 </div>
                 <p class="text-xs text-muted">
                     <template v-if="detail.nearest_outlet">
-                        Outlet terdekat: <strong class="text-fg">{{ detail.nearest_outlet.name }}</strong> <span class="num">({{ formatDistance(detail.nearest_outlet.distance_m) }})</span>.
+                        {{ t('prospect.drawer.nearest_outlet') }} <strong class="text-fg">{{ detail.nearest_outlet.name }}</strong> <span class="num">({{ formatDistance(detail.nearest_outlet.distance_m) }})</span>.
                     </template>
-                    <template v-else>Belum ada outlet terdekat.</template>
-                    <span class="num"> {{ formatNumber(detail.neighbor_count_500m) }}</span> prospek lain dalam 500 m.
+                    <template v-else>{{ t('prospect.drawer.no_nearest') }}</template>
+                    <span class="num"> {{ formatNumber(detail.neighbor_count_500m) }}</span> {{ t('prospect.drawer.neighbors_suffix') }}
                 </p>
             </section>
 
             <!-- Contact info -->
             <section aria-labelledby="sec-kontak">
-                <h3 id="sec-kontak" class="hud-label mb-2">Kontak &amp; reputasi</h3>
+                <h3 id="sec-kontak" class="hud-label mb-2">{{ t('prospect.drawer.contact_title') }}</h3>
                 <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-                    <dt class="text-muted">Telepon</dt>
+                    <dt class="text-muted">{{ t('prospect.drawer.phone') }}</dt>
                     <dd class="flex flex-wrap items-center gap-2">
                         <span v-if="detail.phone" class="num">{{ detail.phone }}</span>
-                        <span v-else class="text-muted">Tidak ada</span>
-                        <SimulasiBadge v-if="detail.phone && detail.phone_simulated" field="Telepon" />
+                        <span v-else class="text-muted">{{ t('prospect.drawer.none') }}</span>
+                        <SimulasiBadge v-if="detail.phone && detail.phone_simulated" :field="t('prospect.drawer.phone')" />
                     </dd>
-                    <dt class="text-muted">Website</dt>
+                    <dt class="text-muted">{{ t('prospect.drawer.website') }}</dt>
                     <dd>
                         <a v-if="safeWebsite" :href="safeWebsite" target="_blank" rel="noopener noreferrer" class="break-all text-st-contacted underline-offset-2 hover:underline">{{ safeWebsite }}</a>
-                        <span v-else class="text-muted">Tidak ada</span>
+                        <span v-else class="text-muted">{{ t('prospect.drawer.none') }}</span>
                     </dd>
-                    <dt class="text-muted">Rating</dt>
+                    <dt class="text-muted">{{ t('prospect.drawer.rating') }}</dt>
                     <dd class="flex flex-wrap items-center gap-2">
                         <template v-if="detail.rating !== null">
                             <span class="num inline-flex items-center gap-1"><Icon name="star" :size="14" class="text-warm" />{{ formatNumber(detail.rating, 1) }}</span>
-                            <SimulasiBadge v-if="detail.rating_simulated" field="Rating" />
+                            <SimulasiBadge v-if="detail.rating_simulated" :field="t('prospect.drawer.rating')" />
                         </template>
-                        <span v-else class="text-muted">Belum ada</span>
+                        <span v-else class="text-muted">{{ t('prospect.drawer.none_yet') }}</span>
                     </dd>
-                    <dt class="text-muted">Ulasan</dt>
+                    <dt class="text-muted">{{ t('prospect.drawer.reviews') }}</dt>
                     <dd class="flex flex-wrap items-center gap-2">
                         <template v-if="detail.review_count !== null">
                             <span class="num">{{ formatNumber(detail.review_count) }}</span>
-                            <SimulasiBadge v-if="detail.reviews_simulated" field="Ulasan" />
+                            <SimulasiBadge v-if="detail.reviews_simulated" :field="t('prospect.drawer.reviews')" />
                         </template>
-                        <span v-else class="text-muted">Belum ada</span>
+                        <span v-else class="text-muted">{{ t('prospect.drawer.none_yet') }}</span>
                     </dd>
-                    <dt class="text-muted">Data diperbarui</dt>
+                    <dt class="text-muted">{{ t('prospect.drawer.data_updated') }}</dt>
                     <dd class="num text-xs" :title="formatDateTime(detail.data_updated_at)">{{ formatDateTime(detail.data_updated_at) }} ({{ relativeTime(detail.data_updated_at) }})</dd>
                 </dl>
             </section>
@@ -271,13 +273,13 @@ const title = computed(() => detail.value?.name ?? (loadError.value ? 'Prospek' 
 
             <!-- Timeline -->
             <section aria-labelledby="sec-timeline">
-                <h3 id="sec-timeline" class="hud-label mb-3">Aktivitas</h3>
+                <h3 id="sec-timeline" class="hud-label mb-3">{{ t('prospect.drawer.activity') }}</h3>
                 <ActivityTimeline :activities="detail.activities" />
             </section>
 
             <p class="flex flex-wrap items-center gap-2 text-2xs text-muted">
-                <Badge v-if="detail.lifecycle_status === 'closed'" tone="danger">Tutup</Badge>
-                Pertama ditemukan {{ relativeTime(detail.first_seen_at) }} · kepadatan area <span class="num">{{ formatNumber(detail.area_density) }}</span>
+                <Badge v-if="detail.lifecycle_status === 'closed'" tone="danger">{{ t('prospect.badge.closed') }}</Badge>
+                {{ t('prospect.drawer.first_seen', { when: relativeTime(detail.first_seen_at) }) }} · {{ t('prospect.drawer.density') }} <span class="num">{{ formatNumber(detail.area_density) }}</span>
             </p>
         </div>
     </Drawer>

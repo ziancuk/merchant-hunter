@@ -1,6 +1,7 @@
-import { computed, type Ref, type ShallowRef } from 'vue';
+import { computed, onScopeDispose, watch, type Ref, type ShallowRef } from 'vue';
 import type { CommandItem } from '@/Components/ui/CommandPalette.vue';
-import { useShortcuts } from '@/composables/useShortcuts';
+import { registerShortcut, type ShortcutDef } from '@/composables/useShortcuts';
+import { currentLocale, t } from '@/i18n';
 import { api } from '@/lib/api';
 import type { MapMode } from '@/types';
 import { MAP_MODES } from './constants';
@@ -38,18 +39,27 @@ export function useMapCommands(d: MapCommandsDeps) {
     }
 
     const commandItems = computed<CommandItem[]>(() => [
-        ...MAP_MODES.map((m) => ({ id: `mode:${m.key}`, label: `Mode peta: ${m.label}`, hint: m.shortcut, group: 'Peta', action: () => (d.mode.value = m.key) })),
-        { id: 'act:reset-filter', label: 'Atur ulang filter', group: 'Peta', action: () => d.resetFilter() },
-        { id: 'act:filter', label: d.filterOpen.value ? 'Sembunyikan panel filter' : 'Tampilkan panel filter', hint: 'F', group: 'Peta', action: d.toggleFilter },
-        { id: 'act:route', label: d.routeOpen.value ? 'Tutup perencana rute' : 'Buka perencana rute', hint: 'R', group: 'Peta', action: d.toggleRoute },
-        { id: 'act:reset-view', label: 'Kembali ke tampilan Indonesia', group: 'Peta', action: () => d.getEngine()?.resetView() },
+        ...MAP_MODES.map((m) => ({ id: `mode:${m.key}`, label: t('map.commands.mode', { label: m.label }), hint: m.shortcut, group: t('map.commands.group'), action: () => (d.mode.value = m.key) })),
+        { id: 'act:reset-filter', label: t('map.commands.reset_filter'), group: t('map.commands.group'), action: () => d.resetFilter() },
+        { id: 'act:filter', label: d.filterOpen.value ? t('map.commands.hide_filter') : t('map.commands.show_filter'), hint: 'F', group: t('map.commands.group'), action: d.toggleFilter },
+        { id: 'act:route', label: d.routeOpen.value ? t('map.commands.close_route') : t('map.commands.open_route'), hint: 'R', group: t('map.commands.group'), action: d.toggleRoute },
+        { id: 'act:reset-view', label: t('map.commands.reset_view'), group: t('map.commands.group'), action: () => d.getEngine()?.resetView() },
     ]);
 
-    useShortcuts([
-        ...MAP_MODES.map((m) => ({ keys: m.shortcut, description: `Mode peta: ${m.label}`, group: 'Peta', handler: () => (d.mode.value = m.key) })),
-        { keys: 'r', description: 'Buka/tutup perencana rute', group: 'Peta', handler: d.toggleRoute },
-        { keys: 'f', description: 'Tampilkan/sembunyikan filter', group: 'Peta', handler: d.toggleFilter },
-    ]);
+    // The shortcut registry copies the definitions, so re-register them when the language changes to keep the `?` help list translated.
+    const shortcutDefs = (): ShortcutDef[] => [
+        ...MAP_MODES.map((m) => ({ keys: m.shortcut, description: t('map.commands.mode', { label: m.label }), group: t('map.commands.group'), handler: () => (d.mode.value = m.key) })),
+        { keys: 'r', description: t('map.commands.kb_route'), group: t('map.commands.group'), handler: d.toggleRoute },
+        { keys: 'f', description: t('map.commands.kb_filter'), group: t('map.commands.group'), handler: d.toggleFilter },
+    ];
+    let offs: (() => void)[] = [];
+    const registerAll = () => {
+        offs.forEach((off) => off());
+        offs = shortcutDefs().map(registerShortcut);
+    };
+    registerAll();
+    watch(currentLocale, registerAll);
+    onScopeDispose(() => offs.forEach((off) => off()));
 
     return { search, commandItems };
 }
