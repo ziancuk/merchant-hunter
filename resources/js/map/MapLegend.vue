@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { BAND_HEX, BAND_LABEL, STATUS_HEX, STATUS_LABEL } from '@/lib/colors';
+import { BAND_HEX, STATUS_HEX } from '@/lib/colors';
+import { BAND_LABEL, STATUS_LABEL } from '@/lib/labels';
 import { PIPELINE_STATUSES, type ScoreBand } from '@/types';
 import type { ColorBy } from './types';
 

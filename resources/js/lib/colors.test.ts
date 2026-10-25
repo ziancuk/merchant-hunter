@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { BAND_CLASSES, BAND_HEX, BAND_LABEL, BAND_VAR, STATUS_CLASSES, STATUS_LABEL, scoreBand } from './colors';
+import { BAND_CLASSES, BAND_HEX, BAND_VAR, STATUS_CLASSES, scoreBand } from './colors';
+import { BAND_LABEL, STATUS_LABEL } from './labels';
 import { PIPELINE_STATUSES } from '@/types';
 
 describe('colors', () => {

@@ -86,10 +86,10 @@ describe('FunnelChart', () => {
     const stages = [
         { key: 'found', label: 'Ditemukan', value: 1000, color: 'red' },
         { key: 'contacted', label: 'Dihubungi', value: 250, color: 'red' },
-        { key: 'won', label: 'Menang', value: 0, color: 'red' },
+        { key: 'won', label: 'Deal', value: 0, color: 'red' },
     ];
     it('shows conversion from the previous stage and a separate lost row', () => {
-        wrapper = mount(FunnelChart, { props: { stages, lost: { label: 'Kalah', value: 40, color: 'pink' }, label: 'Corong' } });
+        wrapper = mount(FunnelChart, { props: { stages, lost: { label: 'Ditolak', value: 40, color: 'pink' }, label: 'Corong' } });
         expect(wrapper.get('[data-testid="funnel-contacted"]').text()).toContain('25,0% dari tahap sebelumnya');
         expect(wrapper.get('[data-testid="funnel-won"]').text()).toContain('0,0%');
         expect(wrapper.get('[data-testid="funnel-lost"]').text()).toContain('40');

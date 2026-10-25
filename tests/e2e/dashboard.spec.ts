@@ -70,7 +70,7 @@ test.describe('Dasbor', () => {
         expect(await settledHudCount(page)).toBe(exp.active);
     });
 
-    test('12b. KPI dan corong ikut berubah setelah prospek dihubungi lalu menang', async ({ page, context }) => {
+    test('12b. KPI dan corong ikut berubah setelah prospek dihubungi lalu deal', async ({ page, context }) => {
         const p = pickContactable(5);
         const before = expectedKpis();
         expect((await api(context, 'POST', `/api/prospects/${p.id}/contact`, { message: 'Halo dari uji E2E.' })).status).toBe(200);

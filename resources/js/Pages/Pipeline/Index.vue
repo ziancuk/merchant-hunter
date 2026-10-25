@@ -10,12 +10,11 @@ import {
     buildMapUrl,
     buildPageUrl,
     buildRouteUrl,
-    COLUMN_LABEL,
     MAX_ROUTE_STOPS,
-    skipReasonLabel,
     type BoardColumn,
     type PipelineView,
 } from '@/Components/pipeline/pipeline';
+import { COLUMN_LABEL, skipReasonLabel } from '@/lib/labels';
 import { usePipelineBoard, usePipelineTable } from '@/Components/pipeline/usePipeline';
 import FilterPanel, { type FilterOptions } from '@/Components/prospect/FilterPanel.vue';
 import ProspectDrawer, { type RejectionReason } from '@/Components/prospect/ProspectDrawer.vue';

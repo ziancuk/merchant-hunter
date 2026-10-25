@@ -19,6 +19,7 @@ import Icon from '@/Components/ui/Icon.vue';
 import KpiCounter from '@/Components/ui/KpiCounter.vue';
 import { formatDistance, formatNumber, formatPercent, relativeTime } from '@/lib/format';
 import { STATUS_VAR } from '@/lib/colors';
+import { STATUS_LABEL } from '@/lib/labels';
 
 const props = defineProps<{
     kpis: DashboardKpis;
@@ -43,9 +44,9 @@ const stages = computed(() => [
     { key: 'found', label: 'Ditemukan', value: props.funnel?.found ?? 0, color: STATUS_VAR.new },
     { key: 'contacted', label: 'Dihubungi', value: props.funnel?.contacted ?? 0, color: STATUS_VAR.contacted },
     { key: 'demo', label: 'Demo', value: props.funnel?.demo ?? 0, color: STATUS_VAR.demo },
-    { key: 'won', label: 'Menang', value: props.funnel?.won ?? 0, color: STATUS_VAR.won },
+    { key: 'won', label: STATUS_LABEL.won, value: props.funnel?.won ?? 0, color: STATUS_VAR.won },
 ]);
-const lost = computed(() => ({ label: 'Kalah', value: props.funnel?.lost ?? 0, color: STATUS_VAR.lost }));
+const lost = computed(() => ({ label: STATUS_LABEL.lost, value: props.funnel?.lost ?? 0, color: STATUS_VAR.lost }));
 
 type SortKey = 'penetration' | 'prospects' | 'name';
 const sortKey = ref<SortKey>('penetration');
@@ -66,7 +67,7 @@ const tiles = computed<CartogramItem[]>(() => {
         label: r.province,
         short: provinceShort(r.province),
         value: r.penetration,
-        details: [`Outlet: ${formatNumber(r.outlets)}`, `Prospek: ${formatNumber(r.prospects)}`, `Menang: ${formatNumber(r.won)}`],
+        details: [`Outlet: ${formatNumber(r.outlets)}`, `Prospek: ${formatNumber(r.prospects)}`, `Deal: ${formatNumber(r.won)}`],
     }));
 });
 const fmtPenetration = (n: number) => formatPercent(n, 2);
@@ -146,7 +147,7 @@ const whitespaceHref = (w: WhitespaceTop) => `/?lat=${w.lat}&lng=${w.lng}&mode=w
                 </div>
 
                 <div class="lg:col-span-12">
-                    <Panel title="Penetrasi per provinsi" hint="Kartogram petak: satu petak per provinsi, warna menurut penetrasi (menang ÷ prospek aktif).">
+                    <Panel title="Penetrasi per provinsi" hint="Kartogram petak: satu petak per provinsi, warna menurut penetrasi (deal ÷ prospek aktif).">
                         <template #actions>
                             <div role="group" aria-label="Urutkan petak" class="flex gap-1">
                                 <button
@@ -201,7 +202,7 @@ const whitespaceHref = (w: WhitespaceTop) => `/?lat=${w.lat}&lng=${w.lng}&mode=w
                             <li v-for="u in activity_by_user" :key="u.user_id" class="grid gap-1" data-testid="activity-row">
                                 <div class="flex items-baseline justify-between gap-3 text-sm">
                                     <span class="truncate">{{ u.name }}</span>
-                                    <span class="num text-2xs text-muted">{{ u.contacted }} hubungi · {{ u.demo }} demo · {{ u.won }} menang</span>
+                                    <span class="num text-2xs text-muted">{{ u.contacted }} hubungi · {{ u.demo }} demo · {{ u.won }} deal</span>
                                 </div>
                                 <div class="h-1.5 overflow-hidden rounded-full bg-fg/10" aria-hidden="true">
                                     <div class="h-full rounded-full" :style="{ width: `${(u.contacted / maxActivity) * 100}%`, background: STATUS_VAR.contacted }" />

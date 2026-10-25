@@ -13,7 +13,8 @@ import { computed, ref } from 'vue';
 import Button from '@/Components/ui/Button.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { countActiveFilters, filterToQuery } from '@/composables/useFilters';
-import { STATUS_CLASSES, STATUS_LABEL } from '@/lib/colors';
+import { STATUS_CLASSES } from '@/lib/colors';
+import { STATUS_LABEL } from '@/lib/labels';
 import type { ProspectFilter } from '@/types';
 
 const props = withDefaults(defineProps<{ modelValue: ProspectFilter; options: FilterOptions; collapsible?: boolean }>(), { collapsible: true });

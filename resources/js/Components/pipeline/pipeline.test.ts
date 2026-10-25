@@ -9,9 +9,9 @@ import {
     insertSorted,
     mergeDetail,
     normalizeColumns,
-    skipReasonLabel,
 } from './pipeline';
 import { cardFixture, prospectFixture } from '@/lib/testing';
+import { skipReasonLabel } from '@/lib/labels';
 
 describe('pipeline URL builders (filter → query)', () => {
     const filter = { category_id: [1, 2], score_min: 60, pipeline_status: ['new' as const], has_phone: 1 as const };

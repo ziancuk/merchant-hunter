@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, ref, useId } from 'vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { STATUS_CLASSES } from '@/lib/colors';
 import { PIPELINE_STATUSES, type PipelineStatus } from '@/types';
-import { COLUMN_LABEL } from './pipeline';
+import { COLUMN_LABEL } from '@/lib/labels';
 
 const props = defineProps<{ prospectId: number; name: string; current: PipelineStatus }>();
 const emit = defineEmits<{ move: [to: PipelineStatus] }>();

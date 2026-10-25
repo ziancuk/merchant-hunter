@@ -7,7 +7,8 @@ import { formatNumber } from '@/lib/format';
 import { STATUS_CLASSES } from '@/lib/colors';
 import { PIPELINE_STATUSES, type PipelineStatus } from '@/types';
 import MoveMenu from './MoveMenu.vue';
-import { COLUMN_LABEL, type BoardColumns } from './pipeline';
+import { COLUMN_LABEL } from '@/lib/labels';
+import type { BoardColumns } from './pipeline';
 
 const props = withDefaults(
     defineProps<{

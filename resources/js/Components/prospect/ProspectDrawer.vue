@@ -14,7 +14,8 @@ import SimulasiBadge from './SimulasiBadge.vue';
 import WhatsAppButton from './WhatsAppButton.vue';
 import WhatsAppComposer from './WhatsAppComposer.vue';
 import { api, normalizeError } from '@/lib/api';
-import { BAND_LABEL, STATUS_CLASSES, STATUS_LABEL } from '@/lib/colors';
+import { STATUS_CLASSES } from '@/lib/colors';
+import { BAND_LABEL, STATUS_LABEL } from '@/lib/labels';
 import { formatCoordinates, formatDateTime, formatDistance, formatNumber, relativeTime } from '@/lib/format';
 import { PIPELINE_STATUSES, type Activity, type PipelineStatus, type ProspectDetail } from '@/types';
 
@@ -289,7 +290,7 @@ const title = computed(() => detail.value?.name ?? (loadError.value ? 'Prospek' 
                         <option v-for="r in rejectionReasons" :key="r.id" :value="r.id">{{ r.label }}</option>
                     </select>
                     <div class="flex gap-2">
-                        <Button size="sm" variant="danger" :disabled="rejectionId === ''" :loading="busy" data-testid="confirm-lost" @click="confirmLost">Tandai kalah</Button>
+                        <Button size="sm" variant="danger" :disabled="rejectionId === ''" :loading="busy" data-testid="confirm-lost" @click="confirmLost">Tandai ditolak</Button>
                         <Button size="sm" variant="ghost" @click="pendingLost = false">Batal</Button>
                     </div>
                 </div>
