@@ -145,7 +145,8 @@ test.describe('Perencana rute', () => {
         await expect(links.first()).toHaveAttribute('rel', /noopener/);
     });
 
-    test('B-01: panel filter di ponsel bisa digulir dan checkbox terakhir dapat diklik', async ({ page }) => {
+    test('B-01: panel filter di ponsel bisa digulir dan checkbox terakhir dapat diklik', async ({ page, context }) => {
+        await loginAs(context, 'ayu');
         await page.setViewportSize({ width: 390, height: 844 });
         await openMap(page);
         await page.getByTestId('filter-toggle').click();
@@ -159,7 +160,8 @@ test.describe('Perencana rute', () => {
         await expect(page.getByTestId('f-newopen')).toBeChecked();
     });
 
-    test('B-05: mengosongkan rute menghapus ?route= dari URL', async ({ page }) => {
+    test('B-05: mengosongkan rute menghapus ?route= dari URL', async ({ page, context }) => {
+        await loginAs(context, 'ayu');
         const from = pickContactable(0);
         const stops = nearbyProspects(from, 3);
         await openMap(page, `route=${stops.map((s) => s.id).join(',')}`);
