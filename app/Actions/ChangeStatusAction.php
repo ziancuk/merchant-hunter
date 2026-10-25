@@ -31,7 +31,7 @@ final class ChangeStatusAction
         if ($to === PipelineStatus::Lost) {
             $reason = $rejectionReasonId !== null ? RejectionReason::query()->find($rejectionReasonId) : null;
             if ($reason === null) {
-                throw ValidationException::withMessages(['rejection_reason_id' => ['Alasan penolakan wajib dipilih bila status Ditolak.']]);
+                throw ValidationException::withMessages(['rejection_reason_id' => [__('api.rejection_reason_required')]]);
             }
         }
 
@@ -61,7 +61,7 @@ final class ChangeStatusAction
                 'type' => $reason !== null ? ActivityType::Rejected->value : ActivityType::StatusChange->value,
                 'from_status' => $from->value,
                 'to_status' => $to->value,
-                'body' => $reason !== null ? 'Ditolak: '.$reason->label : null,
+                'body' => $reason !== null ? __('api.activity.rejected', ['reason' => $reason->label]) : null,
                 'meta' => $reason !== null ? ['rejection_reason_id' => $reason->id, 'rejection_reason_key' => $reason->key] : null,
             ]);
 

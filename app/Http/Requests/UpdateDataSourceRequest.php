@@ -28,10 +28,10 @@ final class UpdateDataSourceRequest extends ApiRequest
                 }
                 $unknown = array_diff(array_map('strval', array_keys($value)), self::CONFIG_KEYS);
                 if ($unknown !== []) {
-                    $fail('Konfigurasi memuat pengaturan yang tidak dikenal. Yang diizinkan: '.implode(', ', self::CONFIG_KEYS).'.');
+                    $fail(__('requests.messages.config_unknown', ['keys' => implode(', ', self::CONFIG_KEYS)]));
                 }
                 if (strlen((string) json_encode($value)) > self::CONFIG_MAX_BYTES) {
-                    $fail('Konfigurasi terlalu besar (maksimal '.self::CONFIG_MAX_BYTES.' byte).');
+                    $fail(__('requests.messages.config_too_large', ['max' => self::CONFIG_MAX_BYTES]));
                 }
             }],
             'config.region' => ['sometimes', 'nullable', 'string', 'max:10'],
@@ -45,13 +45,6 @@ final class UpdateDataSourceRequest extends ApiRequest
     /** @return array<string, string> */
     public function attributes(): array
     {
-        return [
-            'config' => 'Konfigurasi',
-            'config.region' => 'Wilayah',
-            'config.language' => 'Bahasa',
-            'config.radius_m' => 'Radius',
-            'config.timeout_s' => 'Batas waktu',
-            'config.notes' => 'Catatan',
-        ];
+        return (array) __('requests.attributes.data_source');
     }
 }

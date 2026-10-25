@@ -9,7 +9,7 @@ final class ContactRequest extends ApiRequest
     /** @return array<string, string> */
     public function messages(): array
     {
-        return ['override_reason.min' => 'Alasan override minimal 5 karakter.'] + parent::messages();
+        return ['override_reason.min' => __('requests.messages.override_reason_min')] + parent::messages();
     }
 
     /** @return array<string, mixed> */

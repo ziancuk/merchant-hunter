@@ -23,4 +23,10 @@ enum ScoreBand: string
             default => self::Cold,
         };
     }
+
+    /** Display name in the request language (hot = Bidik Utama / Prime Target, ...). */
+    public function label(): string
+    {
+        return __('scoring.bands.'.$this->value);
+    }
 }

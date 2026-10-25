@@ -15,6 +15,6 @@ final class SearchRequest extends ApiRequest
     /** @return array<string, string> */
     public function messages(): array
     {
-        return ['q.min' => 'Kata kunci minimal 2 karakter.'] + parent::messages();
+        return ['q.min' => __('requests.messages.search_min')] + parent::messages();
     }
 }

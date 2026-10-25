@@ -34,7 +34,7 @@ class MasterDataSourceController extends Controller
             $status = $tester->test($dataSource);
         } catch (Throwable) {
             // Never echo exception text: it could contain the request URL with the key.
-            $status = new ConnectionStatus(false, 'Koneksi gagal. Periksa konfigurasi sumber data.');
+            $status = new ConnectionStatus(false, __('api.connection.failed'));
         }
 
         return response()->json([

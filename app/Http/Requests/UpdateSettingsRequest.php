@@ -36,24 +36,7 @@ final class UpdateSettingsRequest extends ApiRequest
      */
     public function attributes(): array
     {
-        return [
-            'contact' => 'Aturan kontak',
-            'contact.warn_days' => 'Peringatan kontak terakhir',
-            'contact.min_interval_days' => 'Jarak minimum antar kontak',
-            'contact.max_overrides' => 'Maksimum override per prospek',
-            'digest' => 'Digest',
-            'digest.email_to' => 'Email penerima digest',
-            'digest.hot_threshold' => 'Ambang skor panas',
-            'digest.follow_up_days' => 'Hari tindak lanjut',
-            'sync' => 'Sinkronisasi',
-            'sync.max_outlets_per_run' => 'Maksimum outlet per run',
-            'scoring' => 'Penilaian',
-            'scoring.params' => 'Parameter penilaian',
-            'enrichment' => 'Pengayaan data',
-            'enrichment.simulated' => 'Data simulasi',
-            'demo' => 'Demo',
-            'demo.allow_simulated_whatsapp' => 'WhatsApp nomor simulasi',
-        ];
+        return (array) __('requests.attributes.settings');
     }
 
     /** @return array<string, array<string, mixed>> */

@@ -23,7 +23,7 @@ final class UpdateDataSourceAction
         }
 
         if ($source->key === 'google' && $source->is_active && ! $source->hasKey()) {
-            throw ValidationException::withMessages(['is_active' => ['Google Places tidak dapat diaktifkan tanpa API key.']]);
+            throw ValidationException::withMessages(['is_active' => [__('api.google_needs_key')]]);
         }
 
         $source->save();

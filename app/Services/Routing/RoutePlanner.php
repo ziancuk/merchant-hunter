@@ -9,8 +9,6 @@ use App\Services\Geo\Haversine;
 /** Visit-route planner: nearest-neighbour seed improved with 2-opt on straight-line (haversine) distance. */
 final class RoutePlanner
 {
-    public const ESTIMATE_NOTE = 'Estimasi garis lurus; jarak jalan sebenarnya lebih panjang.';
-
     public function __construct(private readonly GoogleMapsUrlBuilder $urls = new GoogleMapsUrlBuilder) {}
 
     /**
@@ -52,7 +50,7 @@ final class RoutePlanner
             'order' => $order,
             'stops' => $outStops,
             'total_km' => round(array_sum($legs) / 1000, 2),
-            'estimate_note' => self::ESTIMATE_NOTE,
+            'estimate_note' => __('api.route_estimate_note'),
             'path' => array_map(fn (array $n) => [$n['lng'], $n['lat']], $ordered),
             'google_maps_urls' => $this->urls->build(array_map(fn (array $n) => ['lat' => $n['lat'], 'lng' => $n['lng']], $ordered)),
         ];

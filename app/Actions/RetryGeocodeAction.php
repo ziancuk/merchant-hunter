@@ -18,7 +18,7 @@ final class RetryGeocodeAction
     public function handle(Outlet $outlet): Outlet
     {
         if ($outlet->geocode_status !== GeocodeStatus::Failed) {
-            throw new BusinessRuleException('Hanya outlet dengan status geocoding gagal yang dapat dicoba ulang.', 'geocode_not_failed');
+            throw new BusinessRuleException(__('api.geocode_not_failed'), 'geocode_not_failed');
         }
 
         GeocodeOutletJob::dispatch($outlet->id);

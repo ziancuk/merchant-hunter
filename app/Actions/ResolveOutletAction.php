@@ -21,14 +21,14 @@ final class ResolveOutletAction
         if ($candidateIndex !== null) {
             $candidate = ($outlet->geocode_candidates ?? [])[$candidateIndex] ?? null;
             if ($candidate === null) {
-                throw new BusinessRuleException('Kandidat tidak ditemukan.', 'invalid_candidate');
+                throw new BusinessRuleException(__('api.invalid_candidate'), 'invalid_candidate');
             }
             $lat = (float) $candidate['lat'];
             $lng = (float) $candidate['lng'];
             $score = isset($candidate['score']) ? (int) $candidate['score'] : null;
         }
         if ($lat === null || $lng === null) {
-            throw new BusinessRuleException('Pilih kandidat atau isi koordinat.', 'missing_coordinates');
+            throw new BusinessRuleException(__('api.missing_coordinates'), 'missing_coordinates');
         }
 
         $outlet->fill([

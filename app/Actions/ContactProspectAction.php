@@ -16,13 +16,6 @@ use Illuminate\Support\Facades\DB;
 /** Records a WhatsApp contact (D-65) after enforcing opt-out, frequency limit and override rules. */
 final class ContactProspectAction
 {
-    private const BLOCK_MESSAGES = [
-        'do_not_contact' => 'Prospek ini meminta tidak dihubungi (opt-out).',
-        'closed' => 'Usaha ini sudah tutup.',
-        'no_phone' => 'Prospek ini tidak memiliki nomor telepon.',
-        'invalid_phone' => 'Nomor telepon bukan nomor ponsel yang valid untuk WhatsApp.',
-    ];
-
     public function __construct(private readonly ContactPolicy $policy) {}
 
     public function handle(Prospect $prospect, User $user, string $message, ?string $overrideReason = null): Prospect
@@ -34,22 +27,22 @@ final class ContactProspectAction
             $check = $this->policy->check($prospect, $user);
 
             if ($check->blockedReason !== null) {
-                throw new BusinessRuleException(self::BLOCK_MESSAGES[$check->blockedReason], $check->blockedReason);
+                throw new BusinessRuleException(__('api.contact.'.$check->blockedReason), $check->blockedReason);
             }
 
             $override = false;
             if ($check->minIntervalViolation) {
                 if (blank($overrideReason)) {
                     throw new BusinessRuleException(
-                        'Prospek ini sudah dihubungi dalam batas waktu minimum. Isi alasan override untuk menghubungi lagi.',
+                        __('api.contact.min_interval'),
                         'min_interval',
                         422,
-                        ['override_reason' => ['Alasan override wajib diisi.']],
+                        ['override_reason' => [__('api.contact.override_required')]],
                     );
                 }
                 if ($check->overrideCount >= $check->maxOverrides) {
                     throw new BusinessRuleException(
-                        'Batas override kontak untuk prospek ini sudah tercapai ('.$check->maxOverrides.').',
+                        __('api.contact.max_overrides', ['max' => $check->maxOverrides]),
                         'max_overrides',
                     );
                 }
@@ -84,7 +77,7 @@ final class ContactProspectAction
                 // Only record a transition when the status really moved (no "Dihubungi → Dihubungi").
                 'from_status' => $from === $prospect->pipeline_status ? null : $from->value,
                 'to_status' => $from === $prospect->pipeline_status ? null : $prospect->pipeline_status->value,
-                'body' => 'Dihubungi lewat WhatsApp',
+                'body' => __('api.activity.contacted'),
                 'meta' => $meta,
             ]);
 

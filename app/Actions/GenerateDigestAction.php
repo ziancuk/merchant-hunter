@@ -50,17 +50,17 @@ final class GenerateDigestAction
         }
 
         $p = $digest->payload;
-        $lines = ['Ringkasan harian POS Merchant Hunter - '.($p['date'] ?? '')];
-        foreach (['new_open' => 'Baru buka', 'hot' => 'Prospek panas', 'follow_up' => 'Perlu follow-up'] as $key => $label) {
+        $lines = [__('digest.title', ['date' => $p['date'] ?? ''])];
+        foreach (['new_open', 'hot', 'follow_up'] as $key) {
             $lines[] = '';
-            $lines[] = $label.' ('.count($p[$key] ?? []).')';
+            $lines[] = __('digest.section_heading', ['label' => __('digest.section_'.$key), 'count' => count($p[$key] ?? [])]);
             foreach ($p[$key] ?? [] as $row) {
-                $lines[] = '- '.$row['name'].' (skor '.$row['score'].')';
+                $lines[] = __('digest.row', ['name' => $row['name'], 'score' => $row['score']]);
             }
         }
 
         try {
-            Mail::raw(implode("\n", $lines), fn ($m) => $m->to($to)->subject('Ringkasan harian prospek '.($p['date'] ?? '')));
+            Mail::raw(implode("\n", $lines), fn ($m) => $m->to($to)->subject(__('digest.subject', ['date' => $p['date'] ?? ''])));
             $digest->update(['emailed_at' => now()]);
         } catch (Throwable $e) {
             Log::warning('Digest e-mail failed: '.$e->getMessage());

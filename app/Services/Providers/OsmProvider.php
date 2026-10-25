@@ -79,8 +79,8 @@ class OsmProvider implements DataProvider, SupportsCacheBypass
         $ms = (int) round((microtime(true) - $start) * 1000);
 
         return $status !== null
-            ? new ConnectionStatus(true, 'Overpass reachable: '.mb_substr(preg_replace('/\s+/', ' ', $status) ?? $status, 0, 160), $ms)
-            : new ConnectionStatus(false, 'Overpass status endpoint is unreachable', $ms);
+            ? new ConnectionStatus(true, __('api.connection.osm_ok', ['status' => mb_substr(preg_replace('/\s+/', ' ', $status) ?? $status, 0, 160)]), $ms)
+            : new ConnectionStatus(false, __('api.connection.osm_down'), $ms);
     }
 
     /** @param list<Category> $categories */

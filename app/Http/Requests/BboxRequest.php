@@ -19,7 +19,7 @@ trait BboxRequest
     {
         $validator->after(function (Validator $v) {
             if (! $v->errors()->has('bbox') && BoundingBox::parse((string) $this->query('bbox')) === null) {
-                $v->errors()->add('bbox', 'bbox harus berformat west,south,east,north dengan koordinat yang valid.');
+                $v->errors()->add('bbox', __('requests.messages.bbox_invalid'));
             }
         });
     }

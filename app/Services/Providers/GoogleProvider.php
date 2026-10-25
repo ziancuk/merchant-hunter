@@ -90,13 +90,13 @@ class GoogleProvider implements DataProvider
         $this->refreshSource();
         $source = $this->source();
         if ($source === null) {
-            return new ConnectionStatus(false, 'Sumber data Google belum terdaftar di server ini.');
+            return new ConnectionStatus(false, __('api.connection.google_unregistered'));
         }
         if (! $source->hasKey()) {
-            return new ConnectionStatus(false, 'API key Google belum diisi. Simpan API key lebih dulu.');
+            return new ConnectionStatus(false, __('api.connection.google_no_key'));
         }
         if (! $source->is_active) {
-            return new ConnectionStatus(false, 'Sumber Google sedang nonaktif. Aktifkan sumber ini untuk mengujinya.');
+            return new ConnectionStatus(false, __('api.connection.google_inactive'));
         }
         $start = microtime(true);
         try {
@@ -110,13 +110,13 @@ class GoogleProvider implements DataProvider
             // The detail (Google's own error text, transport errors) goes to the log only; the client gets a generic message.
             Log::warning('Google connection test failed', ['reason' => $this->redact($e->getMessage()), 'status' => $e->status, 'retryable' => $e->retryable]);
             $message = $e instanceof QuotaExceededException
-                ? 'Kuota bulanan Google sudah habis.'
-                : 'Koneksi ke Google gagal. Periksa API key dan kuota; detail ada di log server.';
+                ? __('api.connection.google_quota')
+                : __('api.connection.google_failed');
 
             return new ConnectionStatus(false, $message, (int) round((microtime(true) - $start) * 1000));
         }
 
-        return new ConnectionStatus(true, 'Google Places API dapat dijangkau.', (int) round((microtime(true) - $start) * 1000));
+        return new ConnectionStatus(true, __('api.connection.google_ok'), (int) round((microtime(true) - $start) * 1000));
     }
 
     /** Strips the API key from text destined for logs (defence in depth; the key only travels in a header). */

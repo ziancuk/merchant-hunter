@@ -25,6 +25,6 @@ final class BulkRequest extends ApiRequest
     /** @return array<string, string> */
     public function messages(): array
     {
-        return ['ids.max' => 'Maksimal '.BulkProspectAction::MAX_IDS.' prospek per permintaan.'] + parent::messages();
+        return ['ids.max' => __('requests.messages.ids_max', ['max' => BulkProspectAction::MAX_IDS])] + parent::messages();
     }
 }
