@@ -20,6 +20,7 @@ import KpiCounter from '@/Components/ui/KpiCounter.vue';
 import { formatDistance, formatNumber, formatPercent, relativeTime } from '@/lib/format';
 import { STATUS_VAR } from '@/lib/colors';
 import { STATUS_LABEL } from '@/lib/labels';
+import { useI18n } from '@/i18n';
 
 const props = defineProps<{
     kpis: DashboardKpis;
@@ -32,29 +33,31 @@ const props = defineProps<{
     digest: Digest;
 }>();
 
+const { t } = useI18n();
+
 const kpiTiles = computed(() => [
-    { id: 'kpi-outlets', label: 'Outlet aktif', value: props.kpis?.outlets ?? 0, decimals: 0, suffix: '' },
-    { id: 'kpi-prospects-active', label: 'Prospek aktif', value: props.kpis?.prospects_active ?? 0, decimals: 0, suffix: '' },
-    { id: 'kpi-new-7d', label: 'Baru 7 hari', value: props.kpis?.new_7d ?? 0, decimals: 0, suffix: '' },
-    { id: 'kpi-conversion', label: 'Tingkat konversi', value: (props.kpis?.conversion_rate ?? 0) * 100, decimals: 1, suffix: '%' },
-    { id: 'kpi-deals', label: 'Deal bulan ini', value: props.kpis?.deals_this_month ?? 0, decimals: 0, suffix: '' },
+    { id: 'kpi-outlets', label: t('dashboard.kpi.outlets'), value: props.kpis?.outlets ?? 0, decimals: 0, suffix: '' },
+    { id: 'kpi-prospects-active', label: t('dashboard.kpi.prospects_active'), value: props.kpis?.prospects_active ?? 0, decimals: 0, suffix: '' },
+    { id: 'kpi-new-7d', label: t('dashboard.kpi.new_7d'), value: props.kpis?.new_7d ?? 0, decimals: 0, suffix: '' },
+    { id: 'kpi-conversion', label: t('dashboard.kpi.conversion'), value: (props.kpis?.conversion_rate ?? 0) * 100, decimals: 1, suffix: '%' },
+    { id: 'kpi-deals', label: t('dashboard.kpi.deals'), value: props.kpis?.deals_this_month ?? 0, decimals: 0, suffix: '' },
 ]);
 
 const stages = computed(() => [
-    { key: 'found', label: 'Ditemukan', value: props.funnel?.found ?? 0, color: STATUS_VAR.new },
-    { key: 'contacted', label: 'Dihubungi', value: props.funnel?.contacted ?? 0, color: STATUS_VAR.contacted },
-    { key: 'demo', label: 'Demo', value: props.funnel?.demo ?? 0, color: STATUS_VAR.demo },
+    { key: 'found', label: t('dashboard.funnel.found'), value: props.funnel?.found ?? 0, color: STATUS_VAR.new },
+    { key: 'contacted', label: STATUS_LABEL.contacted, value: props.funnel?.contacted ?? 0, color: STATUS_VAR.contacted },
+    { key: 'demo', label: STATUS_LABEL.demo, value: props.funnel?.demo ?? 0, color: STATUS_VAR.demo },
     { key: 'won', label: STATUS_LABEL.won, value: props.funnel?.won ?? 0, color: STATUS_VAR.won },
 ]);
 const lost = computed(() => ({ label: STATUS_LABEL.lost, value: props.funnel?.lost ?? 0, color: STATUS_VAR.lost }));
 
 type SortKey = 'penetration' | 'prospects' | 'name';
 const sortKey = ref<SortKey>('penetration');
-const SORTS: { key: SortKey; label: string }[] = [
-    { key: 'penetration', label: 'Penetrasi' },
-    { key: 'prospects', label: 'Prospek' },
-    { key: 'name', label: 'Nama' },
-];
+const SORTS = computed<{ key: SortKey; label: string }[]>(() => [
+    { key: 'penetration', label: t('dashboard.penetration.sort_penetration') },
+    { key: 'prospects', label: t('dashboard.penetration.sort_prospects') },
+    { key: 'name', label: t('dashboard.penetration.sort_name') },
+]);
 const tiles = computed<CartogramItem[]>(() => {
     const rows = [...(props.penetration ?? [])];
     rows.sort((a, b) => {
@@ -67,13 +70,17 @@ const tiles = computed<CartogramItem[]>(() => {
         label: r.province,
         short: provinceShort(r.province),
         value: r.penetration,
-        details: [`Outlet: ${formatNumber(r.outlets)}`, `Prospek: ${formatNumber(r.prospects)}`, `Deal: ${formatNumber(r.won)}`],
+        details: [
+            t('dashboard.penetration.detail_outlets', { n: formatNumber(r.outlets) }),
+            t('dashboard.penetration.detail_prospects', { n: formatNumber(r.prospects) }),
+            t('dashboard.penetration.detail_deals', { n: formatNumber(r.won) }),
+        ],
     }));
 });
 const fmtPenetration = (n: number) => formatPercent(n, 2);
 
 const categoryBars = computed(() =>
-    (props.top_categories ?? []).map((c) => ({ label: c.category, value: c.count, hint: `skor rata-rata ${c.avg_score}` })),
+    (props.top_categories ?? []).map((c) => ({ label: c.category, value: c.count, hint: t('dashboard.categories.hint', { score: c.avg_score }) })),
 );
 
 const health = computed(() => props.scheduler_health);
@@ -86,9 +93,9 @@ const healthTone = computed(() => {
 });
 const healthLabel = computed(() => {
     const s = health.value?.status;
-    if (!s) return 'Belum pernah jalan';
-    if (s === 'success' || s === 'completed') return (health.value.age_hours ?? 0) > 36 ? 'Terlambat' : 'Sehat';
-    if (s === 'failed') return 'Gagal';
+    if (!s) return t('dashboard.health.never');
+    if (s === 'success' || s === 'completed') return (health.value.age_hours ?? 0) > 36 ? t('dashboard.health.late') : t('dashboard.health.healthy');
+    if (s === 'failed') return t('dashboard.health.failed');
     return s;
 });
 
@@ -97,18 +104,18 @@ const whitespaceHref = (w: WhitespaceTop) => `/?lat=${w.lat}&lng=${w.lng}&mode=w
 </script>
 
 <template>
-    <Head title="Dasbor" />
+    <Head :title="t('dashboard.head')" />
     <AppShell>
         <div class="mx-auto w-full max-w-7xl">
-            <PageHeader eyebrow="Pusat komando · ringkasan" title="Dasbor" description="Ikhtisar prospek, corong penjualan, dan kesehatan sinkronisasi.">
+            <PageHeader :eyebrow="t('dashboard.eyebrow')" :title="t('dashboard.title')" :description="t('dashboard.description')">
                 <LinkButton href="/dashboard/export.csv" download data-testid="export-csv">
                     <Icon name="send" :size="14" class="rotate-90" />
-                    Ekspor CSV
+                    {{ t('dashboard.export_csv') }}
                 </LinkButton>
             </PageHeader>
 
             <!-- KPI strip -->
-            <ul class="m-0 mb-4 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 xl:grid-cols-5" aria-label="Indikator utama">
+            <ul class="m-0 mb-4 grid list-none grid-cols-2 gap-3 p-0 md:grid-cols-3 xl:grid-cols-5" :aria-label="t('dashboard.kpi.label')">
                 <li v-for="k in kpiTiles" :key="k.id" :class="k.id === 'kpi-deals' ? 'col-span-2 md:col-span-1' : ''">
                     <GlassPanel :data-testid="k.id" class="h-full">
                         <KpiCounter :value="k.value" :label="k.label" :decimals="k.decimals" :suffix="k.suffix" />
@@ -118,16 +125,16 @@ const whitespaceHref = (w: WhitespaceTop) => `/?lat=${w.lat}&lng=${w.lng}&mode=w
 
             <div class="grid gap-4 lg:grid-cols-12">
                 <div class="lg:col-span-7">
-                    <Panel title="Corong penjualan" hint="Kumulatif: setiap tahap menghitung prospek yang pernah mencapainya." class="h-full">
-                        <FunnelChart v-if="(funnel?.found ?? 0) > 0" label="Corong penjualan kumulatif" :stages="stages" :lost="lost" />
-                        <EmptyState v-else title="Belum ada prospek" description="Corong terisi setelah sinkronisasi pertama berhasil." icon="chart" />
+                    <Panel :title="t('dashboard.funnel.title')" :hint="t('dashboard.funnel.hint')" class="h-full">
+                        <FunnelChart v-if="(funnel?.found ?? 0) > 0" :label="t('dashboard.funnel.aria')" :stages="stages" :lost="lost" />
+                        <EmptyState v-else :title="t('dashboard.funnel.empty_title')" :description="t('dashboard.funnel.empty_description')" icon="chart" />
                     </Panel>
                 </div>
 
                 <div class="lg:col-span-5">
-                    <Panel title="Kesehatan penjadwal" class="h-full">
+                    <Panel :title="t('dashboard.health.title')" class="h-full">
                         <template #actions>
-                            <Link href="/scheduler" class="text-xs text-focus underline-offset-2 hover:underline">Riwayat</Link>
+                            <Link href="/scheduler" class="text-xs text-focus underline-offset-2 hover:underline">{{ t('dashboard.health.history') }}</Link>
                         </template>
                         <div class="flex items-center gap-3" data-testid="scheduler-health">
                             <Badge :tone="healthTone" dot size="md">{{ healthLabel }}</Badge>
@@ -135,11 +142,11 @@ const whitespaceHref = (w: WhitespaceTop) => `/?lat=${w.lat}&lng=${w.lng}&mode=w
                         </div>
                         <dl class="m-0 grid grid-cols-2 gap-3 text-sm">
                             <div>
-                                <dt class="hud-label">Umur run terakhir</dt>
-                                <dd class="num m-0 mt-0.5">{{ health?.age_hours != null ? `${formatNumber(health.age_hours, 1)} jam` : '–' }}</dd>
+                                <dt class="hud-label">{{ t('dashboard.health.last_age') }}</dt>
+                                <dd class="num m-0 mt-0.5">{{ health?.age_hours != null ? t('dashboard.health.hours', { n: formatNumber(health.age_hours, 1) }) : '–' }}</dd>
                             </div>
                             <div>
-                                <dt class="hud-label">Gagal 7 hari</dt>
+                                <dt class="hud-label">{{ t('dashboard.health.failed_7d') }}</dt>
                                 <dd class="num m-0 mt-0.5" :class="(health?.failed_last_7d ?? 0) > 0 ? 'text-danger' : ''">{{ formatNumber(health?.failed_last_7d ?? 0) }}</dd>
                             </div>
                         </dl>
@@ -147,9 +154,9 @@ const whitespaceHref = (w: WhitespaceTop) => `/?lat=${w.lat}&lng=${w.lng}&mode=w
                 </div>
 
                 <div class="lg:col-span-12">
-                    <Panel title="Penetrasi per provinsi" hint="Kartogram petak: satu petak per provinsi, warna menurut penetrasi (deal ÷ prospek aktif).">
+                    <Panel :title="t('dashboard.penetration.title')" :hint="t('dashboard.penetration.hint')">
                         <template #actions>
-                            <div role="group" aria-label="Urutkan petak" class="flex gap-1">
+                            <div role="group" :aria-label="t('dashboard.penetration.sort_label')" class="flex gap-1">
                                 <button
                                     v-for="s in SORTS"
                                     :key="s.key"
@@ -164,26 +171,26 @@ const whitespaceHref = (w: WhitespaceTop) => `/?lat=${w.lat}&lng=${w.lng}&mode=w
                                 </button>
                             </div>
                         </template>
-                        <Cartogram v-if="tiles.length" :items="tiles" metric="Penetrasi" :format="fmtPenetration" label="Penetrasi per provinsi" />
-                        <EmptyState v-else title="Data provinsi belum tersedia" icon="map" />
+                        <Cartogram v-if="tiles.length" :items="tiles" :metric="t('dashboard.penetration.metric')" :format="fmtPenetration" :label="t('dashboard.penetration.aria')" />
+                        <EmptyState v-else :title="t('dashboard.penetration.empty')" icon="map" />
                     </Panel>
                 </div>
 
                 <div class="lg:col-span-4">
-                    <Panel title="Kategori teratas" class="h-full">
-                        <BarList v-if="categoryBars.length" :items="categoryBars" label="Jumlah prospek per kategori" />
-                        <EmptyState v-else title="Belum ada kategori" icon="store" />
+                    <Panel :title="t('dashboard.categories.title')" class="h-full">
+                        <BarList v-if="categoryBars.length" :items="categoryBars" :label="t('dashboard.categories.aria')" />
+                        <EmptyState v-else :title="t('dashboard.categories.empty')" icon="store" />
                     </Panel>
                 </div>
 
                 <div class="lg:col-span-4">
-                    <Panel title="Area white space teratas" hint="Sel 1 km dengan banyak prospek dan tanpa outlet dalam 500 m." class="h-full">
+                    <Panel :title="t('dashboard.whitespace.title')" :hint="t('dashboard.whitespace.hint')" class="h-full">
                         <ul v-if="whitespace_top?.length" class="m-0 flex list-none flex-col p-0" data-testid="whitespace-list">
                             <li v-for="w in whitespace_top" :key="w.cell_id" class="border-b border-line/60 last:border-0">
                                 <a :href="whitespaceHref(w)" class="flex items-center justify-between gap-3 py-2 text-sm hover:text-focus" data-testid="whitespace-row">
                                     <span class="min-w-0">
-                                        <span class="block truncate">{{ w.province ?? 'Tanpa provinsi' }}</span>
-                                        <span class="num text-2xs text-muted">{{ w.cell_id }} · outlet terdekat {{ formatDistance(w.nearest_outlet_m) }}</span>
+                                        <span class="block truncate">{{ w.province ?? t('dashboard.whitespace.no_province') }}</span>
+                                        <span class="num text-2xs text-muted">{{ w.cell_id }} · {{ t('dashboard.whitespace.nearest', { distance: formatDistance(w.nearest_outlet_m) }) }}</span>
                                     </span>
                                     <span class="flex shrink-0 items-center gap-2">
                                         <Badge tone="hot" class="num">{{ formatNumber(w.prospects) }}</Badge>
@@ -192,24 +199,24 @@ const whitespaceHref = (w: WhitespaceTop) => `/?lat=${w.lat}&lng=${w.lng}&mode=w
                                 </a>
                             </li>
                         </ul>
-                        <EmptyState v-else title="Tidak ada white space" description="Semua area padat prospek sudah dekat dengan outlet." icon="pin" />
+                        <EmptyState v-else :title="t('dashboard.whitespace.empty_title')" :description="t('dashboard.whitespace.empty_description')" icon="pin" />
                     </Panel>
                 </div>
 
                 <div class="lg:col-span-4">
-                    <Panel title="Aktivitas per akun" class="h-full">
+                    <Panel :title="t('dashboard.activity.title')" class="h-full">
                         <ul v-if="activity_by_user?.length" class="m-0 flex list-none flex-col gap-3 p-0" data-testid="activity-list">
                             <li v-for="u in activity_by_user" :key="u.user_id" class="grid gap-1" data-testid="activity-row">
                                 <div class="flex items-baseline justify-between gap-3 text-sm">
                                     <span class="truncate">{{ u.name }}</span>
-                                    <span class="num text-2xs text-muted">{{ u.contacted }} hubungi · {{ u.demo }} demo · {{ u.won }} deal</span>
+                                    <span class="num text-2xs text-muted">{{ t('dashboard.activity.summary', { contacted: u.contacted, demo: u.demo, won: u.won }) }}</span>
                                 </div>
                                 <div class="h-1.5 overflow-hidden rounded-full bg-fg/10" aria-hidden="true">
                                     <div class="h-full rounded-full" :style="{ width: `${(u.contacted / maxActivity) * 100}%`, background: STATUS_VAR.contacted }" />
                                 </div>
                             </li>
                         </ul>
-                        <EmptyState v-else title="Belum ada akun" icon="user" />
+                        <EmptyState v-else :title="t('dashboard.activity.empty')" icon="user" />
                     </Panel>
                 </div>
 

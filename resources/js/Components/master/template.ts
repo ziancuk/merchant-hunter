@@ -1,13 +1,15 @@
+import { t } from '@/i18n';
+
 export const PLACEHOLDERS = ['{nama_bisnis}', '{nama_pengirim}', '{kategori}'] as const;
 
 /** Mirrors backend MessageBuilder::isValidTemplate: at least one known placeholder and no unknown `{...}` token. Returns an error message or null. */
 export function validateTemplate(template: string): string | null {
-    if (template.trim() === '') return 'Template wajib diisi.';
-    if (template.length > 2000) return 'Template maksimal 2000 karakter.';
+    if (template.trim() === '') return t('master.template.required');
+    if (template.length > 2000) return t('master.template.too_long');
     const tokens = Array.from(new Set(template.match(/\{[^{}\s]*\}/g) ?? []));
-    if (tokens.length === 0) return `Template harus memuat minimal satu placeholder: ${PLACEHOLDERS.join(', ')}.`;
-    const unknown = tokens.filter((t) => !(PLACEHOLDERS as readonly string[]).includes(t));
-    if (unknown.length > 0) return `Placeholder tidak dikenal: ${unknown.join(', ')}. Yang valid: ${PLACEHOLDERS.join(', ')}.`;
+    if (tokens.length === 0) return t('master.template.no_placeholder', { list: PLACEHOLDERS.join(', ') });
+    const unknown = tokens.filter((tok) => !(PLACEHOLDERS as readonly string[]).includes(tok));
+    if (unknown.length > 0) return t('master.template.unknown', { tokens: unknown.join(', '), list: PLACEHOLDERS.join(', ') });
     return null;
 }
 

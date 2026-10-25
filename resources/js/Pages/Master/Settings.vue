@@ -22,10 +22,13 @@ import type { AppSettings } from '@/Components/master/types';
 import Button from '@/Components/ui/Button.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { useToasts } from '@/composables/useToasts';
+import { useI18n } from '@/i18n';
 import { api, normalizeError } from '@/lib/api';
+import { BAND_LABEL } from '@/lib/labels';
 
 const props = defineProps<{ settings: AppSettings }>();
 const { push } = useToasts();
+const { t } = useI18n();
 
 const defaults = SCORING_DEFAULTS as unknown as ScoringParams;
 
@@ -81,35 +84,36 @@ async function save(): Promise<void> {
         const fresh = toForm(data);
         Object.assign(form, fresh);
         saved.value = JSON.stringify(fresh);
-        push('Pengaturan disimpan.', 'success', 3000);
+        push(t('master.settings.saved'), 'success', 3000);
     } catch (e) {
         const er = normalizeError(e);
         errors.value = er.errors;
-        message.value = er.status === 422 ? 'Ada isian di luar rentang yang diizinkan. Periksa yang ditandai.' : er.message;
+        message.value = er.status === 422 ? t('master.settings.out_of_range') : er.message;
     } finally {
         saving.value = false;
     }
 }
 
-const CONTACT = [
-    { key: 'warn_days', label: 'Peringatan kontak terakhir', suffix: 'hari', hint: 'Tampilkan peringatan bila prospek dihubungi dalam rentang ini (0–90).' },
-    { key: 'min_interval_days', label: 'Jarak minimum antar kontak', suffix: 'hari', hint: 'Kontak lebih cepat butuh alasan override (0–365).' },
-    { key: 'max_overrides', label: 'Maksimum override per prospek', suffix: 'kali', hint: '0–20.' },
-] as const;
-const DIGEST = [
-    { key: 'hot_threshold', label: 'Ambang skor panas', suffix: 'poin', hint: 'Prospek dengan skor ≥ ini masuk daftar panas (1–100).' },
-    { key: 'follow_up_days', label: 'Perlu follow-up setelah', suffix: 'hari', hint: 'Tanpa aktivitas selama rentang ini (1–90).' },
-] as const;
+const CONTACT = computed(() => [
+    { key: 'warn_days', label: t('master.settings.contact.warn_days.label'), suffix: t('master.unit.day'), hint: t('master.settings.contact.warn_days.hint') },
+    { key: 'min_interval_days', label: t('master.settings.contact.min_interval_days.label'), suffix: t('master.unit.day'), hint: t('master.settings.contact.min_interval_days.hint') },
+    { key: 'max_overrides', label: t('master.settings.contact.max_overrides.label'), suffix: t('master.unit.times'), hint: t('master.settings.contact.max_overrides.hint') },
+]);
+const DIGEST = computed(() => [
+    { key: 'hot_threshold', label: t('master.settings.digest.hot_threshold.label', { band: BAND_LABEL.hot }), suffix: t('master.unit.points'), hint: t('master.settings.digest.hot_threshold.hint', { band: BAND_LABEL.hot }) },
+    { key: 'follow_up_days', label: t('master.settings.digest.follow_up_days.label'), suffix: t('master.unit.day'), hint: t('master.settings.digest.follow_up_days.hint') },
+]);
+const fieldHint = (f: ScoringField) => t('master.settings.scoring.hint_with_default', { hint: f.hint, value: String(getPath(defaults, f.path)) });
 </script>
 
 <template>
-    <Head title="Pengaturan" />
+    <Head :title="t('master.settings.head')" />
     <AppShell>
         <div class="mx-auto w-full max-w-4xl">
-            <PageHeader eyebrow="Master data" title="Pengaturan" description="Aturan kontak, ringkasan harian, sinkronisasi, skor, dan mode demo.">
+            <PageHeader :eyebrow="t('master.eyebrow')" :title="t('master.settings.title')" :description="t('master.settings.description')">
                 <Button variant="primary" size="sm" :disabled="!dirty" :loading="saving" data-testid="settings-save" @click="save">
                     <Icon name="check" :size="14" />
-                    Simpan pengaturan
+                    {{ t('master.settings.save') }}
                 </Button>
             </PageHeader>
             <MasterTabs current="settings" />
@@ -117,7 +121,7 @@ const DIGEST = [
             <p v-if="message" class="mb-4 rounded-chip border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger" role="alert" data-testid="settings-error">{{ message }}</p>
 
             <form class="grid gap-4" novalidate @submit.prevent="save">
-                <Panel title="Aturan kontak" hint="Mencegah prospek dihubungi berulang oleh banyak akun.">
+                <Panel :title="t('master.settings.contact.title')" :hint="t('master.settings.contact.hint')">
                     <div class="grid gap-4 sm:grid-cols-3">
                         <TextField
                             v-for="f in CONTACT"
@@ -135,9 +139,9 @@ const DIGEST = [
                     </div>
                 </Panel>
 
-                <Panel title="Ringkasan harian (digest)">
+                <Panel :title="t('master.settings.digest.title')">
                     <div class="grid gap-4 sm:grid-cols-3">
-                        <TextField v-model="form.digest.email_to" type="email" label="Kirim ke email" hint="Kosongkan untuk tidak mengirim email." :error="err('digest.email_to')" data-testid="setting-digest-email_to" />
+                        <TextField v-model="form.digest.email_to" type="email" :label="t('master.settings.digest.email_to')" :hint="t('master.settings.digest.email_hint')" :error="err('digest.email_to')" data-testid="setting-digest-email_to" />
                         <TextField
                             v-for="f in DIGEST"
                             :key="f.key"
@@ -154,15 +158,15 @@ const DIGEST = [
                     </div>
                 </Panel>
 
-                <Panel title="Sinkronisasi">
+                <Panel :title="t('master.settings.sync.title')">
                     <div class="grid gap-4 sm:grid-cols-3">
                         <TextField
                             :model-value="numberField('sync', 'max_outlets_per_run')"
                             numeric
                             type="number"
-                            label="Maksimum outlet per run"
-                            suffix="outlet"
-                            hint="Membatasi beban satu run penjadwal (1–1000)."
+                            :label="t('master.settings.sync.max_outlets')"
+                            :suffix="t('master.unit.outlet')"
+                            :hint="t('master.settings.sync.max_outlets_hint')"
                             :error="err('sync.max_outlets_per_run')"
                             data-testid="setting-sync-max_outlets_per_run"
                             @update:model-value="setNumber('sync', 'max_outlets_per_run', $event)"
@@ -170,31 +174,31 @@ const DIGEST = [
                     </div>
                 </Panel>
 
-                <Panel title="Enrichment & demo">
+                <Panel :title="t('master.settings.enrichment.title')">
                     <ul class="m-0 grid list-none gap-4 p-0">
                         <li class="flex items-start justify-between gap-4">
                             <div>
-                                <p class="text-sm font-medium">Data simulasi (rating, ulasan, telepon)</p>
-                                <p class="text-xs text-muted">Bila aktif, kolom yang tidak tersedia dari sumber diisi data simulasi dan diberi label "Simulasi".</p>
+                                <p class="text-sm font-medium">{{ t('master.settings.enrichment.simulated_title') }}</p>
+                                <p class="text-xs text-muted">{{ t('master.settings.enrichment.simulated_desc') }}</p>
                             </div>
-                            <Switch v-model="form.enrichment.simulated" label="Data simulasi" data-testid="setting-enrichment-simulated" />
+                            <Switch v-model="form.enrichment.simulated" :label="t('master.settings.enrichment.simulated_switch')" data-testid="setting-enrichment-simulated" />
                         </li>
                         <li class="flex items-start justify-between gap-4">
                             <div>
-                                <p class="text-sm font-medium">Izinkan WhatsApp ke nomor simulasi</p>
-                                <p class="text-xs text-muted">Hanya untuk demo/E2E. Nomor simulasi memakai rentang tidak aktif (0999-…).</p>
+                                <p class="text-sm font-medium">{{ t('master.settings.enrichment.whatsapp_title') }}</p>
+                                <p class="text-xs text-muted">{{ t('master.settings.enrichment.whatsapp_desc') }}</p>
                             </div>
-                            <Switch v-model="form.demo.allow_simulated_whatsapp" label="Izinkan WhatsApp ke nomor simulasi" data-testid="setting-demo-allow_simulated_whatsapp" />
+                            <Switch v-model="form.demo.allow_simulated_whatsapp" :label="t('master.settings.enrichment.whatsapp_title')" data-testid="setting-demo-allow_simulated_whatsapp" />
                         </li>
                     </ul>
                 </Panel>
 
-                <Panel title="Skor prospek" hint="Nilai default ditampilkan sebagai petunjuk. Hanya nilai yang Anda ubah yang disimpan.">
+                <Panel :title="t('master.settings.scoring.title')" :hint="t('master.settings.scoring.hint')">
                     <template #actions>
-                        <Button size="sm" variant="ghost" :disabled="!scoringModified" data-testid="scoring-reset" @click="resetScoring">Kembalikan default</Button>
+                        <Button size="sm" variant="ghost" :disabled="!scoringModified" data-testid="scoring-reset" @click="resetScoring">{{ t('master.settings.scoring.reset') }}</Button>
                     </template>
-                    <h3 class="hud-label">Poin maksimum per komponen <span class="num ml-2 normal-case" :class="weightSum === 100 ? 'text-st-won' : 'text-warm'" data-testid="weight-sum">total {{ weightSum }}</span></h3>
-                    <p v-if="weightSum !== 100" class="-mt-2 text-xs text-warm">Skor dibatasi 0–100; total poin selain 100 membuat skor tidak seimbang.</p>
+                    <h3 class="hud-label">{{ t('master.settings.scoring.weights_title') }} <span class="num ml-2 normal-case" :class="weightSum === 100 ? 'text-st-won' : 'text-warm'" data-testid="weight-sum">{{ t('master.settings.scoring.total', { n: weightSum }) }}</span></h3>
+                    <p v-if="weightSum !== 100" class="-mt-2 text-xs text-warm">{{ t('master.settings.scoring.unbalanced') }}</p>
                     <div class="grid gap-4 sm:grid-cols-3">
                         <TextField
                             v-for="f in WEIGHT_FIELDS"
@@ -203,7 +207,7 @@ const DIGEST = [
                             numeric
                             type="number"
                             :label="f.label"
-                            :hint="`${f.hint} · default ${getPath(defaults, f.path)}`"
+                            :hint="fieldHint(f)"
                             :min="f.min"
                             :max="f.max"
                             :step="f.step"
@@ -212,7 +216,7 @@ const DIGEST = [
                             @update:model-value="scoringSet(f, $event)"
                         />
                     </div>
-                    <h3 class="hud-label mt-2">Parameter perhitungan</h3>
+                    <h3 class="hud-label mt-2">{{ t('master.settings.scoring.params_title') }}</h3>
                     <div class="grid gap-4 sm:grid-cols-3">
                         <TextField
                             v-for="f in PARAM_FIELDS"
@@ -221,7 +225,7 @@ const DIGEST = [
                             numeric
                             type="number"
                             :label="f.label"
-                            :hint="`${f.hint} · default ${getPath(defaults, f.path)}`"
+                            :hint="fieldHint(f)"
                             :min="f.min"
                             :max="f.max"
                             :step="f.step"
@@ -230,7 +234,7 @@ const DIGEST = [
                             @update:model-value="scoringSet(f, $event)"
                         />
                     </div>
-                    <h3 class="hud-label mt-2">Nilai kepadatan tetangga (0, 1, 2, 3+ tetangga dalam 500 m)</h3>
+                    <h3 class="hud-label mt-2">{{ t('master.settings.scoring.neighbors_title') }}</h3>
                     <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <TextField
                             v-for="(_, i) in neighbors"
@@ -238,18 +242,18 @@ const DIGEST = [
                             v-model="neighbors[i]"
                             numeric
                             type="number"
-                            :label="`${i}${i === 3 ? '+' : ''} tetangga`"
+                            :label="t('master.settings.scoring.neighbor', { n: `${i}${i === 3 ? '+' : ''}` })"
                             min="0"
                             max="1"
                             step="0.05"
-                            :hint="`default ${(SCORING_DEFAULTS.neighbor_values as readonly number[])[i]}`"
+                            :hint="t('master.settings.scoring.default_value', { value: String((SCORING_DEFAULTS.neighbor_values as readonly number[])[i]) })"
                             :data-testid="`scoring-neighbor-${i}`"
                         />
                     </div>
                 </Panel>
 
                 <div class="flex justify-end">
-                    <Button type="submit" variant="primary" :disabled="!dirty" :loading="saving">Simpan pengaturan</Button>
+                    <Button type="submit" variant="primary" :disabled="!dirty" :loading="saving">{{ t('master.settings.save') }}</Button>
                 </div>
             </form>
         </div>
