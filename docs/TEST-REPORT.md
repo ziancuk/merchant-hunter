@@ -110,4 +110,8 @@ FPS ≥ 40 pada TEST-PLAN adalah target GPU nyata; SwiftShader merasterisasi di 
 
 ## 9. Setup dari folder bersih dan pemindaian akhir
 
-(Diisi di akhir sesi; lihat bagian bawah dokumen ini.)
+**Setup dari nol (lulus):** `git clone` commit HEAD ke folder kosong, lalu perintah README persis tanpa menyalin `.env`, `vendor`, `node_modules`, atau database. Hasil: `composer install` 9 dtk, `migrate:fresh --seed` 1 dtk, `hunter:seed-prospects --offline` 23 dtk (14.696 prospek), `npm install` 20 dtk, `npm run build` 28 dtk; total ±1,5 menit. `/login` 200, `/` tanpa login 302 ke `/login`, login akun demo lalu `/`, `/pipeline`, `/dashboard`, `/master/data-sources` semuanya 200. Di clone itu `composer ci` hijau (Pest 455, Vitest 299, 78 dtk) dan `npm run e2e` 46/46 (6,6 menit). Perintah `hunter:demo-reset`, `hunter:create-user`, `schedule:list`, `hunter:sync --provider=mock`, `queue:work --queue=sync,default --once` berjalan tanpa error. `git ls-files` tidak memuat `.env`, sqlite, `vendor`, `node_modules`. Koreksi README yang ditemukan (durasi seed/E2E, peringatan EBADENGINE, opsi `--password`, jam `schedule:list` dalam UTC) sudah diterapkan.
+
+Batasan: HUD peta pada clone itu tidak dibuka di browser oleh pemeriksa (jumlah prospek diverifikasi lewat tinker; peta diuji E2E). Satu-satunya perubahan terlacak di clone adalah field `name` di `package-lock.json` karena nama folder clone berbeda (README mencatatnya).
+
+**Pemindaian secret akhir sebelum tag:** lihat bagian di bawah (diisi saat tagging).
