@@ -72,3 +72,51 @@ it('redacts keys from the data source last_error written by sync', function () {
 
     expect($source->fresh()->last_error)->not->toContain('AIza-literal-0001')->toContain('[redacted]');
 });
+
+// ---------------------------------------------------------------- security
+
+it('whitelists DataSource.config keys and caps its size (security e)', function () {
+    $s = DataSource::create(['key' => 'osm', 'name' => 'OSM', 'is_active' => true, 'priority' => 10]);
+    $url = "/api/master/data-sources/{$s->id}";
+
+    $this->putJson($url, ['config' => ['region' => 'id', 'radius_m' => 1500]])->assertOk()->assertOk();
+    expect($s->fresh()->config)->toMatchArray(['region' => 'id', 'radius_m' => 1500]);
+    $this->putJson($url, ['config' => ['endpoint' => 'http://internal.test/']])->assertStatus(422)->assertJsonValidationErrors('config');
+    $this->putJson($url, ['config' => ['notes' => str_repeat('x', 501)]])->assertStatus(422)->assertJsonValidationErrors('config.notes');
+    $this->putJson($url, ['config' => ['radius_m' => 10]])->assertStatus(422)->assertJsonValidationErrors('config.radius_m');
+    $this->putJson($url, ['config' => ['region' => ['a' => str_repeat('x', 5000)]]])->assertStatus(422);
+});
+
+it('serves Indonesian error pages (B-14)', function () {
+    auth()->logout();
+    $this->get('/halaman-tak-ada')->assertNotFound()->assertSee('Halaman tidak ditemukan')->assertSee('Kembali ke peta')->assertDontSee('NOT FOUND');
+
+    foreach ([401 => 'Perlu masuk', 403 => 'Akses ditolak', 419 => 'Sesi kedaluwarsa', 429 => 'Terlalu banyak permintaan', 500 => 'Terjadi kesalahan di server', 503 => 'Sedang dalam pemeliharaan'] as $code => $title) {
+        expect(view("errors.{$code}")->render())->toContain($title)->toContain('lang="id"');
+    }
+});
+
+it('answers unknown JSON routes with an Indonesian message', function () {
+    $this->getJson('/api/does-not-exist')->assertNotFound()->assertExactJson(['message' => 'Data tidak ditemukan.']);
+});
+
+it('does not share APP_ENV and exposes a server-side debug_hooks flag (security c)', function () {
+    $this->get('/dashboard')->assertInertia(fn ($p) => $p->where('app.debug_hooks', true)->missing('app.env'));
+
+    app()->detectEnvironment(fn () => 'production');
+    $this->get('/dashboard')->assertInertia(fn ($p) => $p->where('app.debug_hooks', false)->missing('app.env'));
+});
+
+it('limits export downloads to 10 per minute per user (security f)', function () {
+    foreach (range(1, 10) as $_) {
+        $this->get('/dashboard/export.csv')->assertOk();
+    }
+    $this->get('/dashboard/export.csv')->assertStatus(429);
+});
+
+it('limits outlet imports to 10 per minute per user (security f)', function () {
+    foreach (range(1, 10) as $_) {
+        $this->postJson('/api/master/outlets/import')->assertStatus(422);
+    }
+    $this->postJson('/api/master/outlets/import')->assertStatus(429);
+});
