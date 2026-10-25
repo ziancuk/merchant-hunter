@@ -7,7 +7,6 @@ namespace App\Models;
 use App\Enums\LifecycleStatus;
 use App\Enums\PipelineStatus;
 use App\Enums\ScoreBand;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -62,21 +61,6 @@ class Prospect extends Model
             'fetched_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
-    }
-
-    public function scopeOpen(Builder $query): Builder
-    {
-        return $query->where('lifecycle_status', LifecycleStatus::Open->value);
-    }
-
-    public function scopeLocated(Builder $query): Builder
-    {
-        return $query->whereNotNull('lat')->whereNotNull('lng');
-    }
-
-    public function scopeContactable(Builder $query): Builder
-    {
-        return $query->where('do_not_contact', false);
     }
 
     public function scoreBand(): ScoreBand

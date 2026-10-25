@@ -14,7 +14,6 @@ final class MapProspectsRequest extends ProspectFilterRequest
         return $this->filterRules() + [
             'bbox' => ['required', 'string'],
             'zoom' => ['required', 'integer', 'between:0,22'],
-            'mode' => ['nullable', 'in:prospects,heatmap'],
         ];
     }
 
