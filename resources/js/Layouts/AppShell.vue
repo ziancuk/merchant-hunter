@@ -107,8 +107,8 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
                                 :aria-current="isNavActive(page.url, n.href) ? 'page' : undefined"
                             >
                                 <Icon :name="n.icon as IconName" :size="16" />
-                                <span class="hidden lg:inline">{{ n.label }}</span>
-                                <span class="sr-only lg:hidden">{{ n.label }}</span>
+                                <span class="hidden xl:inline">{{ n.label }}</span>
+                                <span class="sr-only xl:hidden">{{ n.label }}</span>
                             </Link>
                         </Tooltip>
                     </li>

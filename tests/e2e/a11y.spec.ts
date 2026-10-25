@@ -8,6 +8,7 @@ const PAGES: { name: string; path: string; ready: (page: import('@playwright/tes
     { name: 'peta', path: '/?intro=0&motion=0', ready: async (p) => void (await openMap(p)) },
     { name: 'pipeline (kanban)', path: '/pipeline', ready: async (p) => void (await p.getByTestId('kanban-board').waitFor()) },
     { name: 'pipeline (tabel)', path: '/pipeline?view=table', ready: async (p) => void (await p.getByTestId('pipeline-table').waitFor()) },
+    { name: 'laporan', path: '/reports', ready: async (p) => void (await p.getByTestId('report-table').waitFor()) },
     { name: 'dashboard', path: '/dashboard', ready: async (p) => void (await p.getByTestId('funnel').waitFor()) },
     { name: 'impact', path: '/impact', ready: async (p) => void (await p.getByTestId('impact-results').waitFor()) },
     { name: 'master/data-sources', path: '/master/data-sources', ready: async (p) => void (await p.getByTestId('ds-list').waitFor()) },

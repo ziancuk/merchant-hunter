@@ -7,6 +7,7 @@ namespace App\Services\Export;
 use App\Models\Prospect;
 use App\Repositories\ProspectFilter;
 use Generator;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
 
 /** Prospect CSV rows streamed straight from a joined query (no Eloquent hydration, constant memory). */
@@ -29,7 +30,15 @@ final class ProspectCsvExport
      */
     public function rows(ProspectFilter $filter): Generator
     {
-        $query = $filter->apply(Prospect::query())->toBase()
+        foreach ($this->query($filter)->orderBy('prospects.id')->cursor() as $r) {
+            yield self::row($r);
+        }
+    }
+
+    /** Joined, filtered base query shared by the CSV/Excel exports and the report table (no ordering applied). */
+    public function query(ProspectFilter $filter): QueryBuilder
+    {
+        return $filter->apply(Prospect::query())->toBase()
             ->leftJoin('categories', 'categories.id', '=', 'prospects.category_id')
             ->leftJoin('provinces', 'provinces.id', '=', 'prospects.province_id')
             ->leftJoin('users', 'users.id', '=', 'prospects.handled_by')
@@ -38,12 +47,7 @@ final class ProspectCsvExport
                 'provinces.name as province_name', 'prospects.address', 'prospects.phone', 'prospects.phone_simulated',
                 'prospects.rating', 'prospects.review_count', 'prospects.score', 'prospects.pipeline_status',
                 'users.name as handler_name', 'prospects.last_contacted_at', 'prospects.nearest_outlet_distance_m',
-            ])
-            ->orderBy('prospects.id');
-
-        foreach ($query->cursor() as $r) {
-            yield self::row($r);
-        }
+            ]);
     }
 
     /**

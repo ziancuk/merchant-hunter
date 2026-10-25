@@ -8,6 +8,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
     { href: '/', label: 'Peta', icon: 'map', hint: 'Radar prospek' },
     { href: '/pipeline', label: 'Pipeline', icon: 'kanban', hint: 'Kanban & tabel' },
+    { href: '/reports', label: 'Laporan', icon: 'table', hint: 'Tabel prospek & ekspor' },
     { href: '/dashboard', label: 'Dasbor', icon: 'chart', hint: 'KPI & funnel' },
     { href: '/impact', label: 'Dampak', icon: 'coins', hint: 'Estimasi biaya & hasil' },
     { href: '/master/data-sources', label: 'Master', icon: 'database', hint: 'Sumber data, outlet, kategori' },
