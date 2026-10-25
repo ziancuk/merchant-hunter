@@ -32,7 +32,11 @@ export function formatRupiah(value: number | null | undefined): string {
 /** 0.034 → "3,4%" */
 export function formatPercent(ratio: number | null | undefined, decimals = 1): string {
     if (ratio === null || ratio === undefined || Number.isNaN(ratio)) return '–';
-    return `${formatNumber(ratio * 100, decimals)}%`;
+    const pct = ratio * 100;
+    const floor = 10 ** -decimals;
+    // A tiny non-zero share must not read as "0,0%" (B-08).
+    if (pct > 0 && pct < floor / 2) return `<${formatNumber(floor, decimals)}%`;
+    return `${formatNumber(pct, decimals)}%`;
 }
 
 /** 640 → "640 m", 1450 → "1,5 km" */
@@ -77,6 +81,13 @@ export function relativeTime(iso: string | Date | null | undefined, now: number 
     if (abs < 30 * day) return fmt(Math.floor(abs / (7 * day)), 'minggu');
     if (abs < 365 * day) return fmt(Math.floor(abs / (30 * day)), 'bulan');
     return fmt(Math.floor(abs / (365 * day)), 'tahun');
+}
+
+/** 0 → "hari ini", 1 → "kemarin", 3 → "3 hari lalu" (B-10). */
+export function daysAgoText(days: number): string {
+    if (days <= 0) return 'hari ini';
+    if (days === 1) return 'kemarin';
+    return `${days} hari lalu`;
 }
 
 export function formatCoordinates(lat: number, lng: number): string {

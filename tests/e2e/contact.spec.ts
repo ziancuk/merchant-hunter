@@ -99,7 +99,7 @@ test.describe('Kontak WhatsApp', () => {
             const warning = pageB.getByTestId('wa-warning');
             await expect(warning).toBeVisible();
             await expect(warning).toContainText(USERS.ayu.name);
-            await expect(warning).toContainText(/0 hari lalu/);
+            await expect(warning).toContainText(/hari ini/);
             // Minimum interval violated right after a contact: an override reason is required before sending.
             await expect(pageB.getByTestId('wa-override')).toBeVisible();
             await expect(pageB.getByTestId('wa-send')).toBeDisabled();

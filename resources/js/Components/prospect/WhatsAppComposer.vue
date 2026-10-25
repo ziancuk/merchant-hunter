@@ -7,7 +7,7 @@ import Icon from '@/Components/ui/Icon.vue';
 import Skeleton from '@/Components/ui/Skeleton.vue';
 import { api, normalizeError, postKeepalive, type ApiError } from '@/lib/api';
 import { BLOCKED_REASON_TEXT } from '@/lib/contact';
-import { formatDateTime } from '@/lib/format';
+import { daysAgoText, formatDateTime } from '@/lib/format';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import type { ContactCheck, ProspectDetail, SharedProps } from '@/types';
 
@@ -15,6 +15,7 @@ const props = withDefaults(defineProps<{ prospectId: number; aiEnabled?: boolean
 const emit = defineEmits<{ contacted: [prospect: ProspectDetail]; closed: [] }>();
 
 const MAX_LEN = 1000;
+const MIN_OVERRIDE_REASON = 5;
 const page = usePage();
 const shared = (): SharedProps => page.props as unknown as SharedProps;
 const aiOn = computed(() => props.aiEnabled ?? shared()?.app?.ai_enabled ?? false);
@@ -48,7 +49,7 @@ const canSend = computed(
         !sending.value &&
         trimmed.value.length > 0 &&
         message.value.length <= MAX_LEN &&
-        (!needsOverride.value || (!overrideExhausted.value && overrideReason.value.trim().length > 0)),
+        (!needsOverride.value || (!overrideExhausted.value && overrideReason.value.trim().length >= MIN_OVERRIDE_REASON)),
 );
 
 async function runCheck(): Promise<void> {
@@ -150,7 +151,7 @@ defineExpose({ runCheck });
             >
                 <Icon name="alert" class="mt-0.5" />
                 <span>
-                    Sudah dihubungi oleh <strong>{{ check.warning.by }}</strong> {{ check.warning.days_ago }} hari lalu ({{ formatDateTime(check.warning.at) }}).
+                    Sudah dihubungi oleh <strong>{{ check.warning.by }}</strong> {{ daysAgoText(check.warning.days_ago) }} ({{ formatDateTime(check.warning.at) }}).
                     Pastikan tidak terjadi kontak ganda.
                 </span>
             </p>
@@ -163,7 +164,7 @@ defineExpose({ runCheck });
                 </p>
                 <p class="num text-xs text-muted" data-testid="wa-overrides-left">Sisa override: {{ overridesLeft }} dari {{ check.max_overrides }}</p>
                 <label v-if="!overrideExhausted" class="block text-xs text-muted">
-                    Alasan override (wajib)
+                    Alasan override (wajib, minimal {{ MIN_OVERRIDE_REASON }} karakter)
                     <textarea v-model="overrideReason" rows="2" class="mt-1 w-full rounded-chip border border-line bg-ink/60 p-2 text-sm text-fg" data-testid="wa-override-reason" />
                 </label>
             </div>

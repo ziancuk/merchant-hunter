@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCoordinates, formatDate, formatDateTime, formatDistance, formatNumber, formatPercent, formatRupiah, relativeTime } from './format';
+import { daysAgoText, formatCoordinates, formatDate, formatDateTime, formatDistance, formatNumber, formatPercent, formatRupiah, relativeTime } from './format';
 
 describe('format', () => {
     it('formats numbers with Indonesian grouping', () => {
@@ -28,6 +28,19 @@ describe('format', () => {
         expect(formatDateTime('2026-10-24T01:05:00Z')).toBe('24 Okt 2026, 08.05 WIB');
         expect(formatDate('not a date')).toBe('–');
         expect(formatDate(null)).toBe('–');
+    });
+
+    it('formats whole days ago without "0 hari lalu"', () => {
+        expect(daysAgoText(0)).toBe('hari ini');
+        expect(daysAgoText(1)).toBe('kemarin');
+        expect(daysAgoText(2)).toBe('2 hari lalu');
+    });
+
+    it('shows a tiny non-zero share as "<0,1%" instead of "0,0%"', () => {
+        expect(formatPercent(0.0004)).toBe('<0,1%');
+        expect(formatPercent(0)).toBe('0,0%');
+        expect(formatPercent(0.0006)).toBe('0,1%');
+        expect(formatPercent(0.034)).toBe('3,4%');
     });
 
     it('formats relative time in Indonesian', () => {

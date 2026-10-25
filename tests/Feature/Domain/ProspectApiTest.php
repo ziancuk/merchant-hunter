@@ -224,6 +224,11 @@ it('requires an override reason inside the minimum interval and records it', fun
         ->assertJsonPath('code', 'min_interval')->assertJsonValidationErrors('override_reason');
     expect($p->fresh()->contact_count)->toBe(1);
 
+    // B-11: a one-character reason is not a reason.
+    $this->postJson("/api/prospects/{$p->id}/contact", ['message' => 'x', 'override_reason' => 'a'])->assertStatus(422)
+        ->assertJsonValidationErrors('override_reason');
+    expect($p->fresh()->contact_count)->toBe(1);
+
     $this->postJson("/api/prospects/{$p->id}/contact", ['message' => 'x', 'override_reason' => 'Pelanggan minta dihubungi'])->assertOk()
         ->assertJsonPath('prospect.contact_count', 2);
     $a = ProspectActivity::where('prospect_id', $p->id)->where('type', 'contacted')->latest('id')->first();
