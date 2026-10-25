@@ -267,7 +267,7 @@ class ProspectIngestor
             foreach ($chunk as $attrs) {
                 $payload[] = $this->toInsertRow($attrs, $stamp);
             }
-            Prospect::query()->insert($payload);
+            Prospect::query()->insertOrIgnore($payload); // a concurrent run may have inserted the same (provider, place_id)
         }
 
         $ids = [];

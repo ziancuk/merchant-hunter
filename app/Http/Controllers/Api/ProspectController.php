@@ -42,7 +42,7 @@ class ProspectController extends Controller
     public function contact(ContactRequest $request, Prospect $prospect, ContactProspectAction $action): JsonResponse
     {
         $data = $request->validated();
-        $action->handle($prospect, $request->user(), $data['message'], $data['override_reason'] ?? null);
+        $prospect = $action->handle($prospect, $request->user(), $data['message'], $data['override_reason'] ?? null);
 
         return response()->json(['prospect' => $this->detail($prospect)]);
     }
@@ -50,7 +50,7 @@ class ProspectController extends Controller
     public function status(ChangeStatusRequest $request, Prospect $prospect, ChangeStatusAction $action): JsonResponse
     {
         $data = $request->validated();
-        $action->handle($prospect, PipelineStatus::from($data['status']), $request->user(), $data['rejection_reason_id'] ?? null);
+        $prospect = $action->handle($prospect, PipelineStatus::from($data['status']), $request->user(), $data['rejection_reason_id'] ?? null);
 
         return response()->json(['prospect' => $this->detail($prospect)]);
     }
@@ -64,14 +64,14 @@ class ProspectController extends Controller
 
     public function optOut(Request $request, Prospect $prospect, OptOutAction $action): JsonResponse
     {
-        $action->optOut($prospect, $request->user());
+        $prospect = $action->optOut($prospect, $request->user());
 
         return response()->json(['prospect' => $this->detail($prospect)]);
     }
 
     public function optIn(Request $request, Prospect $prospect, OptOutAction $action): JsonResponse
     {
-        $action->optIn($prospect, $request->user());
+        $prospect = $action->optIn($prospect, $request->user());
 
         return response()->json(['prospect' => $this->detail($prospect)]);
     }
@@ -98,9 +98,13 @@ class ProspectController extends Controller
         ));
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * The Actions already return the refreshed model, so no second refresh here.
+     *
+     * @return array<string, mixed>
+     */
     private function detail(Prospect $prospect): array
     {
-        return ProspectDetailResource::make($this->prospects->detail($prospect->refresh()))->resolve();
+        return ProspectDetailResource::make($this->prospects->detail($prospect))->resolve();
     }
 }
