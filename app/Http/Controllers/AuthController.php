@@ -28,14 +28,14 @@ class AuthController extends Controller
 
         // Second limiter per IP only (D-120): rotating e-mail addresses cannot dodge the per-account limit.
         if (RateLimiter::tooManyAttempts($key, 5) || RateLimiter::tooManyAttempts($ipKey, self::IP_MAX_ATTEMPTS)) {
-            abort(429, 'Terlalu banyak percobaan masuk. Coba lagi sebentar lagi.');
+            abort(429, __('api.login_throttled'));
         }
 
         if (! Auth::attempt($request->only('email', 'password'), $request->boolean('remember'))) {
             RateLimiter::hit($key, 60);
             RateLimiter::hit($ipKey, 60);
 
-            return back()->withErrors(['email' => 'Email atau kata sandi salah.']);
+            return back()->withErrors(['email' => __('api.login_failed')]);
         }
 
         RateLimiter::clear($key);

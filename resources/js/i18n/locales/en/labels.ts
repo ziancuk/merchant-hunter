@@ -1,0 +1,41 @@
+export default {
+    band: {
+        hot: "Prime Target",
+        warm: "Promising",
+        medium: "Potential",
+        cold: "Watch",
+    },
+    status: {
+        new: "New",
+        contacted: "Contacted",
+        demo: "Demo",
+        won: "Won",
+        lost: "Lost",
+    },
+    skip: {
+        not_found: "Prospect not found",
+        already_opted_out: "Already marked do-not-contact",
+        same_status: "Status is already the same",
+    },
+    activity: {
+        created: "Discovered",
+        status_change: "Status changed",
+        contacted: "Contacted",
+        note: "Note",
+        opt_out: "Opt-out",
+        opt_in: "Opted back in",
+        rejected: "Rejected",
+        system: "System",
+    },
+    run: {
+        success: "Succeeded",
+        completed: "Completed",
+        ok: "Succeeded",
+        cached: "From cache",
+        partial: "Partly failed",
+        failed: "Failed",
+        running: "Running",
+        skipped: "Skipped",
+        never: "Never",
+    },
+};

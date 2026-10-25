@@ -1,10 +1,17 @@
+@php
+    // Static error pages can be rendered for unmatched routes, where the SetLocale middleware never ran: resolve explicitly.
+    app()->setLocale(\App\Support\Locale::resolve(request()));
+    $code = trim($__env->yieldContent('code'));
+    $title = __('errors.pages.'.$code.'.title');
+    $message = __('errors.pages.'.$code.'.message');
+@endphp
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
-    <title>@yield('code') · @yield('title') · {{ config('app.name') }}</title>
+    <title>{{ $code }} · {{ $title }} · {{ config('app.name') }}</title>
     {{-- Self-contained (no scripts, no external requests): must render even when the app bundle is unavailable. --}}
     <style>
         :root { color-scheme: dark light; --bg: #070d0c; --surface: #0f1917; --line: rgb(190 230 215 / .14); --text: #e8f0eb; --muted: #9fb3aa; --focus: #7de3c4; --hot: #ff6a2b; }
@@ -28,10 +35,10 @@
     <main role="main">
         <p class="brand">{{ config('app.name') }}</p>
         <p class="code" aria-hidden="true">@yield('code')</p>
-        <h1>@yield('title')</h1>
-        <p class="msg">@yield('message')</p>
+        <h1>{{ $title }}</h1>
+        <p class="msg">{{ $message }}</p>
         <div class="actions">
-            <a class="btn primary" href="{{ url('/') }}">Kembali ke peta</a>
+            <a class="btn primary" href="{{ url('/') }}">{{ __('errors.back_to_map') }}</a>
             @hasSection('extra')
                 @yield('extra')
             @endif

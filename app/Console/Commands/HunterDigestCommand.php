@@ -38,14 +38,13 @@ class HunterDigestCommand extends Command
         ]);
 
         $p = $digest->payload;
-        $this->info(sprintf(
-            'Digest %s %s: %d baru buka, %d panas, %d follow-up.',
-            $date->format('Y-m-d'),
-            $created ? 'dibuat' : 'sudah ada',
-            count($p['new_open'] ?? []),
-            count($p['hot'] ?? []),
-            count($p['follow_up'] ?? []),
-        ));
+        $this->info(__('digest.command_summary', [
+            'date' => $date->format('Y-m-d'),
+            'state' => $created ? __('digest.created') : __('digest.exists'),
+            'new' => count($p['new_open'] ?? []),
+            'hot' => count($p['hot'] ?? []),
+            'follow_up' => count($p['follow_up'] ?? []),
+        ]));
 
         return self::SUCCESS;
     }

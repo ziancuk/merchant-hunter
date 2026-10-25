@@ -3,8 +3,9 @@ import { getCurrentScope, onScopeDispose, ref, shallowReactive } from 'vue';
 export interface ShortcutDef {
     /** e.g. `mod+k`, `?`, `alt+shift+p`. `mod` = Ctrl on Windows/Linux, Cmd on macOS (either is accepted). */
     keys: string;
-    description: string;
-    group?: string;
+    /** A function lets the text follow the active language (registered once, resolved when the help list renders). */
+    description: string | (() => string);
+    group?: string | (() => string);
     handler: (event: KeyboardEvent) => void;
     /** Fire even when focus is in an input/textarea/select (modifier shortcuts always do). */
     allowInInput?: boolean;
@@ -15,6 +16,10 @@ interface Registered extends ShortcutDef {
 }
 
 const registry = shallowReactive<Registered[]>([]);
+export function shortcutText(value: string | (() => string)): string {
+    return typeof value === 'function' ? value() : value;
+}
+
 /** Whether the shortcut help overlay is open (rendered by AppShell). */
 export const shortcutHelpOpen = ref(false);
 let nextId = 1;

@@ -1,0 +1,15 @@
+export default {
+    now: "just now",
+    minute: "{n} min",
+    hour: "{n} h",
+    day: "{n} d",
+    week: "{n} wk",
+    month: "{n} mo",
+    year: "{n} yr",
+    ago: "{value} ago",
+    in: "in {value}",
+    tomorrow: "tomorrow",
+    yesterday: "yesterday",
+    today: "today",
+    tz: "WIB",
+};

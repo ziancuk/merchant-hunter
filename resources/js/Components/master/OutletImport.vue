@@ -2,12 +2,14 @@
 import { ref } from 'vue';
 import Button from '@/Components/ui/Button.vue';
 import Icon from '@/Components/ui/Icon.vue';
+import { useI18n } from '@/i18n';
 import { api, normalizeError } from '@/lib/api';
 import { formatNumber } from '@/lib/format';
 import Panel from './Panel.vue';
 import type { ImportResult } from './types';
 
 const emit = defineEmits<{ imported: [result: ImportResult] }>();
+const { t } = useI18n();
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const SAMPLE = 'code,name,address,city,province,lat,lng\nOUT-901,Toko Contoh Makmur,Jl. Asia Afrika No. 1,Bandung,Jawa Barat,-6.9215,107.6071\nOUT-902,Toko Tanpa Koordinat,Jl. Malioboro No. 5,Yogyakarta,DI Yogyakarta,,\n';
@@ -24,7 +26,7 @@ function onPick(e: Event): void {
     result.value = null;
     error.value = null;
     if (f && f.size > MAX_BYTES) {
-        error.value = 'Berkas lebih dari 2 MB. Pecah menjadi beberapa berkas.';
+        error.value = t('master.import.too_big');
         file.value = null;
         return;
     }
@@ -53,22 +55,22 @@ async function upload(): Promise<void> {
 }
 
 const stats = (r: ImportResult) => [
-    { key: 'created', label: 'Dibuat', value: r.created },
-    { key: 'updated', label: 'Diperbarui', value: r.updated },
-    { key: 'geocoded', label: 'Ter-geocode', value: r.geocoded },
-    { key: 'needs_review', label: 'Perlu tinjau', value: r.needs_review },
-    { key: 'failed', label: 'Gagal', value: r.failed },
+    { key: 'created', label: t('master.import.created'), value: r.created },
+    { key: 'updated', label: t('master.import.updated'), value: r.updated },
+    { key: 'geocoded', label: t('master.import.geocoded'), value: r.geocoded },
+    { key: 'needs_review', label: t('master.import.needs_review'), value: r.needs_review },
+    { key: 'failed', label: t('master.import.failed'), value: r.failed },
 ];
 </script>
 
 <template>
-    <Panel title="Impor CSV" hint="Kolom: code, name, address, city, province, lat, lng. Maks. 2 MB. Baris tanpa koordinat di-geocode di latar belakang.">
+    <Panel :title="t('master.import.title')" :hint="t('master.import.hint')">
         <template #actions>
-            <a :href="sampleHref" download="contoh-outlet.csv" class="text-xs text-focus underline-offset-2 hover:underline" data-testid="import-sample">Unduh contoh format</a>
+            <a :href="sampleHref" download="contoh-outlet.csv" class="text-xs text-focus underline-offset-2 hover:underline" data-testid="import-sample">{{ t('master.import.sample') }}</a>
         </template>
         <form class="flex flex-wrap items-end gap-3" @submit.prevent="upload">
             <div class="flex min-w-0 flex-col gap-1">
-                <label for="import-file" class="text-xs font-medium text-muted">Berkas CSV</label>
+                <label for="import-file" class="text-xs font-medium text-muted">{{ t('master.import.file_label') }}</label>
                 <input
                     id="import-file"
                     ref="input"
@@ -81,7 +83,7 @@ const stats = (r: ImportResult) => [
             </div>
             <Button type="submit" variant="primary" :disabled="!file" :loading="uploading" data-testid="import-submit">
                 <Icon name="send" :size="14" class="-rotate-90" />
-                Impor
+                {{ t('master.import.submit') }}
             </Button>
         </form>
 
@@ -95,15 +97,15 @@ const stats = (r: ImportResult) => [
                 </div>
             </dl>
             <div v-if="result.errors?.length" data-testid="import-errors">
-                <p class="text-sm font-medium text-danger">{{ result.errors.length }} baris bermasalah</p>
+                <p class="text-sm font-medium text-danger">{{ t('master.import.error_rows', { n: result.errors.length }) }}</p>
                 <ul class="m-0 mt-1 max-h-48 list-none overflow-y-auto p-0 text-xs">
                     <li v-for="(er, i) in result.errors" :key="i" class="flex gap-3 border-b border-line/60 py-1">
-                        <span class="num shrink-0 text-muted">Baris {{ er.row }}</span>
+                        <span class="num shrink-0 text-muted">{{ t('master.import.row', { n: er.row }) }}</span>
                         <span>{{ er.message }}</span>
                     </li>
                 </ul>
             </div>
-            <p v-else class="text-sm text-st-won">Semua baris berhasil diproses.</p>
+            <p v-else class="text-sm text-st-won">{{ t('master.import.all_ok') }}</p>
         </div>
     </Panel>
 </template>

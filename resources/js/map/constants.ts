@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import type { MapMode } from '@/types';
 
 /** Below this zoom the server returns aggregated grid cells instead of points (CONTRACTS §3, D-15). */
@@ -27,12 +28,28 @@ export const OPENFREEMAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liber
 export const INTRO_STORAGE_KEY = 'hunter.map.intro-skipped';
 export const COLOR_BY_STORAGE_KEY = 'hunter.map.color-by';
 
-export const MAP_MODES: { key: MapMode; label: string; hint: string; shortcut: string }[] = [
-    { key: 'prospects', label: 'Prospek', hint: 'Titik dan kolom prospek menurut skor', shortcut: '1' },
-    { key: 'heatmap', label: 'Heatmap', hint: 'Kepadatan prospek', shortcut: '2' },
-    { key: 'whitespace', label: 'White Space', hint: 'Area padat prospek tanpa outlet dalam 500 m', shortcut: '3' },
-    { key: 'coverage', label: 'Cakupan', hint: 'Cincin 2 km di sekitar setiap outlet', shortcut: '4' },
-];
+export interface MapModeDef {
+    key: MapMode;
+    /** Translated at read time so the mode switcher follows the active language. */
+    readonly label: string;
+    readonly hint: string;
+    shortcut: string;
+}
+
+function mode(key: MapMode, shortcut: string): MapModeDef {
+    return {
+        key,
+        shortcut,
+        get label() {
+            return t(`map.modes.${key}.label`);
+        },
+        get hint() {
+            return t(`map.modes.${key}.hint`);
+        },
+    };
+}
+
+export const MAP_MODES: MapModeDef[] = [mode('prospects', '1'), mode('heatmap', '2'), mode('whitespace', '3'), mode('coverage', '4')];
 
 export const ATTRIBUTION = {
     text: 'OpenFreeMap © OpenMapTiles Data from OpenStreetMap',

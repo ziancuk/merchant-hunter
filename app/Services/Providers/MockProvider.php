@@ -142,7 +142,7 @@ class MockProvider implements DataProvider
 
     public function testConnection(): ConnectionStatus
     {
-        return new ConnectionStatus(true, 'Simulated provider: no external connection needed', 0);
+        return new ConnectionStatus(true, __('api.connection.mock_ok'), 0);
     }
 
     public function usage(): UsageInfo

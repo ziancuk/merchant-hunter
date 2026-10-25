@@ -39,7 +39,7 @@ final class OptOutAction
                 'prospect_id' => $prospect->id,
                 'user_id' => $user->id,
                 'type' => ($optOut ? ActivityType::OptOut : ActivityType::OptIn)->value,
-                'body' => $optOut ? 'Ditandai tidak boleh dihubungi (opt-out)' : 'Opt-out dibatalkan',
+                'body' => $optOut ? __('api.activity.opt_out') : __('api.activity.opt_in'),
             ]);
 
             return $prospect->refresh();

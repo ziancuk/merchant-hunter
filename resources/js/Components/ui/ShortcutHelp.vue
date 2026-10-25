@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import Drawer from './Drawer.vue';
-import { listShortcuts, shortcutHelpOpen } from '@/composables/useShortcuts';
+import { listShortcuts, shortcutHelpOpen, shortcutText } from '@/composables/useShortcuts';
+import { useI18n } from '@/i18n';
+
+const { t } = useI18n();
 
 const grouped = computed(() => {
     const map = new Map<string, { keys: string; description: string }[]>();
     for (const s of listShortcuts()) {
-        const g = s.group ?? 'Umum';
+        const g = s.group ? shortcutText(s.group) : t('ui.shortcuts.general');
         if (!map.has(g)) map.set(g, []);
-        map.get(g)!.push({ keys: s.keys, description: s.description });
+        map.get(g)!.push({ keys: s.keys, description: shortcutText(s.description) });
     }
     return [...map.entries()];
 });
@@ -17,7 +20,7 @@ const pretty = (keys: string) => keys.replace(/mod/i, 'Ctrl/⌘').split('+').map
 </script>
 
 <template>
-    <Drawer v-model="shortcutHelpOpen" title="Pintasan keyboard" description="Tekan ? kapan saja untuk membuka daftar ini.">
+    <Drawer v-model="shortcutHelpOpen" :title="t('ui.shortcuts.title')" :description="t('ui.shortcuts.description')">
         <div class="space-y-5 p-4">
             <section v-for="[group, list] in grouped" :key="group">
                 <h3 class="hud-label mb-2">{{ group }}</h3>

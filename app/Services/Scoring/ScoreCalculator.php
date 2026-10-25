@@ -7,6 +7,7 @@ namespace App\Services\Scoring;
 use App\DTO\ScoreInput;
 use App\DTO\ScoreResult;
 use App\Services\Settings\SettingsService;
+use Illuminate\Support\Facades\Lang;
 use Throwable;
 
 /**
@@ -61,28 +62,22 @@ final class ScoreCalculator implements ProspectScorer
             'contact' => $this->contact($input, $p),
             'new' => $this->newOpen($input, $p),
         ];
-        $labels = [
-            'category' => 'Kecocokan kategori',
-            'quality' => 'Kualitas (rating & ulasan)',
-            'proximity' => 'Kedekatan dengan outlet',
-            'density' => 'Kepadatan area',
-            'contact' => 'Kelengkapan kontak',
-            'new' => 'Baru buka',
-        ];
-
         $total = 0.0;
         $breakdown = [];
-        foreach ($components as $key => [$value, $reason]) {
+        foreach ($components as $key => [$value, $reasonKey, $reasonParams]) {
             $max = (int) $w[$key];
             $points = $closed ? 0.0 : $max * $value;
             $total += $points;
             $breakdown[] = [
                 'key' => $key,
-                'label' => $labels[$key],
+                'label' => __('scoring.labels.'.$key),
                 'value' => round($closed ? 0.0 : $value, 4),
                 'max' => $max,
                 'points' => round($points, 2),
-                'reason' => $closed ? 'Usaha tutup: skor 0' : $reason,
+                'reason' => self::reason($closed ? 'closed' : $reasonKey, $closed ? [] : $reasonParams),
+                // Structured form of the reason, persisted so it can be re-translated when read (see translateBreakdown()).
+                'reason_key' => $closed ? 'closed' : $reasonKey,
+                'reason_params' => $closed ? [] : $reasonParams,
             ];
         }
 
@@ -111,23 +106,23 @@ final class ScoreCalculator implements ProspectScorer
         return $this->resolved = array_replace_recursive(self::DEFAULTS, $stored, $this->overrides);
     }
 
-    /** @return array{float, string} */
+    /** @return array{float, string, array<string, mixed>} */
     private function category(ScoreInput $in): array
     {
-        return [self::clamp($in->categoryWeight / 100), 'Bobot kategori '.$in->categoryWeight];
+        return [self::clamp($in->categoryWeight / 100), 'category', ['weight' => $in->categoryWeight]];
     }
 
     /**
      * @param  array<string, mixed>  $p
-     * @return array{float, string}
+     * @return array{float, string, array<string, mixed>}
      */
     private function quality(ScoreInput $in, array $p): array
     {
         if (! $in->ratingCounts) {
-            return [(float) $p['unrated_value'], 'Rating tidak dihitung (nilai netral '.$p['unrated_value'].')'];
+            return [(float) $p['unrated_value'], 'rating_ignored', ['value' => $p['unrated_value']]];
         }
         if ($in->rating === null) {
-            return [(float) $p['unrated_value'], 'Belum ada rating (nilai netral '.$p['unrated_value'].')'];
+            return [(float) $p['unrated_value'], 'rating_missing', ['value' => $p['unrated_value']]];
         }
 
         $span = max(0.0001, (float) $p['rating_ceiling'] - (float) $p['rating_floor']);
@@ -137,12 +132,12 @@ final class ScoreCalculator implements ProspectScorer
         $v = self::clamp(log10(1 + $reviews) / log10(1 + $cap));
         $value = self::clamp((float) $p['rating_weight'] * $r + (float) $p['reviews_weight'] * $v);
 
-        return [$value, 'Rating '.number_format($in->rating, 1, '.', '').' dari '.$reviews.' ulasan'];
+        return [$value, 'rating', ['rating' => number_format($in->rating, 1, '.', ''), 'reviews' => $reviews]];
     }
 
     /**
      * @param  array<string, mixed>  $p
-     * @return array{float, string}
+     * @return array{float, string, array<string, mixed>}
      */
     private function proximity(ScoreInput $in, array $p): array
     {
@@ -157,31 +152,26 @@ final class ScoreCalculator implements ProspectScorer
             : 1 - min(max(0, $in->nearestOutletDistanceM), $maxD) / $maxD;
 
         $value = self::clamp($share * $distancePart + (1 - $share) * $t);
-        $reason = $neighbors > 0
-            ? $neighbors.' outlet Hitachi dalam 500 m'
-            : 'Tidak ada outlet Hitachi dalam 500 m';
-        $reason .= $in->nearestOutletDistanceM === null
-            ? '; jarak ke outlet belum diketahui'
-            : '; outlet terdekat '.$in->nearestOutletDistanceM.' m';
+        $reasonParams = ['neighbors' => $neighbors, 'distance' => $in->nearestOutletDistanceM];
 
-        return [$value, $reason];
+        return [$value, 'proximity', $reasonParams];
     }
 
     /**
      * @param  array<string, mixed>  $p
-     * @return array{float, string}
+     * @return array{float, string, array<string, mixed>}
      */
     private function density(ScoreInput $in, array $p): array
     {
         $cap = max(1, (int) $p['density_cap']);
         $n = max(0, $in->areaDensity);
 
-        return [self::clamp($n / $cap), $n.' prospek lain dalam 500 m'];
+        return [self::clamp($n / $cap), 'density', ['count' => $n]];
     }
 
     /**
      * @param  array<string, mixed>  $p
-     * @return array{float, string}
+     * @return array{float, string, array<string, mixed>}
      */
     private function contact(ScoreInput $in, array $p): array
     {
@@ -189,25 +179,79 @@ final class ScoreCalculator implements ProspectScorer
             + ($in->hasWebsite ? (float) $p['contact_website'] : 0.0)
             + ($in->hasAddress ? (float) $p['contact_address'] : 0.0);
 
-        $have = array_keys(array_filter(['telepon' => $in->hasPhone, 'website' => $in->hasWebsite, 'alamat' => $in->hasAddress]));
-
-        return [self::clamp($value), $have === [] ? 'Belum ada telepon, website, atau alamat' : 'Tersedia: '.implode(', ', $have)];
+        return [self::clamp($value), 'contact', ['phone' => $in->hasPhone, 'website' => $in->hasWebsite, 'address' => $in->hasAddress]];
     }
 
     /**
      * @param  array<string, mixed>  $p
-     * @return array{float, string}
+     * @return array{float, string, array<string, mixed>}
      */
     private function newOpen(ScoreInput $in, array $p): array
     {
         if (! $in->isNewOpen) {
-            return [0.0, 'Bukan usaha baru buka'];
+            return [0.0, 'not_new', []];
         }
         $days = max(1, (int) $p['new_days']);
         $age = max(0, $in->ageDays);
         $value = self::clamp(1 - $age / $days);
 
-        return [$value, $value > 0 ? 'Baru buka '.$age.' hari lalu' : 'Baru buka, tetapi sudah lewat '.$days.' hari'];
+        return $value > 0 ? [$value, 'new_age', ['days' => $age]] : [$value, 'new_expired', ['days' => $days]];
+    }
+
+    /**
+     * Human-readable reason in the current locale from its stable key and parameters.
+     *
+     * @param  array<string, mixed>  $params
+     */
+    public static function reason(string $key, array $params = []): string
+    {
+        $t = static fn (string $k, array $r = []): string => __('scoring.reasons.'.$k, $r);
+
+        return match ($key) {
+            'proximity' => (($params['neighbors'] ?? 0) > 0
+                ? $t('neighbors', ['count' => $params['neighbors']])
+                : $t('no_neighbors'))
+                .(($params['distance'] ?? null) === null
+                    ? $t('distance_unknown')
+                    : $t('nearest', ['distance' => $params['distance']])),
+            'contact' => self::contactReason($params, $t),
+            default => $t($key, $params),
+        };
+    }
+
+    /**
+     * Rewrites a stored breakdown (label/reason persisted in the language of the sync run) into the request language.
+     * Rows written before reason keys existed keep their stored reason; the label always follows the component key.
+     *
+     * @param  list<array<string, mixed>>  $breakdown
+     * @return list<array<string, mixed>>
+     */
+    public static function translateBreakdown(array $breakdown): array
+    {
+        return array_map(static function (array $row): array {
+            if (isset($row['key']) && is_string($row['key']) && Lang::has('scoring.labels.'.$row['key'])) {
+                $row['label'] = __('scoring.labels.'.$row['key']);
+            }
+            if (isset($row['reason_key']) && is_string($row['reason_key'])) {
+                $row['reason'] = self::reason($row['reason_key'], (array) ($row['reason_params'] ?? []));
+            }
+            unset($row['reason_key'], $row['reason_params']);
+
+            return $row;
+        }, array_values($breakdown));
+    }
+
+    /** @param  array<string, mixed>  $params */
+    private static function contactReason(array $params, callable $t): string
+    {
+        $have = [];
+        foreach (['phone', 'website', 'address'] as $field) {
+            if (! empty($params[$field])) {
+                $have[] = $t('contact_'.$field);
+            }
+        }
+
+        return $have === [] ? $t('contact_none') : $t('contact_have', ['items' => implode(', ', $have)]);
     }
 
     private static function clamp(float $v): float

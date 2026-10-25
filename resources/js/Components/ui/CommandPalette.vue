@@ -13,6 +13,7 @@ import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
 import Icon from './Icon.vue';
 import { useDebounceFn } from '@/composables/useDebounce';
 import { useShortcuts } from '@/composables/useShortcuts';
+import { t } from '@/i18n';
 
 
 const uidStr = `cmdk-${useId()}`;
@@ -28,7 +29,7 @@ const props = withDefaults(
         /** Register the global Ctrl/Cmd+K toggle. */
         hotkey?: boolean;
     }>(),
-    { search: undefined, placeholder: 'Cari prospek, outlet, wilayah, atau perintah…', debounceMs: 250, hotkey: true },
+    { search: undefined, placeholder: undefined, debounceMs: 250, hotkey: true },
 );
 
 const emit = defineEmits<{ 'update:open': [value: boolean]; select: [item: CommandItem] }>();
@@ -46,8 +47,8 @@ if (props.hotkey) {
     useShortcuts([
         {
             keys: 'mod+k',
-            description: 'Buka palet perintah',
-            group: 'Umum',
+            description: () => t('ui.shortcuts.openPalette'),
+            group: () => t('ui.shortcuts.general'),
             allowInInput: true,
             handler: () => emit('update:open', !props.open),
         },
@@ -59,7 +60,7 @@ const localMatches = computed(() => {
     if (!tokens.length) return props.items;
     return props.items.filter((it) => {
         const hay = `${it.label} ${it.hint ?? ''} ${it.group}`.toLowerCase();
-        return tokens.every((t) => hay.includes(t));
+        return tokens.every((tok) => hay.includes(tok));
     });
 });
 
@@ -205,7 +206,7 @@ onBeforeUnmount(() => runSearch.cancel());
                 class="glass w-full max-w-xl overflow-hidden rounded-panel text-fg"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Palet perintah"
+                :aria-label="t('ui.palette.dialog')"
                 @keydown="onKeydown"
             >
                 <div class="flex items-center gap-3 border-b border-line px-4">
@@ -222,12 +223,12 @@ onBeforeUnmount(() => runSearch.cancel());
                         aria-expanded="true"
                         :aria-controls="`${uidStr}-list`"
                         :aria-activedescendant="flat.length ? `${uidStr}-opt-${active}` : undefined"
-                        aria-label="Cari perintah"
-                        :placeholder="placeholder"
+                        :aria-label="t('ui.palette.search')"
+                        :placeholder="placeholder ?? t('ui.palette.placeholder')"
                     />
                     <kbd class="num rounded border border-line px-1.5 py-0.5 text-2xs text-muted">Esc</kbd>
                 </div>
-                <ul :id="`${uidStr}-list`" role="listbox" aria-label="Hasil" class="max-h-[50vh] overflow-y-auto p-2">
+                <ul :id="`${uidStr}-list`" role="listbox" :aria-label="t('ui.palette.results')" class="max-h-[50vh] overflow-y-auto p-2">
                     <template v-for="row in rows" :key="row.key">
                         <li v-if="row.kind === 'group'" role="presentation" class="hud-label px-2 pb-1 pt-3 first:pt-1">{{ row.label }}</li>
                         <li
@@ -245,13 +246,13 @@ onBeforeUnmount(() => runSearch.cancel());
                         </li>
                     </template>
                 </ul>
-                <p v-if="remoteLoading" class="px-4 pb-3 text-xs text-muted" role="status">Mencari…</p>
-                <p v-else-if="remoteError" class="px-4 pb-3 text-xs text-danger" role="alert">Pencarian gagal. Coba lagi.</p>
-                <p v-else-if="!flat.length" class="px-4 pb-4 text-sm text-muted" role="status">Tidak ada hasil untuk "{{ query }}".</p>
+                <p v-if="remoteLoading" class="px-4 pb-3 text-xs text-muted" role="status">{{ t('ui.palette.searching') }}</p>
+                <p v-else-if="remoteError" class="px-4 pb-3 text-xs text-danger" role="alert">{{ t('ui.palette.failed') }}</p>
+                <p v-else-if="!flat.length" class="px-4 pb-4 text-sm text-muted" role="status">{{ t('ui.palette.empty', { query }) }}</p>
                 <div class="flex items-center gap-4 border-t border-line px-4 py-2 text-2xs text-muted">
-                    <span><kbd class="num">↑↓</kbd> pilih</span>
-                    <span><kbd class="num">Enter</kbd> buka</span>
-                    <span><kbd class="num">Esc</kbd> tutup</span>
+                    <span><kbd class="num">↑↓</kbd> {{ t('ui.palette.hintSelect') }}</span>
+                    <span><kbd class="num">Enter</kbd> {{ t('ui.palette.hintOpen') }}</span>
+                    <span><kbd class="num">Esc</kbd> {{ t('ui.palette.hintClose') }}</span>
                 </div>
             </div>
         </div>

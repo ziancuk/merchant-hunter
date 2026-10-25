@@ -7,6 +7,7 @@ namespace App\Http\Resources;
 use App\Models\Prospect;
 use App\Services\Contact\ContactPolicy;
 use App\Services\Contact\WhatsAppNormalizer;
+use App\Services\Scoring\ScoreCalculator;
 use App\Services\Settings\SettingsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -41,7 +42,7 @@ class ProspectDetailResource extends JsonResource
             'first_seen_at' => Support::iso($p->first_seen_at),
             'score' => $p->score,
             'score_band' => $p->scoreBand()->value,
-            'score_breakdown' => $p->score_breakdown ?? [],
+            'score_breakdown' => ScoreCalculator::translateBreakdown((array) ($p->score_breakdown ?? [])),
             'nearest_outlet' => $p->nearestOutlet ? [
                 'id' => $p->nearestOutlet->id,
                 'name' => $p->nearestOutlet->name,

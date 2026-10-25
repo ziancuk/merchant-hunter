@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from '@/i18n';
 
 export interface CartogramItem {
     id: number | string;
@@ -13,6 +14,7 @@ export interface CartogramItem {
     details?: string[];
 }
 
+const { t } = useI18n();
 const props = withDefaults(
     defineProps<{
         items: CartogramItem[];
@@ -92,12 +94,12 @@ function hide(): void {
             <span class="num">0</span>
             <span class="h-2 w-28 rounded-full border border-line" style="background: linear-gradient(90deg, color-mix(in srgb, var(--c-medium) 8%, var(--c-surface)), color-mix(in srgb, var(--c-medium) 50%, var(--c-surface)))" />
             <span class="num">{{ format(max) }}</span>
-            <span class="ml-2 inline-flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm border border-hot" />teratas</span>
+            <span class="ml-2 inline-flex items-center gap-1"><span class="h-2.5 w-2.5 rounded-sm border border-hot" />{{ t('ui.chart.top') }}</span>
         </div>
 
         <table class="sr-only" data-testid="cartogram-table">
             <caption>{{ label }}</caption>
-            <thead><tr><th>Wilayah</th><th>{{ metric }}</th></tr></thead>
+            <thead><tr><th>{{ t('ui.chart.region') }}</th><th>{{ metric }}</th></tr></thead>
             <tbody>
                 <tr v-for="item in items" :key="item.id"><td>{{ item.label }}</td><td>{{ format(item.value) }}</td></tr>
             </tbody>

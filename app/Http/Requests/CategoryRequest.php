@@ -38,7 +38,7 @@ final class CategoryRequest extends ApiRequest
                 foreach (array_keys($filters) as $key) {
                     // Same pattern OverpassQuery::mergedFilters accepts for tag keys.
                     if (! is_string($key) || preg_match('/^[a-z_]+$/', $key) !== 1) {
-                        $v->errors()->add('osm_filters', 'Kunci filter OSM hanya boleh berisi huruf kecil dan garis bawah.');
+                        $v->errors()->add('osm_filters', __('requests.messages.osm_filters_invalid'));
                         break;
                     }
                 }
@@ -46,7 +46,7 @@ final class CategoryRequest extends ApiRequest
 
             $template = $this->input('whatsapp_template');
             if (is_string($template) && ! $v->errors()->has('whatsapp_template') && ! MessageBuilder::isValidTemplate($template)) {
-                $v->errors()->add('whatsapp_template', 'Template harus memuat placeholder yang valid ({nama_bisnis}, {nama_pengirim}, {kategori}) dan tidak boleh memuat placeholder lain.');
+                $v->errors()->add('whatsapp_template', __('requests.messages.template_invalid'));
             }
         });
     }

@@ -1,13 +1,15 @@
 <script setup lang="ts">
+import { useI18n } from '@/i18n';
 import Button from './Button.vue';
 import Icon from './Icon.vue';
 
 withDefaults(defineProps<{ title?: string; message?: string; retryLabel?: string; retrying?: boolean }>(), {
-    title: 'Terjadi kesalahan',
-    message: 'Data tidak dapat dimuat. Periksa koneksi Anda lalu coba lagi.',
-    retryLabel: 'Coba lagi',
+    title: undefined,
+    message: undefined,
+    retryLabel: undefined,
     retrying: false,
 });
+const { t } = useI18n();
 const emit = defineEmits<{ retry: [] }>();
 </script>
 
@@ -16,11 +18,11 @@ const emit = defineEmits<{ retry: [] }>();
         <div class="grid h-14 w-14 place-items-center rounded-full border border-danger/40 bg-danger/10 text-danger">
             <Icon name="alert" :size="24" />
         </div>
-        <h3 class="font-display text-base font-semibold text-fg">{{ title }}</h3>
-        <p class="max-w-xs text-sm text-muted">{{ message }}</p>
+        <h3 class="font-display text-base font-semibold text-fg">{{ title ?? t('ui.error.title') }}</h3>
+        <p class="max-w-xs text-sm text-muted">{{ message ?? t('ui.error.message') }}</p>
         <Button variant="secondary" size="sm" :loading="retrying" @click="emit('retry')">
             <Icon name="refresh" :size="14" />
-            {{ retryLabel }}
+            {{ retryLabel ?? t('ui.error.retry') }}
         </Button>
     </div>
 </template>

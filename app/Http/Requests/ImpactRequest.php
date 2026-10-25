@@ -9,23 +9,7 @@ final class ImpactRequest extends ApiRequest
     /** @return array<string, string> */
     public function attributes(): array
     {
-        return [
-            'outlets' => 'Jumlah outlet',
-            'google_syncs_per_month' => 'Sinkronisasi Google per bulan',
-            'google_groups_per_outlet' => 'Grup kategori per outlet',
-            'avg_pages' => 'Rata-rata halaman',
-            'details_ratio' => 'Rasio panggilan detail',
-            'cost_per_1000_search' => 'Tarif pencarian per 1.000',
-            'cost_per_1000_details' => 'Tarif detail per 1.000',
-            'usd_idr' => 'Kurs USD ke Rupiah',
-            'prospects_per_outlet' => 'Prospek per outlet',
-            'conv_found_to_contact' => 'Konversi ditemukan ke dihubungi',
-            'conv_contact_to_demo' => 'Konversi dihubungi ke demo',
-            'conv_demo_to_won' => 'Konversi demo ke deal',
-            'deal_value_idr' => 'Nilai deal',
-            'hours_saved_per_week' => 'Jam hemat per minggu',
-            'hourly_cost_idr' => 'Biaya per jam',
-        ];
+        return (array) __('requests.attributes.impact');
     }
 
     /** @return array<string, mixed> */

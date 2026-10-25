@@ -1,18 +1,36 @@
+import { t } from '@/i18n';
+
 export interface NavItem {
     href: string;
-    label: string;
     icon: string;
-    hint?: string;
+    key: string;
+    /** Translated at read time so the nav follows the active language. */
+    readonly label: string;
+    readonly hint: string;
+}
+
+function item(href: string, icon: string, key: string): NavItem {
+    return {
+        href,
+        icon,
+        key,
+        get label() {
+            return t(`nav.${key}`);
+        },
+        get hint() {
+            return t(`nav.${key}_hint`);
+        },
+    };
 }
 
 export const NAV_ITEMS: NavItem[] = [
-    { href: '/', label: 'Peta', icon: 'map', hint: 'Radar prospek' },
-    { href: '/pipeline', label: 'Pipeline', icon: 'kanban', hint: 'Kanban & tabel' },
-    { href: '/reports', label: 'Laporan', icon: 'table', hint: 'Tabel prospek & ekspor' },
-    { href: '/dashboard', label: 'Dasbor', icon: 'chart', hint: 'KPI & funnel' },
-    { href: '/impact', label: 'Dampak', icon: 'coins', hint: 'Estimasi biaya & hasil' },
-    { href: '/master/data-sources', label: 'Master', icon: 'database', hint: 'Sumber data, outlet, kategori' },
-    { href: '/scheduler', label: 'Penjadwal', icon: 'clock', hint: 'Riwayat sinkronisasi' },
+    item('/', 'map', 'map'),
+    item('/pipeline', 'kanban', 'pipeline'),
+    item('/reports', 'table', 'report'),
+    item('/dashboard', 'chart', 'dashboard'),
+    item('/impact', 'coins', 'impact'),
+    item('/master/data-sources', 'database', 'master'),
+    item('/scheduler', 'clock', 'scheduler'),
 ];
 
 /** Whether the Inertia page url belongs to the nav item (`/` only matches exactly). */

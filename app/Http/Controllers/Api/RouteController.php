@@ -29,10 +29,10 @@ class RouteController extends Controller
         }
         if (count($stops) < 2) {
             throw new BusinessRuleException(
-                'Minimal 2 prospek dengan koordinat diperlukan untuk menyusun rute.',
+                __('api.route_min_stops'),
                 'not_enough_stops',
                 422,
-                ['prospect_ids' => ['Minimal 2 prospek dengan koordinat diperlukan.']],
+                ['prospect_ids' => [__('api.route_min_stops_field')]],
             );
         }
 

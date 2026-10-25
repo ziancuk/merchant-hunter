@@ -52,7 +52,7 @@ final class BulkProspectAction
             }
 
             if ($status === null) {
-                throw ValidationException::withMessages(['status' => ['Status wajib diisi.']]);
+                throw ValidationException::withMessages(['status' => [__('api.status_required')]]);
             }
             if ($prospect->pipeline_status === $status && $status !== PipelineStatus::Lost) {
                 $skipped[] = ['id' => $id, 'reason' => 'same_status'];

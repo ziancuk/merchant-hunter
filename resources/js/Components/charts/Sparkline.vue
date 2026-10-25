@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { t } from '@/i18n';
 
 const props = withDefaults(
     defineProps<{
@@ -37,8 +38,8 @@ const area = computed(() => {
 const last = computed(() => points.value[points.value.length - 1] ?? null);
 const summary = computed(() => {
     const v = props.values;
-    if (v.length === 0) return `${props.label}: tidak ada data`;
-    return `${props.label}: ${v.length} titik, terakhir ${v[v.length - 1]}, terendah ${Math.min(...v)}, tertinggi ${Math.max(...v)}`;
+    if (v.length === 0) return t('ui.chart.sparkNone', { label: props.label });
+    return t('ui.chart.sparkSummary', { label: props.label, n: v.length, last: v[v.length - 1], min: Math.min(...v), max: Math.max(...v) });
 });
 </script>
 

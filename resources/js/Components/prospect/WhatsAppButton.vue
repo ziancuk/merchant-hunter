@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, useId } from 'vue';
 import Icon from '@/Components/ui/Icon.vue';
+import { useI18n } from '@/i18n';
 import { whatsappAvailability } from '@/lib/contact';
 import type { LifecycleStatus } from '@/types';
 
@@ -19,6 +20,7 @@ const props = withDefaults(
 );
 const emit = defineEmits<{ click: [event: MouseEvent] }>();
 
+const { t } = useI18n();
 const reasonId = `wa-reason-${useId()}`;
 const state = computed(() =>
     whatsappAvailability({
@@ -35,6 +37,9 @@ function onClick(e: MouseEvent): void {
     emit('click', e);
 }
 
+/** Translated here from the availability kind (lib/contact.ts keeps the Indonesian fallback text). */
+const reason = computed(() => (state.value.reason ? t(`prospect.wa.reason.${state.value.kind}`) : null));
+
 const base = 'inline-flex h-10 items-center justify-center gap-2 rounded-chip px-4 text-sm font-medium transition';
 </script>
 
@@ -47,7 +52,7 @@ const base = 'inline-flex h-10 items-center justify-center gap-2 rounded-chip px
             rel="noopener noreferrer"
             :class="[base, 'bg-st-won text-ink hover:brightness-110']"
             data-testid="wa-button"
-            :aria-describedby="state.reason ? reasonId : undefined"
+            :aria-describedby="reason ? reasonId : undefined"
             @click="onClick"
         >
             <Icon name="whatsapp" />
@@ -65,6 +70,6 @@ const base = 'inline-flex h-10 items-center justify-center gap-2 rounded-chip px
             <Icon name="whatsapp" />
             {{ label }}
         </button>
-        <span v-if="state.reason" :id="reasonId" class="text-xs text-muted" data-testid="wa-reason">{{ state.reason }}</span>
+        <span v-if="reason" :id="reasonId" class="text-xs text-muted" data-testid="wa-reason">{{ reason }}</span>
     </span>
 </template>

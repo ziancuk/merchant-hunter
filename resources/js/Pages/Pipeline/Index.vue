@@ -15,6 +15,7 @@ import {
     type PipelineView,
 } from '@/Components/pipeline/pipeline';
 import { COLUMN_LABEL, skipReasonLabel } from '@/lib/labels';
+import { tn, useI18n } from '@/i18n';
 import { usePipelineBoard, usePipelineTable } from '@/Components/pipeline/usePipeline';
 import PipelineToolbar from '@/Components/pipeline/PipelineToolbar.vue';
 import type { FilterOptions } from '@/Components/prospect/FilterPanel.vue';
@@ -39,6 +40,7 @@ const props = defineProps<{
 }>();
 
 const { push } = useToasts();
+const { t } = useI18n();
 
 const view = ref<PipelineView>(props.view === 'table' ? 'table' : 'kanban');
 const filter = ref<ProspectFilter>(typeof window !== 'undefined' ? queryToFilter(window.location.search) : {});
@@ -112,8 +114,8 @@ async function onMove(id: number, from: PipelineStatus, to: PipelineStatus): Pro
         pendingReject.value = { kind: 'move', id };
         return;
     }
-    const name = board.find(id)?.name ?? 'Prospek';
-    if (await board.move(id, to)) announcement.value = `${name} dipindahkan ke ${COLUMN_LABEL[to]}.`;
+    const name = board.find(id)?.name ?? t('pipeline.prospectFallback');
+    if (await board.move(id, to)) announcement.value = t('pipeline.movedAnnounce', { name, status: COLUMN_LABEL[to] });
 }
 
 async function onRejectionConfirm(reasonId: number): Promise<void> {
@@ -121,8 +123,8 @@ async function onRejectionConfirm(reasonId: number): Promise<void> {
     if (!pending) return;
     if (pending.kind === 'move') {
         pendingReject.value = null;
-        const name = board.find(pending.id)?.name ?? 'Prospek';
-        if (await board.move(pending.id, 'lost', reasonId)) announcement.value = `${name} dipindahkan ke ${COLUMN_LABEL.lost}.`;
+        const name = board.find(pending.id)?.name ?? t('pipeline.prospectFallback');
+        if (await board.move(pending.id, 'lost', reasonId)) announcement.value = t('pipeline.movedAnnounce', { name, status: COLUMN_LABEL.lost });
         return;
     }
     await runBulk({ action: 'status', status: 'lost', rejection_reason_id: reasonId });
@@ -141,7 +143,7 @@ function toggleAll(checked: boolean): void {
 }
 
 function nameOf(id: number): string {
-    return board.find(id)?.name ?? table.rows.value.find((r) => r.id === id)?.name ?? `Prospek #${id}`;
+    return board.find(id)?.name ?? table.rows.value.find((r) => r.id === id)?.name ?? t('pipeline.prospectNum', { id });
 }
 
 interface BulkBody {
@@ -160,7 +162,12 @@ async function runBulk(body: BulkBody): Promise<void> {
             updated: res.data.updated,
             skipped: res.data.skipped.map((s) => ({ id: s.id, name: nameOf(s.id), reason: s.reason })),
         };
-        push(`${res.data.updated} prospek diperbarui${res.data.skipped.length ? `, ${res.data.skipped.length} dilewati` : ''}.`, res.data.updated > 0 ? 'success' : 'info');
+        push(
+            res.data.skipped.length
+                ? t('pipeline.bulk.toastSkipped', { updated: res.data.updated, skipped: res.data.skipped.length })
+                : t('pipeline.bulk.toast', { updated: res.data.updated }),
+            res.data.updated > 0 ? 'success' : 'info',
+        );
         selected.value = [];
         await refresh();
     } catch (e) {
@@ -203,7 +210,7 @@ const boardRefreshing = computed(() => board.loading.value && boardHasCards.valu
 
 <template>
     <AppShell>
-        <Head title="Pipeline" />
+        <Head :title="t('pipeline.title')" />
         <div class="mx-auto w-full max-w-[1600px] space-y-4">
             <PipelineToolbar
                 :total="total"
@@ -226,9 +233,9 @@ const boardRefreshing = computed(() => board.loading.value && boardHasCards.valu
             >
                 <div class="flex items-start justify-between gap-3">
                     <p class="text-fg">
-                        <strong class="num">{{ bulkResult.updated }}</strong> prospek diperbarui<template v-if="bulkResult.skipped.length">, <strong class="num">{{ bulkResult.skipped.length }}</strong> dilewati</template>.
+                        <strong class="num">{{ bulkResult.updated }}</strong>{{ tn('pipeline.bulk.updatedSuffix', bulkResult.updated) }}<template v-if="bulkResult.skipped.length">, <strong class="num">{{ bulkResult.skipped.length }}</strong>{{ t('pipeline.bulk.skippedSuffix') }}</template>.
                     </p>
-                    <Button size="sm" variant="ghost" aria-label="Tutup hasil aksi massal" icon-only @click="bulkResult = null"><Icon name="close" :size="14" /></Button>
+                    <Button size="sm" variant="ghost" :aria-label="t('pipeline.bulk.closeResult')" icon-only @click="bulkResult = null"><Icon name="close" :size="14" /></Button>
                 </div>
                 <ul v-if="bulkResult.skipped.length" class="mt-2 space-y-1 text-muted" data-testid="bulk-skipped">
                     <li v-for="s in bulkResult.skipped" :key="s.id"><span class="text-fg">{{ s.name }}</span>: {{ skipReasonLabel(s.reason) }}</li>
@@ -237,15 +244,15 @@ const boardRefreshing = computed(() => board.loading.value && boardHasCards.valu
 
             <!-- Kanban -->
             <template v-if="view === 'kanban'">
-                <ErrorState v-if="board.error.value && !boardHasCards" title="Gagal memuat pipeline" :message="board.error.value" :retrying="board.loading.value" @retry="board.reload()" />
+                <ErrorState v-if="board.error.value && !boardHasCards" :title="t('pipeline.board.loadFailed')" :message="board.error.value" :retrying="board.loading.value" @retry="board.reload()" />
                 <EmptyState
                     v-else-if="!board.loading.value && boardTotal === 0"
-                    title="Belum ada prospek di pipeline"
-                    :description="activeFilters ? 'Tidak ada prospek yang cocok dengan filter ini.' : 'Prospek akan muncul setelah sinkronisasi pertama selesai.'"
+                    :title="t('pipeline.board.emptyTitle')"
+                    :description="activeFilters ? t('pipeline.board.emptyFiltered') : t('pipeline.board.emptyFresh')"
                     icon="kanban"
                     data-testid="board-empty"
                 >
-                    <Button v-if="activeFilters" size="sm" variant="secondary" @click="resetFilter">Atur ulang filter</Button>
+                    <Button v-if="activeFilters" size="sm" variant="secondary" @click="resetFilter">{{ t('pipeline.board.resetFilter') }}</Button>
                 </EmptyState>
                 <template v-else>
                     <p v-if="board.error.value" class="rounded-chip border border-danger/40 bg-danger/10 p-2 text-sm text-danger" role="alert">{{ board.error.value }}</p>
@@ -286,7 +293,7 @@ const boardRefreshing = computed(() => board.loading.value && boardHasCards.valu
             />
 
             <p v-if="rules.min_interval_days" class="hud-label text-center normal-case tracking-normal" data-testid="contact-rules">
-                Aturan kontak: peringatan bila dihubungi dalam {{ rules.warn_days }} hari · jeda minimum {{ rules.min_interval_days }} hari · override maks. {{ rules.max_overrides }}x per prospek.
+                {{ t('pipeline.contactRules', { warn: rules.warn_days ?? '', min: rules.min_interval_days, max: rules.max_overrides ?? '' }) }}
             </p>
         </div>
 
@@ -303,7 +310,7 @@ const boardRefreshing = computed(() => board.loading.value && boardHasCards.valu
         <RejectionDialog
             :open="pendingReject !== null"
             :reasons="rejection_reasons"
-            :title="pendingReject?.kind === 'bulk' ? `Tolak ${selected.length} prospek` : 'Alasan penolakan'"
+            :title="pendingReject?.kind === 'bulk' ? t('pipeline.reject.titleBulk', { n: selected.length }) : t('pipeline.reject.title')"
             :busy="bulkBusy"
             @confirm="onRejectionConfirm"
             @cancel="pendingReject = null"

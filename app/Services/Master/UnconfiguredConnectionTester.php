@@ -12,6 +12,6 @@ final class UnconfiguredConnectionTester implements ConnectionTester
 {
     public function test(DataSource $source): ConnectionStatus
     {
-        return new ConnectionStatus(false, 'Uji koneksi belum dikonfigurasi di server ini.');
+        return new ConnectionStatus(false, __('api.connection.unconfigured'));
     }
 }

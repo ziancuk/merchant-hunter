@@ -15,6 +15,6 @@ final class ImportOutletsRequest extends ApiRequest
     /** @return array<string, string> */
     public function messages(): array
     {
-        return ['file.max' => 'Ukuran berkas maksimal 2 MB.'] + parent::messages();
+        return ['file.max' => __('requests.messages.file_max')] + parent::messages();
     }
 }

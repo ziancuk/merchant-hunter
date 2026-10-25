@@ -21,6 +21,6 @@ final class ChangeStatusRequest extends ApiRequest
     /** @return array<string, string> */
     public function messages(): array
     {
-        return ['rejection_reason_id.required_if' => 'Alasan penolakan wajib dipilih bila status Ditolak.'] + parent::messages();
+        return ['rejection_reason_id.required_if' => __('requests.messages.rejection_reason_required')] + parent::messages();
     }
 }

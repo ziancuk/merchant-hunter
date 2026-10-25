@@ -1,54 +1,35 @@
-// Single source of Indonesian UI wording for statuses, columns, score bands and activity types (D-98).
+// Single source of UI wording for statuses, columns, score bands and activity types (D-98, D-132).
+// The maps are Proxies over the i18n messages: reading `BAND_LABEL.hot` inside a render function tracks the active
+// locale, so every existing `LABEL[key]` usage switches language without changes.
+import { t } from '@/i18n';
 import type { ActivityType, PipelineStatus, ScoreBand } from '@/types';
 
-export const STATUS_LABEL: Record<PipelineStatus, string> = {
-    new: 'Baru',
-    contacted: 'Dihubungi',
-    demo: 'Demo',
-    won: 'Deal',
-    lost: 'Ditolak',
-};
-
-/** Pipeline column headings use the same wording as statuses. */
-export const COLUMN_LABEL: Record<PipelineStatus, string> = STATUS_LABEL;
-
-export const BAND_LABEL: Record<ScoreBand, string> = { hot: 'Panas', warm: 'Hangat', medium: 'Sedang', cold: 'Dingin' };
-
-export const SKIP_REASON_LABEL: Record<string, string> = {
-    not_found: 'Prospek tidak ditemukan',
-    already_opted_out: 'Sudah ditandai jangan hubungi',
-    same_status: 'Status sudah sama',
-};
-
-export function skipReasonLabel(reason: string): string {
-    return SKIP_REASON_LABEL[reason] ?? reason;
+function labelMap<K extends string>(prefix: string): Record<K, string> {
+    return new Proxy({} as Record<K, string>, {
+        get: (_target, key) => (typeof key === 'string' ? t(`${prefix}.${key}`) : undefined),
+        has: () => true,
+    });
 }
 
-/** `rejected` is labelled "Ditolak" (same as the status), not an ambiguous variant. */
-export const ACTIVITY_LABEL: Record<ActivityType, string> = {
-    created: 'Ditemukan',
-    status_change: 'Status berubah',
-    contacted: 'Dihubungi',
-    note: 'Catatan',
-    opt_out: 'Opt-out',
-    opt_in: 'Opt-in kembali',
-    rejected: 'Ditolak',
-    system: 'Sistem',
-};
+export const STATUS_LABEL = labelMap<PipelineStatus>('labels.status');
+
+/** Pipeline column headings use the same wording as statuses. */
+export const COLUMN_LABEL = STATUS_LABEL;
+
+export const BAND_LABEL = labelMap<ScoreBand>('labels.band');
+
+export const ACTIVITY_LABEL = labelMap<ActivityType>('labels.activity');
+
+export function skipReasonLabel(reason: string): string {
+    const key = `labels.skip.${reason}`;
+    const text = t(key);
+    return text === key ? reason : text;
+}
 
 /** Scheduler run / per-outlet sync statuses (B-03). */
-export const RUN_STATUS_LABEL: Record<string, string> = {
-    success: 'Berhasil',
-    completed: 'Selesai',
-    ok: 'Berhasil',
-    cached: 'Dari cache',
-    partial: 'Sebagian gagal',
-    failed: 'Gagal',
-    running: 'Berjalan',
-    skipped: 'Dilewati',
-};
-
 export function runStatusLabel(status: string | null | undefined): string {
-    if (!status) return 'Belum pernah';
-    return RUN_STATUS_LABEL[status] ?? status;
+    if (!status) return t('labels.run.never');
+    const key = `labels.run.${status}`;
+    const text = t(key);
+    return text === key ? status : text;
 }

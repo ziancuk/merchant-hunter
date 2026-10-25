@@ -168,6 +168,37 @@ body {
     color: var(--c-muted);
 }
 
+/* Dropdowns: one custom look everywhere (native arrow removed, chevron with room on the right, themed popup). */
+:root {
+    --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238fa39b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+.light {
+    --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23516059' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+select {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: var(--chev);
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+    cursor: pointer;
+    text-overflow: ellipsis;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+select:hover:not(:disabled) {
+    border-color: var(--c-focus);
+}
+select:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+select option {
+    background: var(--c-surface);
+    color: var(--c-text);
+}
+
 .focus-ring:focus-visible,
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
     outline: 2px solid var(--c-focus);

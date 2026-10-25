@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { BAND_CLASSES, scoreBand } from '@/lib/colors';
+import { useI18n } from '@/i18n';
 import { formatNumber } from '@/lib/format';
 import type { ScoreBand, ScoreComponent } from '@/types';
 
 const props = defineProps<{ components: ScoreComponent[]; band?: ScoreBand }>();
+const { t } = useI18n();
 
 const rows = computed(() =>
     props.components.map((c) => {
@@ -15,7 +17,7 @@ const rows = computed(() =>
 </script>
 
 <template>
-    <ul v-if="rows.length" class="space-y-3" aria-label="Rincian skor">
+    <ul v-if="rows.length" class="space-y-3" :aria-label="t('prospect.score.aria')">
         <li v-for="row in rows" :key="row.key" data-testid="score-row">
             <div class="flex items-baseline justify-between gap-2 text-sm">
                 <span class="text-fg">{{ row.label }}</span>
@@ -36,5 +38,5 @@ const rows = computed(() =>
             <p class="mt-1 text-xs text-muted">{{ row.reason }}</p>
         </li>
     </ul>
-    <p v-else class="text-sm text-muted">Rincian skor belum tersedia.</p>
+    <p v-else class="text-sm text-muted">{{ t('prospect.score.empty') }}</p>
 </template>

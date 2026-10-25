@@ -8,15 +8,17 @@ import FilterPanel, { type FilterOptions } from '@/Components/prospect/FilterPan
 import ProspectDrawer, { type RejectionReason } from '@/Components/prospect/ProspectDrawer.vue';
 import { useFilters } from '@/composables/useFilters';
 import { useReducedMotion } from '@/composables/useReducedMotion';
+import { useI18n } from '@/i18n';
 import { formatNumber } from '@/lib/format';
 import type { MapMode, SharedProps } from '@/types';
-import { ATTRIBUTION, COLOR_BY_STORAGE_KEY, COLUMN_ZOOM, GRID_ZOOM } from '@/map/constants';
+import { COLOR_BY_STORAGE_KEY, COLUMN_ZOOM, GRID_ZOOM } from '@/map/constants';
 import { parseMapParams, readIntroSkipped, readPref, resolveMotionFlags, withRouteParam, writeIntroSkipped } from '@/map/params';
 import { removeStop, moveStop } from '@/map/route';
 import type { MapEngine } from '@/map/engine';
 import { toMapPick, type MapPick } from '@/map/picking';
 import type { ColorBy, RouteStop, Viewport } from '@/map/types';
 import MapHud, { type HudProps } from '@/map/MapHud.vue';
+import MapAttribution from '@/map/MapAttribution.vue';
 import MapLegend from '@/map/MapLegend.vue';
 import MapOverlays from '@/map/MapOverlays.vue';
 import ModeSwitcher from '@/map/ModeSwitcher.vue';
@@ -39,6 +41,7 @@ const props = defineProps<{
 }>();
 /* eslint-enable vue/prop-name-casing */
 
+const { t } = useI18n();
 const page = usePage();
 const app = computed(() => (page.props as unknown as SharedProps).app);
 const reducedMotion = useReducedMotion();
@@ -208,7 +211,7 @@ async function startMap(): Promise<void> {
         EngineCtor = eng.MapEngine;
         layers.setBuilder(eng.buildLayers);
     } catch (e) {
-        mapError.value = e instanceof Error ? e.message : 'Modul peta gagal dimuat.';
+        mapError.value = e instanceof Error ? e.message : t('map.module_failed');
         return;
     }
     if (unmounted) return;
@@ -258,15 +261,15 @@ function reloadPage(): void {
     window.location.reload();
 }
 
-const liveSummary = computed(() => (count.value === null ? '' : `${formatNumber(count.value)} ${mode.value === 'whitespace' ? 'sel white space' : 'prospek'} ditampilkan di peta.`));
+const liveSummary = computed(() => (count.value === null ? '' : t(mode.value === 'whitespace' ? 'map.live.whitespace' : 'map.live.prospects', { n: formatNumber(count.value) })));
 </script>
 
 <template>
-    <Head title="Peta" />
+    <Head :title="t('map.title')" />
     <AppShell full-bleed :command-items="commandItems" :search="search">
         <div class="absolute inset-0 bg-ink">
             <div class="absolute inset-0">
-                <div ref="container" class="h-full w-full" role="region" aria-label="Peta prospek" data-testid="map-canvas" :data-ready="ready" :data-intro="introActive" :data-mode="mode" />
+                <div ref="container" class="h-full w-full" role="region" :aria-label="t('map.region')" data-testid="map-canvas" :data-ready="ready" :data-intro="introActive" :data-mode="mode" />
             </div>
             <MapOverlays
                 :ready="ready"
@@ -291,20 +294,20 @@ const liveSummary = computed(() => (count.value === null ? '' : `${formatNumber(
         <!-- Inside AppShell so the top-right controls (user menu) stack above the drawer. -->
         <ProspectDrawer :prospect-id="selectedId" :loader="drawerLoader" :rejection-reasons="rejection_reasons" @close="closeDrawer" @updated="onProspectChanged" @contacted="onProspectChanged" @locate="locate">
             <template #actions="{ prospect }">
-                <Button size="sm" variant="secondary" data-testid="add-to-route" @click="planner.addToRoute(prospect)"><Icon name="pin" :size="14" /> Tambah ke rute</Button>
+                <Button size="sm" variant="secondary" data-testid="add-to-route" @click="planner.addToRoute(prospect)"><Icon name="pin" :size="14" /> {{ t('map.toolbar.add_to_route') }}</Button>
             </template>
         </ProspectDrawer>
 
         <template #top-left>
-            <section v-if="ready && !introActive" class="flex w-[min(22rem,calc(100vw-1.5rem))] flex-col gap-2" aria-label="Mode, filter, dan rute">
+            <section v-if="ready && !introActive" class="flex w-[min(22rem,calc(100vw-1.5rem))] flex-col gap-2" :aria-label="t('map.toolbar.aria')">
                 <ModeSwitcher v-model="mode" />
                 <div class="flex items-center gap-2">
                     <Button size="sm" variant="secondary" class="glass !h-9" :aria-expanded="filterOpen" aria-controls="map-filter" data-testid="filter-toggle" @click="toggleFilter">
-                        <Icon name="filter" :size="14" /> Filter
-                        <span v-if="activeCount" class="num rounded-full bg-hot px-1.5 text-2xs text-on-hot" :aria-label="`${activeCount} filter aktif`">{{ activeCount }}</span>
+                        <Icon name="filter" :size="14" /> {{ t('map.toolbar.filter') }}
+                        <span v-if="activeCount" class="num rounded-full bg-hot px-1.5 text-2xs text-on-hot" :aria-label="t('map.toolbar.filter_active', { n: activeCount })">{{ activeCount }}</span>
                     </Button>
                     <Button size="sm" variant="secondary" class="glass !h-9" :aria-expanded="routeOpen" aria-controls="map-route" data-testid="route-toggle" @click="planner.toggleRoute">
-                        <Icon name="navigation" :size="14" /> Rute
+                        <Icon name="navigation" :size="14" /> {{ t('map.toolbar.route') }}
                         <span v-if="routeStops.length" class="num rounded-full bg-focus px-1.5 text-2xs text-ink">{{ routeStops.length }}</span>
                     </Button>
                     <div class="sm:hidden"><MapHud :hud="hud" :count="count" :mode="mode" :loading="loading" :truncated="truncated" compact /></div>
@@ -335,25 +338,17 @@ const liveSummary = computed(() => (count.value === null ? '' : `${formatNumber(
         </template>
 
         <template #bottom-left>
-            <section v-if="ready" class="flex flex-col items-start gap-2" aria-label="Atribusi peta">
-                <p class="glass max-w-[calc(100vw-5.5rem)] rounded-chip px-2 py-1 text-2xs text-muted sm:max-w-[calc(100vw-21rem)]" data-testid="map-attribution">
-                    {{ ATTRIBUTION.text }} ·
-                    <template v-for="(l, i) in ATTRIBUTION.links" :key="l.href">
-                        <a :href="l.href" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 hover:text-fg">{{ l.label }}</a
-                        ><span v-if="i < ATTRIBUTION.links.length - 1">, </span>
-                    </template>
-                </p>
-            </section>
+            <MapAttribution v-if="ready" />
         </template>
 
         <template #bottom-right>
             <div v-if="ready && !introActive" class="flex items-end gap-2">
                 <MapLegend v-model:color-by="colorBy" />
-                <section class="glass flex flex-col gap-1 rounded-full p-1" aria-label="Kontrol peta">
-                    <Button icon-only variant="ghost" aria-label="Perbesar" data-testid="zoom-in" @click="engine?.zoomBy(1)"><span aria-hidden="true" class="text-lg leading-none">+</span></Button>
-                    <Button icon-only variant="ghost" aria-label="Perkecil" data-testid="zoom-out" @click="engine?.zoomBy(-1)"><span aria-hidden="true" class="text-lg leading-none">−</span></Button>
-                    <Button icon-only variant="ghost" aria-label="Tampilan 3D miring" :aria-pressed="tilted" data-testid="tilt" @click="engine?.toggleTilt()"><span aria-hidden="true" class="text-2xs font-semibold">3D</span></Button>
-                    <Button icon-only variant="ghost" aria-label="Kembali ke Indonesia" data-testid="reset-view" @click="engine?.resetView()"><Icon name="globe" :size="16" /></Button>
+                <section class="glass flex flex-col gap-1 rounded-full p-1" :aria-label="t('map.controls.aria')">
+                    <Button icon-only variant="ghost" :aria-label="t('map.controls.zoom_in')" data-testid="zoom-in" @click="engine?.zoomBy(1)"><span aria-hidden="true" class="text-lg leading-none">+</span></Button>
+                    <Button icon-only variant="ghost" :aria-label="t('map.controls.zoom_out')" data-testid="zoom-out" @click="engine?.zoomBy(-1)"><span aria-hidden="true" class="text-lg leading-none">−</span></Button>
+                    <Button icon-only variant="ghost" :aria-label="t('map.controls.tilt')" :aria-pressed="tilted" data-testid="tilt" @click="engine?.toggleTilt()"><span aria-hidden="true" class="text-2xs font-semibold">3D</span></Button>
+                    <Button icon-only variant="ghost" :aria-label="t('map.controls.reset_view')" data-testid="reset-view" @click="engine?.resetView()"><Icon name="globe" :size="16" /></Button>
                 </section>
             </div>
         </template>

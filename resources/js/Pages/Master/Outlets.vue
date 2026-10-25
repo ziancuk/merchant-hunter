@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* eslint-disable vue/prop-name-casing -- Inertia props mirror the snake_case JSON contract (CONTRACTS §1) */
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import AppShell from '@/Layouts/AppShell.vue';
 import MasterTabs from '@/Components/master/MasterTabs.vue';
@@ -18,6 +18,7 @@ import Icon from '@/Components/ui/Icon.vue';
 import Skeleton from '@/Components/ui/Skeleton.vue';
 import { useDebounceFn } from '@/composables/useDebounce';
 import { useToasts } from '@/composables/useToasts';
+import { useI18n } from '@/i18n';
 import { api, normalizeError } from '@/lib/api';
 import { formatCoordinates } from '@/lib/format';
 import type { GeocodeStatus } from '@/types';
@@ -30,6 +31,7 @@ const props = defineProps<{
 }>();
 
 const { push } = useToasts();
+const { t } = useI18n();
 const rows = ref<OutletRow[]>(props.outlets?.data ?? []);
 const meta = ref<PageMeta>(props.outlets?.meta ?? { current_page: 1, last_page: 1, total: 0, per_page: 25 });
 const reviewCount = ref(props.review_queue_count ?? 0);
@@ -46,12 +48,12 @@ const editing = ref<OutletRow | null>(null);
 const confirmingId = ref<number | null>(null);
 const busyId = ref<number | null>(null);
 
-const STATUS: Record<GeocodeStatus, { label: string; tone: BadgeTone }> = {
-    ok: { label: 'Terverifikasi', tone: 'success' },
-    manual: { label: 'Manual', tone: 'info' },
-    needs_review: { label: 'Perlu tinjau', tone: 'warm' },
-    failed: { label: 'Gagal', tone: 'danger' },
-};
+const STATUS = computed<Record<GeocodeStatus, { label: string; tone: BadgeTone }>>(() => ({
+    ok: { label: t('master.geocode.ok'), tone: 'success' },
+    manual: { label: t('master.geocode.manual'), tone: 'info' },
+    needs_review: { label: t('master.geocode.needs_review'), tone: 'warm' },
+    failed: { label: t('master.geocode.failed'), tone: 'danger' },
+}));
 
 async function load(page = 1): Promise<void> {
     loading.value = true;
@@ -83,7 +85,7 @@ function openEdit(o: OutletRow): void {
     drawerOpen.value = true;
 }
 async function onSaved(o: OutletRow, created: boolean): Promise<void> {
-    push(created ? `Outlet ${o.code} ditambahkan.` : `Outlet ${o.code} disimpan.`, 'success', 3000);
+    push(t(created ? 'master.outlets.toast_added' : 'master.outlets.toast_saved', { code: o.code }), 'success', 3000);
     await load(created ? 1 : meta.value.current_page);
 }
 
@@ -93,7 +95,7 @@ async function deactivate(o: OutletRow): Promise<void> {
     try {
         const { data } = await api.delete<OutletRow>(`/api/master/outlets/${o.id}`);
         rows.value = rows.value.map((r) => (r.id === o.id ? data : r));
-        push(`Outlet ${o.code} dinonaktifkan.`, 'success', 3000);
+        push(t('master.outlets.toast_deactivated', { code: o.code }), 'success', 3000);
     } catch (e) {
         push(normalizeError(e).message, 'error');
     } finally {
@@ -106,7 +108,7 @@ async function retry(o: OutletRow): Promise<void> {
     try {
         const { data } = await api.post<{ queued: boolean; outlet: OutletRow }>(`/api/master/outlets/${o.id}/retry-geocode`, {});
         rows.value = rows.value.map((r) => (r.id === o.id ? data.outlet : r));
-        push(`Geocode ulang ${o.code} diantrekan.`, 'success', 3000);
+        push(t('master.outlets.toast_geocode_queued', { code: o.code }), 'success', 3000);
     } catch (e) {
         push(normalizeError(e).message, 'error');
     } finally {
@@ -121,13 +123,13 @@ async function onImported(r: ImportResult): Promise<void> {
 </script>
 
 <template>
-    <Head title="Outlet" />
+    <Head :title="t('master.outlets.head')" />
     <AppShell>
         <div class="mx-auto w-full max-w-7xl">
-            <PageHeader eyebrow="Master data" title="Outlet" description="Daftar outlet yang menjadi pusat pencarian prospek. Menghapus outlet hanya menonaktifkannya.">
+            <PageHeader :eyebrow="t('master.eyebrow')" :title="t('master.outlets.title')" :description="t('master.outlets.description')">
                 <Button variant="primary" size="sm" data-testid="outlet-add" @click="openCreate">
                     <Icon name="store" :size="14" />
-                    Tambah outlet
+                    {{ t('master.outlets.add') }}
                 </Button>
             </PageHeader>
             <MasterTabs current="outlets" :review-count="reviewCount" />
@@ -141,27 +143,27 @@ async function onImported(r: ImportResult): Promise<void> {
                     class="glass flex items-center justify-between gap-3 rounded-panel px-4 py-3 text-sm transition hover:bg-fg/5"
                     data-testid="review-banner"
                 >
-                    <span class="flex items-center gap-2"><Icon name="alert" :size="16" class="text-warm" /> {{ reviewCount }} outlet menunggu verifikasi lokasi manual</span>
-                    <span class="text-focus">Tinjau →</span>
+                    <span class="flex items-center gap-2"><Icon name="alert" :size="16" class="text-warm" /> {{ t('master.outlets.banner', { n: reviewCount }) }}</span>
+                    <span class="text-focus">{{ t('master.outlets.banner_link') }}</span>
                 </Link>
 
                 <GlassPanel :padded="false" class="overflow-hidden">
                     <form class="flex flex-wrap items-end gap-3 border-b border-line p-4" role="search" @submit.prevent="load(1)">
                         <div class="flex min-w-[12rem] flex-1 flex-col gap-1">
-                            <label for="outlet-search" class="text-xs font-medium text-muted">Cari</label>
-                            <input id="outlet-search" v-model="filter.search" type="search" placeholder="Nama, kode, atau kota" data-testid="outlet-search" class="h-10 rounded-chip border border-line bg-surface/60 px-3 text-base text-fg placeholder:text-muted/70 sm:text-sm" />
+                            <label for="outlet-search" class="text-xs font-medium text-muted">{{ t('master.outlets.search') }}</label>
+                            <input id="outlet-search" v-model="filter.search" type="search" :placeholder="t('master.outlets.search_placeholder')" data-testid="outlet-search" class="h-10 rounded-chip border border-line bg-surface/60 px-3 text-base text-fg placeholder:text-muted/70 sm:text-sm" />
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label for="outlet-filter-province" class="text-xs font-medium text-muted">Provinsi</label>
+                            <label for="outlet-filter-province" class="text-xs font-medium text-muted">{{ t('master.outlets.province') }}</label>
                             <select id="outlet-filter-province" v-model.number="filter.province_id" data-testid="outlet-filter-province" class="h-10 rounded-chip border border-line bg-surface/60 px-3 text-base text-fg sm:text-sm">
-                                <option value="">Semua provinsi</option>
+                                <option value="">{{ t('master.outlets.all_provinces') }}</option>
                                 <option v-for="p in provinces ?? []" :key="p.id" :value="p.id">{{ p.name }}</option>
                             </select>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label for="outlet-filter-geo" class="text-xs font-medium text-muted">Status geocode</label>
+                            <label for="outlet-filter-geo" class="text-xs font-medium text-muted">{{ t('master.outlets.geocode_status') }}</label>
                             <select id="outlet-filter-geo" v-model="filter.geocode_status" data-testid="outlet-filter-geocode" class="h-10 rounded-chip border border-line bg-surface/60 px-3 text-base text-fg sm:text-sm">
-                                <option value="">Semua status</option>
+                                <option value="">{{ t('master.outlets.all_statuses') }}</option>
                                 <option v-for="(s, k) in STATUS" :key="k" :value="k">{{ s.label }}</option>
                             </select>
                         </div>
@@ -170,20 +172,20 @@ async function onImported(r: ImportResult): Promise<void> {
                     <div class="p-4" data-testid="outlet-body">
                         <Skeleton v-if="loading && rows.length === 0" :lines="6" />
                         <ErrorState v-else-if="error" :message="error" :retrying="loading" @retry="load(meta.current_page)" />
-                        <EmptyState v-else-if="rows.length === 0" title="Tidak ada outlet" description="Ubah filter pencarian, tambahkan outlet, atau impor dari CSV." icon="store">
-                            <Button size="sm" variant="primary" @click="openCreate">Tambah outlet</Button>
+                        <EmptyState v-else-if="rows.length === 0" :title="t('master.outlets.empty_title')" :description="t('master.outlets.empty_description')" icon="store">
+                            <Button size="sm" variant="primary" @click="openCreate">{{ t('master.outlets.add') }}</Button>
                         </EmptyState>
                         <div v-else class="overflow-x-auto" :class="loading ? 'opacity-60' : ''" :aria-busy="loading">
                             <table class="w-full min-w-[44rem] border-collapse text-left text-sm" data-testid="outlet-table">
-                                <caption class="sr-only">Daftar outlet</caption>
+                                <caption class="sr-only">{{ t('master.outlets.caption') }}</caption>
                                 <thead>
                                     <tr class="hud-label border-b border-line">
-                                        <th scope="col" class="py-2 pr-3 font-normal">Kode</th>
-                                        <th scope="col" class="py-2 pr-3 font-normal">Nama</th>
-                                        <th scope="col" class="py-2 pr-3 font-normal">Kota · Provinsi</th>
-                                        <th scope="col" class="py-2 pr-3 font-normal">Koordinat</th>
-                                        <th scope="col" class="py-2 pr-3 font-normal">Geocode</th>
-                                        <th scope="col" class="py-2 text-right font-normal">Aksi</th>
+                                        <th scope="col" class="py-2 pr-3 font-normal">{{ t('master.outlets.col_code') }}</th>
+                                        <th scope="col" class="py-2 pr-3 font-normal">{{ t('master.outlets.col_name') }}</th>
+                                        <th scope="col" class="py-2 pr-3 font-normal">{{ t('master.outlets.col_city') }}</th>
+                                        <th scope="col" class="py-2 pr-3 font-normal">{{ t('master.outlets.col_coords') }}</th>
+                                        <th scope="col" class="py-2 pr-3 font-normal">{{ t('master.outlets.col_geocode') }}</th>
+                                        <th scope="col" class="py-2 text-right font-normal">{{ t('master.outlets.col_actions') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -191,21 +193,21 @@ async function onImported(r: ImportResult): Promise<void> {
                                         <td class="num py-2.5 pr-3">{{ o.code }}</td>
                                         <td class="py-2.5 pr-3">
                                             <span class="font-medium">{{ o.name }}</span>
-                                            <Badge v-if="!o.is_active" class="ml-2">Nonaktif</Badge>
-                                            <Badge v-if="o.is_simulated" tone="simulasi" class="ml-2">Simulasi</Badge>
+                                            <Badge v-if="!o.is_active" class="ml-2">{{ t('master.inactive') }}</Badge>
+                                            <Badge v-if="o.is_simulated" tone="simulasi" class="ml-2">{{ t('master.simulated') }}</Badge>
                                         </td>
                                         <td class="py-2.5 pr-3 text-muted">{{ o.city }} · {{ o.province ?? '–' }}</td>
                                         <td class="num py-2.5 pr-3 text-xs">{{ o.lat !== null && o.lng !== null ? formatCoordinates(o.lat, o.lng) : '–' }}</td>
                                         <td class="py-2.5 pr-3"><Badge :tone="STATUS[o.geocode_status]?.tone ?? 'neutral'">{{ STATUS[o.geocode_status]?.label ?? o.geocode_status }}</Badge></td>
                                         <td class="py-2.5 text-right">
                                             <div class="flex flex-wrap justify-end gap-1">
-                                                <Button v-if="o.geocode_status === 'failed'" size="sm" :loading="busyId === o.id" :data-testid="`outlet-retry-${o.code}`" @click="retry(o)">Coba geocode ulang</Button>
-                                                <Button size="sm" variant="ghost" :aria-label="`Ubah ${o.name}`" :data-testid="`outlet-edit-${o.code}`" @click="openEdit(o)">Ubah</Button>
+                                                <Button v-if="o.geocode_status === 'failed'" size="sm" :loading="busyId === o.id" :data-testid="`outlet-retry-${o.code}`" @click="retry(o)">{{ t('master.outlets.retry_geocode') }}</Button>
+                                                <Button size="sm" variant="ghost" :aria-label="t('master.outlets.edit_aria', { name: o.name })" :data-testid="`outlet-edit-${o.code}`" @click="openEdit(o)">{{ t('master.outlets.edit') }}</Button>
                                                 <template v-if="o.is_active">
-                                                    <Button v-if="confirmingId !== o.id" size="sm" variant="ghost" :aria-label="`Nonaktifkan ${o.name}`" :data-testid="`outlet-delete-${o.code}`" @click="confirmingId = o.id">Nonaktifkan</Button>
+                                                    <Button v-if="confirmingId !== o.id" size="sm" variant="ghost" :aria-label="t('master.outlets.deactivate_aria', { name: o.name })" :data-testid="`outlet-delete-${o.code}`" @click="confirmingId = o.id">{{ t('master.outlets.deactivate') }}</Button>
                                                     <template v-else>
-                                                        <Button size="sm" variant="danger" :loading="busyId === o.id" :data-testid="`outlet-delete-confirm-${o.code}`" @click="deactivate(o)">Yakin?</Button>
-                                                        <Button size="sm" variant="ghost" @click="confirmingId = null">Batal</Button>
+                                                        <Button size="sm" variant="danger" :loading="busyId === o.id" :data-testid="`outlet-delete-confirm-${o.code}`" @click="deactivate(o)">{{ t('master.outlets.confirm') }}</Button>
+                                                        <Button size="sm" variant="ghost" @click="confirmingId = null">{{ t('common.cancel') }}</Button>
                                                     </template>
                                                 </template>
                                             </div>
