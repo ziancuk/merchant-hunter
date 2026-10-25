@@ -5,20 +5,23 @@ import Badge from '@/Components/ui/Badge.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import ErrorState from '@/Components/ui/ErrorState.vue';
 import Skeleton from '@/Components/ui/Skeleton.vue';
+import { useI18n } from '@/i18n';
 import { api, normalizeError } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 import { scoreBand } from '@/lib/colors';
+import { BAND_LABEL } from '@/lib/labels';
 import Panel from './Panel.vue';
 import type { Digest, DigestRow } from './types';
 
 const props = defineProps<{ digest: Digest }>();
+const { t } = useI18n();
 
 type TabKey = 'new_open' | 'hot' | 'follow_up';
-const TABS: { key: TabKey; label: string; empty: string }[] = [
-    { key: 'new_open', label: 'Baru buka', empty: 'Tidak ada usaha baru buka pada tanggal ini.' },
-    { key: 'hot', label: 'Panas', empty: 'Belum ada prospek panas yang menunggu dihubungi.' },
-    { key: 'follow_up', label: 'Perlu follow-up', empty: 'Tidak ada prospek yang perlu ditindaklanjuti.' },
-];
+const TABS = computed<{ key: TabKey; label: string; empty: string }[]>(() => [
+    { key: 'new_open', label: t('dashboard.digest.tab_new_open'), empty: t('dashboard.digest.empty_new_open') },
+    { key: 'hot', label: BAND_LABEL.hot, empty: t('dashboard.digest.empty_hot', { band: BAND_LABEL.hot }) },
+    { key: 'follow_up', label: t('dashboard.digest.tab_follow_up'), empty: t('dashboard.digest.empty_follow_up') },
+]);
 
 const current = ref<Digest>(props.digest);
 const tab = ref<TabKey>('new_open');
@@ -49,9 +52,9 @@ async function load(): Promise<void> {
 </script>
 
 <template>
-    <Panel title="Ringkasan harian" :hint="`Digest untuk ${formatDate(current?.date)}`">
+    <Panel :title="t('dashboard.digest.title')" :hint="t('dashboard.digest.hint', { date: formatDate(current?.date) })">
         <template #actions>
-            <label class="sr-only" for="digest-date">Tanggal ringkasan</label>
+            <label class="sr-only" for="digest-date">{{ t('dashboard.digest.date_label') }}</label>
             <input
                 id="digest-date"
                 v-model="date"
@@ -62,29 +65,29 @@ async function load(): Promise<void> {
             />
         </template>
 
-        <div role="tablist" aria-label="Kelompok digest" class="flex flex-wrap gap-1">
+        <div role="tablist" :aria-label="t('dashboard.digest.tabs_label')" class="flex flex-wrap gap-1">
             <button
-                v-for="t in TABS"
-                :id="`digest-tab-${t.key}`"
-                :key="t.key"
+                v-for="tb in TABS"
+                :id="`digest-tab-${tb.key}`"
+                :key="tb.key"
                 type="button"
                 role="tab"
-                :aria-selected="tab === t.key"
+                :aria-selected="tab === tb.key"
                 :aria-controls="`digest-panel`"
-                :data-testid="`digest-tab-${t.key}`"
+                :data-testid="`digest-tab-${tb.key}`"
                 class="flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-medium transition"
-                :class="tab === t.key ? 'bg-fg text-ink' : 'text-fg/80 hover:bg-fg/10'"
-                @click="tab = t.key"
+                :class="tab === tb.key ? 'bg-fg text-ink' : 'text-fg/80 hover:bg-fg/10'"
+                @click="tab = tb.key"
             >
-                {{ t.label }}
-                <span class="num opacity-70">{{ counts[t.key] }}</span>
+                {{ tb.label }}
+                <span class="num opacity-70">{{ counts[tb.key] }}</span>
             </button>
         </div>
 
         <div id="digest-panel" role="tabpanel" :aria-labelledby="`digest-tab-${tab}`" class="min-h-[8rem]">
             <Skeleton v-if="loading" :lines="4" />
             <ErrorState v-else-if="error" :message="error" @retry="load" />
-            <EmptyState v-else-if="rows.length === 0" :title="TABS.find((t) => t.key === tab)?.empty ?? 'Kosong'" icon="note" />
+            <EmptyState v-else-if="rows.length === 0" :title="TABS.find((tb) => tb.key === tab)?.empty ?? t('dashboard.digest.empty_fallback')" icon="note" />
             <ul v-else class="m-0 flex list-none flex-col p-0" data-testid="digest-list">
                 <li v-for="r in rows" :key="r.id" class="border-b border-line/60 last:border-0">
                     <Link :href="`/?prospect=${r.id}`" class="flex items-center justify-between gap-3 py-2 text-sm hover:text-focus" data-testid="digest-row">

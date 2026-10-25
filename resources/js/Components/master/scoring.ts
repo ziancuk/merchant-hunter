@@ -1,3 +1,5 @@
+import { t } from '@/i18n';
+
 // Mirror of App\Services\Scoring\ScoreCalculator::DEFAULTS (used to show defaults and send only overrides).
 export const SCORING_DEFAULTS = {
     weights: { category: 25, quality: 20, proximity: 15, density: 15, contact: 10, new: 15 },
@@ -52,36 +54,53 @@ export function diffParams(current: ScoringParams, defaults: ScoringParams): Sco
 
 export interface ScoringField {
     path: string;
-    label: string;
-    hint: string;
+    /** Translated at read time so the form follows the active language. */
+    readonly label: string;
+    readonly hint: string;
     step: number;
     min?: number;
     max?: number;
 }
 
+function field(path: string, step: number, min?: number, max?: number, weight = false): ScoringField {
+    const key = path.replace('.', '_');
+    return {
+        path,
+        step,
+        min,
+        max,
+        get label() {
+            return t(`master.scoring_field.${key}.label`);
+        },
+        get hint() {
+            return weight ? t('master.scoring_field.max_points') : t(`master.scoring_field.${key}.hint`);
+        },
+    };
+}
+
 export const WEIGHT_FIELDS: ScoringField[] = [
-    { path: 'weights.category', label: 'Kecocokan kategori', hint: 'Poin maksimum', step: 1, min: 0, max: 100 },
-    { path: 'weights.quality', label: 'Kualitas (rating & ulasan)', hint: 'Poin maksimum', step: 1, min: 0, max: 100 },
-    { path: 'weights.proximity', label: 'Kedekatan dengan outlet', hint: 'Poin maksimum', step: 1, min: 0, max: 100 },
-    { path: 'weights.density', label: 'Kepadatan area', hint: 'Poin maksimum', step: 1, min: 0, max: 100 },
-    { path: 'weights.contact', label: 'Kelengkapan kontak', hint: 'Poin maksimum', step: 1, min: 0, max: 100 },
-    { path: 'weights.new', label: 'Baru buka', hint: 'Poin maksimum', step: 1, min: 0, max: 100 },
+    field('weights.category', 1, 0, 100, true),
+    field('weights.quality', 1, 0, 100, true),
+    field('weights.proximity', 1, 0, 100, true),
+    field('weights.density', 1, 0, 100, true),
+    field('weights.contact', 1, 0, 100, true),
+    field('weights.new', 1, 0, 100, true),
 ];
 
 export const PARAM_FIELDS: ScoringField[] = [
-    { path: 'rating_floor', label: 'Rating terendah (nilai 0)', hint: 'Di bawah ini kualitas rating dianggap 0', step: 0.1, min: 0, max: 5 },
-    { path: 'rating_ceiling', label: 'Rating tertinggi (nilai 1)', hint: 'Di atas ini kualitas rating dianggap penuh', step: 0.1, min: 0, max: 5 },
-    { path: 'rating_weight', label: 'Bobot rating dalam kualitas', hint: '0–1', step: 0.05, min: 0, max: 1 },
-    { path: 'reviews_weight', label: 'Bobot ulasan dalam kualitas', hint: '0–1', step: 0.05, min: 0, max: 1 },
-    { path: 'reviews_cap', label: 'Batas jumlah ulasan', hint: 'Ulasan di atas ini dihitung penuh', step: 10, min: 1 },
-    { path: 'unrated_value', label: 'Nilai tanpa rating', hint: '0–1', step: 0.05, min: 0, max: 1 },
-    { path: 'proximity_distance_m', label: 'Jarak acuan outlet', hint: 'Meter', step: 100, min: 1 },
-    { path: 'proximity_distance_share', label: 'Porsi jarak dalam kedekatan', hint: '0–1', step: 0.05, min: 0, max: 1 },
-    { path: 'density_cap', label: 'Batas kepadatan', hint: 'Jumlah tetangga yang dihitung penuh', step: 1, min: 1 },
-    { path: 'contact_phone', label: 'Nilai ada telepon', hint: '0–1', step: 0.05, min: 0, max: 1 },
-    { path: 'contact_website', label: 'Nilai ada situs web', hint: '0–1', step: 0.05, min: 0, max: 1 },
-    { path: 'contact_address', label: 'Nilai ada alamat', hint: '0–1', step: 0.05, min: 0, max: 1 },
-    { path: 'new_days', label: 'Lama dianggap baru', hint: 'Hari sejak ditemukan', step: 1, min: 1 },
+    field('rating_floor', 0.1, 0, 5),
+    field('rating_ceiling', 0.1, 0, 5),
+    field('rating_weight', 0.05, 0, 1),
+    field('reviews_weight', 0.05, 0, 1),
+    field('reviews_cap', 10, 1),
+    field('unrated_value', 0.05, 0, 1),
+    field('proximity_distance_m', 100, 1),
+    field('proximity_distance_share', 0.05, 0, 1),
+    field('density_cap', 1, 1),
+    field('contact_phone', 0.05, 0, 1),
+    field('contact_website', 0.05, 0, 1),
+    field('contact_address', 0.05, 0, 1),
+    field('new_days', 1, 1),
 ];
 
 export function getPath(obj: Record<string, unknown>, path: string): unknown {
