@@ -11,6 +11,7 @@ use App\DTO\ProviderResult;
 use App\Models\Category;
 use App\Models\DataSource;
 use App\Services\Providers\Concerns\UsesDataSource;
+use App\Support\Redactor;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
@@ -86,8 +87,16 @@ class GoogleProvider implements DataProvider
 
     public function testConnection(): ConnectionStatus
     {
-        if (! $this->isAvailable()) {
-            return new ConnectionStatus(false, 'Google provider is inactive or has no API key');
+        $this->refreshSource();
+        $source = $this->source();
+        if ($source === null) {
+            return new ConnectionStatus(false, 'Sumber data Google belum terdaftar di server ini.');
+        }
+        if (! $source->hasKey()) {
+            return new ConnectionStatus(false, 'API key Google belum diisi. Simpan API key lebih dulu.');
+        }
+        if (! $source->is_active) {
+            return new ConnectionStatus(false, 'Sumber Google sedang nonaktif. Aktifkan sumber ini untuk mengujinya.');
         }
         $start = microtime(true);
         try {
@@ -107,7 +116,7 @@ class GoogleProvider implements DataProvider
             return new ConnectionStatus(false, $message, (int) round((microtime(true) - $start) * 1000));
         }
 
-        return new ConnectionStatus(true, 'Google Places API reachable', (int) round((microtime(true) - $start) * 1000));
+        return new ConnectionStatus(true, 'Google Places API dapat dijangkau.', (int) round((microtime(true) - $start) * 1000));
     }
 
     /** Strips the API key from text destined for logs (defence in depth; the key only travels in a header). */
@@ -115,7 +124,7 @@ class GoogleProvider implements DataProvider
     {
         $key = (string) $this->source()?->api_key;
 
-        return $key === '' ? $text : str_replace($key, '[redacted]', $text);
+        return (string) Redactor::redact($text, $key === '' ? [] : [$key]);
     }
 
     private function requireSource(): DataSource
@@ -152,7 +161,7 @@ class GoogleProvider implements DataProvider
                 'X-Goog-FieldMask' => self::FIELD_MASK,
             ])->timeout(15)->acceptJson()->asJson()->post(self::ENDPOINT, $body);
         } catch (ConnectionException $e) {
-            throw new ProviderException('Google connection failed: '.$e->getMessage(), true);
+            throw new ProviderException('Google connection failed: '.Redactor::redact($e->getMessage(), [(string) $source->api_key]), true);
         }
         // Every request that reached Google is billable/quota-relevant.
         $source->increment('calls_this_month');
@@ -170,7 +179,7 @@ class GoogleProvider implements DataProvider
         if (! $response->successful()) {
             $msg = (string) ($response->json('error.message') ?? 'HTTP '.$response->status());
 
-            throw new ProviderException('Google error: '.mb_substr($msg, 0, 200), $response->serverError(), $response->status());
+            throw new ProviderException('Google error: '.mb_substr((string) Redactor::redact($msg, [(string) $this->source()?->api_key]), 0, 200), $response->serverError(), $response->status());
         }
         $json = $response->json();
 

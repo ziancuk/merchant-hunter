@@ -94,7 +94,7 @@ test.describe('Master Data Source', () => {
         const row = page.getByTestId(`scheduler-row-${runs[0].id}`);
         await expect(row).toBeVisible();
         await expect(row).toContainText(runs[0].command);
-        await expect(row).toContainText(runs[0].status);
+        await expect(row).toContainText({ success: 'Berhasil', partial: 'Sebagian gagal', failed: 'Gagal', running: 'Berjalan' }[runs[0].status] ?? runs[0].status);
         await expect(row).toContainText(new Intl.NumberFormat('id-ID').format(runs[0].prospects_new));
         await expect(page.getByTestId('scheduler-health')).toBeVisible();
 

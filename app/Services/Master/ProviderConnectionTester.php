@@ -7,6 +7,7 @@ namespace App\Services\Master;
 use App\DTO\ConnectionStatus;
 use App\Models\DataSource;
 use App\Services\Providers\ProviderRegistry;
+use App\Support\Redactor;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -26,7 +27,7 @@ final class ProviderConnectionTester implements ConnectionTester
             return $provider->testConnection();
         } catch (Throwable $e) {
             // Never echo exception text to the client: it may carry URLs or upstream error bodies.
-            Log::warning('Provider connection test crashed', ['source' => $source->key, 'exception' => $e::class, 'reason' => $e->getMessage()]);
+            Log::warning('Provider connection test crashed', ['source' => $source->key, 'exception' => $e::class, 'reason' => Redactor::exception($e)]);
 
             return new ConnectionStatus(false, 'Uji koneksi gagal. Detail ada di log server.');
         }

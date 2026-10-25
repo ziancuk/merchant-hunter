@@ -13,6 +13,7 @@ use App\Services\Master\ProspectReconciler;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 
 require_once __DIR__.'/helpers.php';
@@ -143,12 +144,15 @@ it('reports a failed connection test without leaking exception text', function (
 });
 
 it('falls back to an "unconfigured" tester until the real one is bound', function () {
+    Http::fake(['*' => Http::response('', 503)]);
     $s = dm_source('osm');
 
     $this->postJson("/api/master/data-sources/{$s->id}/test")->assertOk()->assertJsonPath('ok', false)->assertJsonStructure(['ok', 'message', 'latency_ms']);
 });
 
 it('rate-limits connection tests', function () {
+    // Hermetic: the real OSM tester would otherwise hit the network and outlast the 60 s throttle window.
+    Http::fake();
     $s = dm_source('osm');
 
     foreach (range(1, 6) as $i) {

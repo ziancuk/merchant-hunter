@@ -21,6 +21,8 @@ const props = withDefaults(defineProps<{ modelValue: ProspectFilter; options: Fi
 const emit = defineEmits<{ 'update:modelValue': [value: ProspectFilter]; query: [query: string] }>();
 
 const expanded = ref(true);
+/** True right after a reversed score range (min > max) was swapped automatically (B-09). */
+const scoreSwapped = ref(false);
 const active = computed(() => countActiveFilters(props.modelValue));
 
 function commit(patch: Partial<Record<keyof ProspectFilter, unknown>>): void {
@@ -30,11 +32,17 @@ function commit(patch: Partial<Record<keyof ProspectFilter, unknown>>): void {
         if (v === undefined || v === null || v === '' || (typeof v === 'number' && Number.isNaN(v)) || (Array.isArray(v) && v.length === 0)) delete next[k];
     }
     const filter = next as ProspectFilter;
+    scoreSwapped.value = false;
+    if (typeof filter.score_min === 'number' && typeof filter.score_max === 'number' && filter.score_min > filter.score_max) {
+        [filter.score_min, filter.score_max] = [filter.score_max, filter.score_min];
+        scoreSwapped.value = true;
+    }
     emit('update:modelValue', filter);
     emit('query', filterToQuery(filter));
 }
 
 function reset(): void {
+    scoreSwapped.value = false;
     emit('update:modelValue', {});
     emit('query', '');
 }
@@ -124,6 +132,7 @@ const chip = 'cursor-pointer rounded-full border px-2.5 py-1 text-xs transition'
                     </select>
                 </label>
             </div>
+            <p v-if="scoreSwapped" class="-mt-1 text-xs text-hot" role="status" data-testid="f-score-swapped">Skor minimum lebih besar dari maksimum, nilainya ditukar otomatis.</p>
 
             <fieldset class="space-y-1">
                 <legend class="hud-label">Status pipeline</legend>

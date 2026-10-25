@@ -3,7 +3,10 @@
 use App\Models\User;
 use Illuminate\Support\Facades\RateLimiter;
 
-beforeEach(fn () => RateLimiter::clear('ayu@hunter.test|127.0.0.1'));
+beforeEach(function () {
+    RateLimiter::clear('ayu@hunter.test|127.0.0.1');
+    RateLimiter::clear('login-ip|127.0.0.1');
+});
 
 it('redirects guests to the login page', function (string $path) {
     $this->get($path)->assertRedirect('/login');
@@ -41,6 +44,24 @@ it('rate limits login to 5 attempts per minute', function () {
     }
 
     $this->post('/login', ['email' => $user->email, 'password' => 'wrong'])->assertStatus(429);
+});
+
+it('also limits login attempts per IP across different e-mail addresses (20 per minute)', function () {
+    foreach (range(1, 20) as $i) {
+        $this->post('/login', ['email' => "orang{$i}@hunter.test", 'password' => 'wrong'])->assertStatus(302);
+    }
+
+    // A never-seen address is still refused: the IP bucket is exhausted.
+    $this->post('/login', ['email' => 'baru@hunter.test', 'password' => 'wrong'])->assertStatus(429);
+});
+
+it('does not let successful logins consume the per-IP limit', function () {
+    $user = User::factory()->create(['password' => 'secret-pass-1']);
+
+    foreach (range(1, 25) as $_) {
+        $this->post('/login', ['email' => $user->email, 'password' => 'secret-pass-1'])->assertRedirect('/');
+        $this->post('/logout');
+    }
 });
 
 it('logs out', function () {

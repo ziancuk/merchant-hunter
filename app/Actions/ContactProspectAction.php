@@ -81,8 +81,9 @@ final class ContactProspectAction
                 'prospect_id' => $prospect->id,
                 'user_id' => $user->id,
                 'type' => ActivityType::Contacted->value,
-                'from_status' => $from->value,
-                'to_status' => $prospect->pipeline_status->value,
+                // Only record a transition when the status really moved (no "Dihubungi → Dihubungi").
+                'from_status' => $from === $prospect->pipeline_status ? null : $from->value,
+                'to_status' => $from === $prospect->pipeline_status ? null : $prospect->pipeline_status->value,
                 'body' => 'Dihubungi lewat WhatsApp',
                 'meta' => $meta,
             ]);

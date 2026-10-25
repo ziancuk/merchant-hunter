@@ -66,12 +66,12 @@ export interface MotionFlags {
 /**
  * Resolves the intro/motion switches.
  *
- * `?intro=` and `?motion=` are honoured whenever `app.env` is not `production` (local, e2e, staging), so E2E and
+ * `?intro=` and `?motion=` are honoured whenever the server enables `app.debug_hooks` (not production), so E2E and
  * demos can disable the intro; in production they are ignored and only the user's stored preference and
  * `prefers-reduced-motion` apply. The URL never *enables* motion for a user who asked the OS for reduced motion.
  */
-export function resolveMotionFlags(opts: { params: MapUrlParams; env: string | undefined; introSkipped: boolean; reducedMotion: boolean }): MotionFlags {
-    const overridable = opts.env !== 'production';
+export function resolveMotionFlags(opts: { params: MapUrlParams; debugHooks: boolean | undefined; introSkipped: boolean; reducedMotion: boolean }): MotionFlags {
+    const overridable = opts.debugHooks === true;
     const motionParam = overridable ? opts.params.motion : null;
     const introParam = overridable ? opts.params.intro : null;
     const motion = !opts.reducedMotion && motionParam !== false;
@@ -124,6 +124,15 @@ export function writePref(key: string, value: string, storage: StorageLike | nul
     } catch {
         /* ignore */
     }
+}
+
+/** Builds the page URL with `route` set (comma separated ids) or removed when empty, keeping the other parameters (B-05). */
+export function withRouteParam(href: string, ids: number[]): string {
+    const url = new URL(href, 'http://localhost');
+    if (ids.length === 0) url.searchParams.delete('route');
+    else url.searchParams.set('route', ids.join(','));
+    const qs = url.searchParams.toString().replace(/%2C/g, ',');
+    return `${url.pathname}${qs ? `?${qs}` : ''}${url.hash}`;
 }
 
 /** Builds the page URL with `prospect` set/removed, keeping the other parameters (history.replaceState helper). */

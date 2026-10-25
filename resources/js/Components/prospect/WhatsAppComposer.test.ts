@@ -79,6 +79,21 @@ describe('WhatsAppComposer', () => {
         expect(JSON.parse(fetchSpy.mock.calls[0][1].body)).toEqual({ message: 'Halo Kopi Senja, kami dari Hitachi.', override_reason: 'Pelanggan minta dihubungi' });
     });
 
+    it('keeps send disabled while the override reason is shorter than 5 characters', async () => {
+        const w = await mountWith(checkFixture({ min_interval_violation: true, override_count: 0, max_overrides: 2 }));
+        await w.get('[data-testid="wa-override-reason"]').setValue('abcd');
+        expect(w.get('[data-testid="wa-send"]').attributes('disabled')).toBeDefined();
+        await w.get('[data-testid="wa-override-reason"]').setValue('abcde');
+        expect(w.get('[data-testid="wa-send"]').attributes('disabled')).toBeUndefined();
+    });
+
+    it('says "hari ini" instead of "0 hari lalu"', async () => {
+        const w = await mountWith(checkFixture({ warning: { type: 'recent_contact', by: 'Ayu', at: '2026-10-22T03:00:00Z', days_ago: 0 } }));
+        const text = w.get('[data-testid="wa-warning"]').text();
+        expect(text).toContain('hari ini');
+        expect(text).not.toContain('0 hari lalu');
+    });
+
     it('blocks sending when overrides are exhausted', async () => {
         const w = await mountWith(checkFixture({ min_interval_violation: true, override_count: 2, max_overrides: 2 }));
         expect(w.get('[data-testid="wa-override"]').text()).toContain('Batas override');

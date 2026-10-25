@@ -9,6 +9,7 @@ use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\DemoUserSeeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 it('seeds reference data', function () {
     $this->seed(DatabaseSeeder::class);
@@ -66,4 +67,27 @@ it('creates users via the artisan command', function () {
 
 it('registers the full schedule', function () {
     $this->artisan('schedule:list')->expectsOutputToContain('hunter:sync')->assertSuccessful();
+});
+
+it('uses the documented default demo password only on local, e2e and testing', function () {
+    config(['hunter.demo_user_password' => '']);
+    (new DemoUserSeeder)->run();
+
+    expect(Hash::check('demo-password-123', User::where('email', 'ayu@hunter.test')->value('password')))->toBeTrue();
+});
+
+it('refuses to seed demo users without DEMO_USER_PASSWORD outside local, e2e and testing', function () {
+    config(['hunter.demo_user_password' => '']);
+    app()->detectEnvironment(fn () => 'staging');
+
+    expect(fn () => (new DemoUserSeeder)->run())->toThrow(RuntimeException::class, 'DEMO_USER_PASSWORD wajib diisi');
+    expect(User::count())->toBe(0);
+});
+
+it('uses an explicit DEMO_USER_PASSWORD in any non-production environment', function () {
+    config(['hunter.demo_user_password' => 'a-strong-demo-secret']);
+    app()->detectEnvironment(fn () => 'staging');
+    (new DemoUserSeeder)->run();
+
+    expect(Hash::check('a-strong-demo-secret', User::where('email', 'budi@hunter.test')->value('password')))->toBeTrue();
 });

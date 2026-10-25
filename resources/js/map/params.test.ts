@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { INTRO_STORAGE_KEY } from './constants';
-import { parseMapParams, readIntroSkipped, readPref, resolveMotionFlags, withProspectParam, writeIntroSkipped, writePref } from './params';
+import { parseMapParams, readIntroSkipped, readPref, resolveMotionFlags, withProspectParam, withRouteParam, writeIntroSkipped, writePref } from './params';
 
 function memoryStorage(initial: Record<string, string> = {}) {
     const data = new Map(Object.entries(initial));
@@ -53,7 +53,7 @@ describe('parseMapParams', () => {
 });
 
 describe('resolveMotionFlags', () => {
-    const base = { params: parseMapParams(''), env: 'local', introSkipped: false, reducedMotion: false };
+    const base = { params: parseMapParams(''), debugHooks: true, introSkipped: false, reducedMotion: false };
 
     it('plays the intro by default', () => {
         expect(resolveMotionFlags(base)).toEqual({ intro: true, motion: true });
@@ -66,7 +66,7 @@ describe('resolveMotionFlags', () => {
     it('?intro=0 and ?motion=0 are honoured outside production', () => {
         expect(resolveMotionFlags({ ...base, params: parseMapParams('?intro=0') })).toEqual({ intro: false, motion: true });
         expect(resolveMotionFlags({ ...base, params: parseMapParams('?motion=0') })).toEqual({ intro: false, motion: false });
-        expect(resolveMotionFlags({ ...base, env: 'e2e', params: parseMapParams('?intro=0&motion=0') })).toEqual({ intro: false, motion: false });
+        expect(resolveMotionFlags({ ...base, debugHooks: true, params: parseMapParams('?intro=0&motion=0') })).toEqual({ intro: false, motion: false });
     });
 
     it('?intro=1 can force the intro again for demos (non-production)', () => {
@@ -75,8 +75,8 @@ describe('resolveMotionFlags', () => {
 
     it('ignores the URL switches in production', () => {
         const params = parseMapParams('?intro=0&motion=0');
-        expect(resolveMotionFlags({ ...base, env: 'production', params })).toEqual({ intro: true, motion: true });
-        expect(resolveMotionFlags({ ...base, env: 'production', introSkipped: true, params: parseMapParams('?intro=1') })).toEqual({ intro: false, motion: true });
+        expect(resolveMotionFlags({ ...base, debugHooks: false, params })).toEqual({ intro: true, motion: true });
+        expect(resolveMotionFlags({ ...base, debugHooks: false, introSkipped: true, params: parseMapParams('?intro=1') })).toEqual({ intro: false, motion: true });
     });
 
     it('prefers-reduced-motion switches everything off and cannot be overridden by the URL', () => {
@@ -128,5 +128,15 @@ describe('focus and mode deep links', () => {
         expect(parseMapParams('?lat=-6.2&lng=106.8&mode=whitespace')).toMatchObject({ focus: { lat: -6.2, lng: 106.8 }, mode: 'whitespace' });
         expect(parseMapParams('?lat=99&lng=106.8&mode=nope')).toMatchObject({ focus: null, mode: null });
         expect(parseMapParams('?lat=-6.2')).toMatchObject({ focus: null });
+    });
+});
+
+describe('withRouteParam (B-05)', () => {
+    it('sets the route ids and keeps the other params', () => {
+        expect(withRouteParam('/?intro=0', [3, 4, 5])).toBe('/?intro=0&route=3,4,5');
+    });
+    it('removes the route param when the route is emptied', () => {
+        expect(withRouteParam('/?route=3,4&mode=heatmap', [])).toBe('/?mode=heatmap');
+        expect(withRouteParam('/?route=3,4', [])).toBe('/');
     });
 });

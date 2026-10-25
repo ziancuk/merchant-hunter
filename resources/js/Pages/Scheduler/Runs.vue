@@ -18,6 +18,7 @@ import Icon from '@/Components/ui/Icon.vue';
 import Skeleton from '@/Components/ui/Skeleton.vue';
 import { api, normalizeError } from '@/lib/api';
 import { formatDateTime, formatNumber, relativeTime } from '@/lib/format';
+import { runStatusLabel } from '@/lib/labels';
 
 const props = defineProps<{ runs?: { data: SchedulerRunRow[]; meta: PageMeta } | null; health?: SchedulerHealth | null }>();
 
@@ -88,17 +89,17 @@ async function showDetail(run: SchedulerRunRow): Promise<void> {
                 <GlassPanel data-testid="scheduler-health">
                     <p class="hud-label">Run sinkronisasi terakhir</p>
                     <div v-if="health" class="mt-2 flex flex-wrap items-center gap-2">
-                        <Badge :tone="healthTone" dot size="md">{{ health.status ?? 'Belum pernah' }}</Badge>
+                        <Badge :tone="healthTone" dot size="md">{{ runStatusLabel(health.status) }}</Badge>
                         <span class="text-sm text-muted">{{ health.last_run_at ? relativeTime(health.last_run_at) : '–' }}</span>
                     </div>
                     <p v-else class="mt-2 text-sm text-muted">Belum ada data.</p>
                 </GlassPanel>
                 <GlassPanel>
-                    <p class="hud-label">Umur · gagal 7 hari</p>
-                    <p class="num mt-2 text-xl font-semibold">
-                        {{ health?.age_hours != null ? `${formatNumber(health.age_hours, 1)} jam` : '–' }}
+                    <p class="hud-label">Umur run terakhir · run gagal 7 hari</p>
+                    <p class="num mt-2 text-xl font-semibold" data-testid="scheduler-age">
+                        {{ health?.age_hours != null ? `${formatNumber(health.age_hours, 1)} jam lalu` : '–' }}
                         <span class="text-muted">·</span>
-                        <span :class="(health?.failed_last_7d ?? 0) > 0 ? 'text-danger' : ''">{{ formatNumber(health?.failed_last_7d ?? 0) }}</span>
+                        <span :class="(health?.failed_last_7d ?? 0) > 0 ? 'text-danger' : ''">{{ formatNumber(health?.failed_last_7d ?? 0) }} run gagal</span>
                     </p>
                 </GlassPanel>
                 <GlassPanel>
@@ -138,7 +139,7 @@ async function showDetail(run: SchedulerRunRow): Promise<void> {
                                         <span v-if="r.error" class="block max-w-[16rem] truncate text-2xs text-danger" :title="r.error">{{ r.error }}</span>
                                     </td>
                                     <td class="num py-2.5 pr-3 text-xs">{{ r.command }}</td>
-                                    <td class="py-2.5 pr-3"><Badge :tone="tone(r.status)">{{ r.status }}</Badge></td>
+                                    <td class="py-2.5 pr-3"><Badge :tone="tone(r.status)">{{ runStatusLabel(r.status) }}</Badge></td>
                                     <td class="num py-2.5 pr-3 text-right">{{ formatDuration(r.duration_ms) }}</td>
                                     <td class="num py-2.5 pr-3 text-right">
                                         {{ r.outlets_ok }}/{{ r.outlets_total }}<span v-if="r.outlets_failed" class="text-danger"> ({{ r.outlets_failed }} gagal)</span>
@@ -167,7 +168,7 @@ async function showDetail(run: SchedulerRunRow): Promise<void> {
                     <li v-for="o in detail.outlets" :key="o.id" class="border-b border-line/60 py-2.5 text-sm">
                         <div class="flex items-center justify-between gap-2">
                             <span class="min-w-0 truncate font-medium">{{ o.outlet ?? `Outlet #${o.outlet_id}` }}</span>
-                            <Badge :tone="tone(o.status)">{{ o.status }}</Badge>
+                            <Badge :tone="tone(o.status)">{{ runStatusLabel(o.status) }}</Badge>
                         </div>
                         <p class="num mt-0.5 text-2xs text-muted">
                             {{ o.provider ?? '–' }} · ambil {{ o.fetched_count }} · baru {{ o.new_count }} · diperbarui {{ o.updated_count }} · ditutup {{ o.closed_count }} · {{ formatDuration(o.duration_ms) }}

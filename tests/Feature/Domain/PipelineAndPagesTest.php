@@ -168,7 +168,7 @@ it('shares auth, flash and app props on every page', function () {
     config(['hunter.ai.key' => 'x']);
 
     $this->get('/dashboard')->assertInertia(fn (Assert $p) => $p
-        ->where('auth.user.email', $this->user->email)->has('flash')->where('app.ai_enabled', true)->has('app.basemap')->has('app.env'));
+        ->where('auth.user.email', $this->user->email)->has('flash')->where('app.ai_enabled', true)->has('app.basemap')->has('app.debug_hooks')->missing('app.env'));
 });
 
 // ---------------------------------------------------------------- dashboard

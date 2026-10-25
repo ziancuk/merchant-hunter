@@ -32,6 +32,14 @@ describe('FilterPanel', () => {
         expect(last(w, 'query')).toBe('category_id[]=1&pipeline_status[]=won');
     });
 
+    it('swaps a reversed score range and explains it (B-09)', async () => {
+        const w = mount(FilterPanel, { props: { modelValue: { score_min: 90 }, options } });
+        await w.get('[data-testid="f-score-max"]').setValue('10');
+        expect(last(w, 'update:modelValue')).toEqual({ score_min: 10, score_max: 90 });
+        expect(last(w, 'query')).toBe('score_max=90&score_min=10');
+        expect(w.get('[data-testid="f-score-swapped"]').text()).toContain('ditukar otomatis');
+    });
+
     it('emits numeric selections and drops cleared ones', async () => {
         const w = mount(FilterPanel, { props: { modelValue: { score_min: 60 }, options } });
         await w.get('[data-testid="f-province"]').setValue('31');

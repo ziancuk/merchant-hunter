@@ -14,6 +14,7 @@ use App\Models\Setting;
 use App\Services\Providers\DataProvider;
 use App\Services\Providers\ProviderRegistry;
 use App\Services\Providers\SupportsCacheBypass;
+use App\Support\Redactor;
 use Illuminate\Support\Carbon;
 use Throwable;
 
@@ -56,8 +57,9 @@ class SyncService
                 $answers[] = ['provider' => $provider->key(), 'result' => $result];
                 $this->markSource($provider, 'ok', null);
             } catch (Throwable $e) {
-                $errors[] = $provider->key().': '.$e->getMessage();
-                $this->markSource($provider, 'error', $e->getMessage());
+                $message = Redactor::exception($e);
+                $errors[] = $provider->key().': '.$message;
+                $this->markSource($provider, 'error', $message);
 
                 continue;
             }
@@ -137,7 +139,7 @@ class SyncService
                 'new_count' => $r->new,
                 'updated_count' => $r->updated,
                 'closed_count' => $r->closed,
-                'error' => $r->error !== null ? mb_substr($r->error, 0, 1000) : null,
+                'error' => $r->error !== null ? mb_substr((string) Redactor::redact($r->error), 0, 1000) : null,
                 'duration_ms' => $r->durationMs,
             ],
         );
@@ -148,7 +150,7 @@ class SyncService
         DataSource::query()->where('key', $provider->key())->update([
             'last_run_at' => Carbon::now(),
             'last_status' => $status,
-            'last_error' => $error !== null ? mb_substr($error, 0, 1000) : null,
+            'last_error' => $error !== null ? mb_substr((string) Redactor::redact($error), 0, 1000) : null,
         ]);
     }
 

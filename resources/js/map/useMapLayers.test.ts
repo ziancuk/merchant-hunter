@@ -47,10 +47,10 @@ describe('map tooltip helpers', () => {
 });
 
 describe('debug api gating (D-93)', () => {
-    it('is off only in production', () => {
-        expect(debugApiEnabled('production')).toBe(false);
-        expect(debugApiEnabled('local')).toBe(true);
-        expect(debugApiEnabled(undefined)).toBe(true);
+    it('is on only when the server sets debug_hooks (never inferred from a client-visible env string)', () => {
+        expect(debugApiEnabled(false)).toBe(false);
+        expect(debugApiEnabled(true)).toBe(true);
+        expect(debugApiEnabled(undefined)).toBe(false);
     });
 });
 
