@@ -28,6 +28,9 @@ final class ContactProspectAction
     public function handle(Prospect $prospect, User $user, string $message, ?string $overrideReason = null): Prospect
     {
         return DB::transaction(function () use ($prospect, $user, $message, $overrideReason) {
+            // Re-read under a row lock so two concurrent contacts cannot both pass the interval/override checks
+            // nor lose a contact_count increment (no-op on SQLite, effective on MySQL/PostgreSQL).
+            $prospect = Prospect::query()->lockForUpdate()->findOrFail($prospect->id);
             $check = $this->policy->check($prospect, $user);
 
             if ($check->blockedReason !== null) {
@@ -57,7 +60,6 @@ final class ContactProspectAction
             $attributes = [
                 'last_contacted_at' => $now,
                 'last_contacted_by' => $user->id,
-                'contact_count' => $prospect->contact_count + 1,
                 'handled_by' => $user->id,
             ];
             $from = $prospect->pipeline_status;
@@ -68,7 +70,8 @@ final class ContactProspectAction
             if ($prospect->contacted_at === null) {
                 $attributes['contacted_at'] = $now;
             }
-            $prospect->forceFill($attributes)->save();
+            // Atomic `contact_count = contact_count + 1` together with the other changed columns.
+            $prospect->increment('contact_count', 1, $attributes);
 
             $meta = ['message' => $message, 'phone' => $check->phoneNormalized];
             if ($override) {
