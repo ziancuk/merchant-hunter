@@ -14,11 +14,10 @@ const labels: Record<Locale, string> = { id: 'ID', en: 'EN' };
             class="h-8 min-w-9 cursor-pointer rounded-full px-2 text-xs font-semibold transition"
             :class="locale === l ? 'bg-fg text-ink' : 'text-fg/70 hover:text-fg'"
             :aria-pressed="locale === l"
-            :aria-label="t('shell.language_to', { name: t(`shell.lang_${l}`) })"
             :data-testid="`locale-${l}`"
             @click="setLocale(l)"
         >
-            {{ labels[l] }}
+            {{ labels[l] }}<span class="sr-only"> – {{ t(`shell.lang_${l}`) }}</span>
         </button>
     </div>
 </template>

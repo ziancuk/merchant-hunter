@@ -16,6 +16,7 @@ Final project training Claude Code (Hacktiv8). Dokumen lengkap ada di [`docs/`](
 - **Pipeline**: Baru → Dihubungi → Demo → Deal / Ditolak; Kanban drag & drop, tabel, bulk action, peringatan dobel kontak, batas frekuensi, opt-out "Jangan hubungi lagi".
 - **Perencana rute**: urutan kunjungan (nearest-neighbor + 2-opt) dan tautan Google Maps multi-waypoint tanpa API key.
 - **Dashboard**: KPI, funnel, penetrasi provinsi (kartogram), kategori teratas, white space, aktivitas per akun, kesehatan scheduler, ringkasan harian, ekspor CSV.
+- **Dua bahasa**: Indonesia (bawaan) dan English, ganti lewat tombol ID/EN di bar atas atau halaman login; pilihan diingat di browser.
 - **Laporan**: tabel prospek lengkap (nama, kategori, kota, provinsi, alamat, telepon, rating, skor, status, penanggung jawab, jarak) dengan filter, urutan kolom, paginasi, serta **unduh CSV dan Excel (.xlsx)** sesuai filter aktif.
 - **Estimasi Dampak & Biaya**: kalkulator dengan asumsi yang bisa diedit (Google vs OSM Rp0).
 - **Master**: Data Source (OSM Overpass, Mock, Google; API key terenkripsi; uji koneksi), Outlet (CRUD, impor CSV, geocoding + antrean verifikasi), Kategori (bobot skor, template pesan), Pengaturan, Riwayat Scheduler.
