@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue';
 import { useToasts } from '@/composables/useToasts';
+import { t } from '@/i18n';
 import { api, normalizeError } from '@/lib/api';
 import { COLUMN_LABEL } from '@/lib/labels';
 import { PIPELINE_STATUSES, type PipelineCard, type PipelineStatus, type ProspectDetail, type ProspectFilter } from '@/types';
@@ -110,7 +111,7 @@ export function usePipelineBoard(initial: RawColumns | null | undefined, filter:
             return true;
         } catch (e) {
             columns.value = { ...columns.value, [from]: snapshot[from], [to]: snapshot[to] };
-            push(`Gagal memindahkan ke ${COLUMN_LABEL[to]}: ${normalizeError(e).message}`, 'error', 7000);
+            push(t('pipeline.moveFailed', { status: COLUMN_LABEL[to], message: normalizeError(e).message }), 'error', 7000);
             return false;
         }
     }

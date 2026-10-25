@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
+import { useI18n } from '@/i18n';
 import Icon from './Icon.vue';
 
 
@@ -20,6 +21,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{ 'update:modelValue': [value: boolean]; close: [] }>();
 
+const { t } = useI18n();
 const titleId = `drawer-title-${useId()}`;
 const panel = ref<HTMLElement | null>(null);
 let previouslyFocused: HTMLElement | null = null;
@@ -107,7 +109,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKeydown));
                     <button
                         type="button"
                         class="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-chip text-muted transition hover:bg-fg/10 hover:text-fg"
-                        aria-label="Tutup panel"
+                        :aria-label="t('ui.closePanel')"
                         @click="close"
                     >
                         <Icon name="close" />

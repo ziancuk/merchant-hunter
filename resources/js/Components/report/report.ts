@@ -43,7 +43,8 @@ export interface ReportMeta {
 
 export interface ReportColumn {
     key: ReportSortKey | 'address' | 'phone' | 'handled_by' | 'map';
-    label: string;
+    /** i18n key; resolve with t() at render time so headers follow the active language. */
+    labelKey: string;
     sortKey?: ReportSortKey;
     /** Descending first (numbers, recency) vs ascending first (text). */
     firstDir?: SortDir;
@@ -51,19 +52,19 @@ export interface ReportColumn {
 }
 
 export const REPORT_COLUMNS: ReportColumn[] = [
-    { key: 'name', label: 'Nama', sortKey: 'name', firstDir: 'asc' },
-    { key: 'category', label: 'Kategori', sortKey: 'category', firstDir: 'asc' },
-    { key: 'city', label: 'Kota', sortKey: 'city', firstDir: 'asc' },
-    { key: 'province', label: 'Provinsi', sortKey: 'province', firstDir: 'asc' },
-    { key: 'address', label: 'Alamat' },
-    { key: 'phone', label: 'Telepon' },
-    { key: 'rating', label: 'Rating', sortKey: 'rating', firstDir: 'desc', align: 'right' },
-    { key: 'review_count', label: 'Ulasan', sortKey: 'review_count', firstDir: 'desc', align: 'right' },
-    { key: 'score', label: 'Skor', sortKey: 'score', firstDir: 'desc', align: 'right' },
-    { key: 'status', label: 'Status', sortKey: 'status', firstDir: 'asc' },
-    { key: 'handled_by', label: 'Ditangani oleh' },
-    { key: 'last_contacted_at', label: 'Terakhir dihubungi', sortKey: 'last_contacted_at', firstDir: 'desc' },
-    { key: 'distance', label: 'Jarak ke outlet', sortKey: 'distance', firstDir: 'asc', align: 'right' },
+    { key: 'name', labelKey: 'report.col.name', sortKey: 'name', firstDir: 'asc' },
+    { key: 'category', labelKey: 'report.col.category', sortKey: 'category', firstDir: 'asc' },
+    { key: 'city', labelKey: 'report.col.city', sortKey: 'city', firstDir: 'asc' },
+    { key: 'province', labelKey: 'report.col.province', sortKey: 'province', firstDir: 'asc' },
+    { key: 'address', labelKey: 'report.col.address' },
+    { key: 'phone', labelKey: 'report.col.phone' },
+    { key: 'rating', labelKey: 'report.col.rating', sortKey: 'rating', firstDir: 'desc', align: 'right' },
+    { key: 'review_count', labelKey: 'report.col.review_count', sortKey: 'review_count', firstDir: 'desc', align: 'right' },
+    { key: 'score', labelKey: 'report.col.score', sortKey: 'score', firstDir: 'desc', align: 'right' },
+    { key: 'status', labelKey: 'report.col.status', sortKey: 'status', firstDir: 'asc' },
+    { key: 'handled_by', labelKey: 'report.col.handled_by' },
+    { key: 'last_contacted_at', labelKey: 'report.col.last_contacted_at', sortKey: 'last_contacted_at', firstDir: 'desc' },
+    { key: 'distance', labelKey: 'report.col.distance', sortKey: 'distance', firstDir: 'asc', align: 'right' },
 ];
 
 function join(...parts: (string | false | undefined | null)[]): string {

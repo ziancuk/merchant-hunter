@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import ProspectCard from '@/Components/prospect/ProspectCard.vue';
 import Button from '@/Components/ui/Button.vue';
 import Skeleton from '@/Components/ui/Skeleton.vue';
+import { useI18n } from '@/i18n';
 import { formatNumber } from '@/lib/format';
 import { STATUS_CLASSES } from '@/lib/colors';
 import { PIPELINE_STATUSES, type PipelineStatus } from '@/types';
@@ -30,6 +31,7 @@ const emit = defineEmits<{
     'toggle-select': [id: number];
 }>();
 
+const { t } = useI18n();
 const dragging = ref<{ id: number; from: PipelineStatus } | null>(null);
 const overStatus = ref<PipelineStatus | null>(null);
 
@@ -87,17 +89,17 @@ const remaining = (s: PipelineStatus): number => Math.max(0, props.columns[s].to
                     <span class="h-2.5 w-2.5 rounded-full" :class="STATUS_CLASSES[s].bg" aria-hidden="true" />
                     {{ COLUMN_LABEL[s] }}
                 </h2>
-                <span class="num rounded-full bg-fg/10 px-2 py-0.5 text-xs text-fg" :aria-label="`${columns[s].total} prospek`" :data-testid="`kanban-count-${s}`">{{ formatNumber(columns[s].total) }}</span>
+                <span class="num rounded-full bg-fg/10 px-2 py-0.5 text-xs text-fg" :aria-label="t('pipeline.board.columnCount', { n: columns[s].total })" :data-testid="`kanban-count-${s}`">{{ formatNumber(columns[s].total) }}</span>
             </header>
 
-            <ul class="flex-1 space-y-2 overflow-y-auto p-2" :aria-label="`Kartu ${COLUMN_LABEL[s]}`" role="list">
+            <ul class="flex-1 space-y-2 overflow-y-auto p-2" :aria-label="t('pipeline.board.cardsOf', { status: COLUMN_LABEL[s] })" role="list">
                 <template v-if="loading && columns[s].cards.length === 0">
                     <li v-for="n in 3" :key="n" class="rounded-panel border border-line p-3" data-testid="kanban-skeleton">
                         <Skeleton :lines="3" height="0.9rem" />
                     </li>
                 </template>
                 <li v-else-if="columns[s].cards.length === 0" class="rounded-panel border border-dashed border-line px-3 py-6 text-center text-xs text-muted" :data-testid="`kanban-empty-${s}`">
-                    Tidak ada prospek. Seret kartu ke sini.
+                    {{ t('pipeline.board.emptyColumn') }}
                 </li>
                 <li
                     v-for="card in columns[s].cards"
@@ -116,7 +118,7 @@ const remaining = (s: PipelineStatus): number => Math.max(0, props.columns[s].to
                                 type="checkbox"
                                 class="h-4 w-4 cursor-pointer accent-[var(--c-focus)]"
                                 :checked="selected.includes(card.id)"
-                                :aria-label="`Pilih ${card.name}`"
+                                :aria-label="t('pipeline.board.select', { name: card.name })"
                                 :data-testid="`select-${card.id}`"
                                 @change="emit('toggle-select', card.id)"
                             />
@@ -133,7 +135,7 @@ const remaining = (s: PipelineStatus): number => Math.max(0, props.columns[s].to
                         :data-testid="`kanban-more-${s}`"
                         @click="emit('load-more', s)"
                     >
-                        Muat lagi<template v-if="remaining(s) > 0"> ({{ formatNumber(remaining(s)) }} lagi)</template>
+                        {{ t('pipeline.board.loadMore') }}<template v-if="remaining(s) > 0">{{ t('pipeline.board.remaining', { n: formatNumber(remaining(s)) }) }}</template>
                     </Button>
                 </li>
             </ul>
