@@ -22,6 +22,7 @@ Props Inertia bersama (semua halaman): `auth.user {id, name, email}`, `flash {su
 | `GET /login` | `Auth/Login` | `{}` |
 | `GET /` | `Map/Index` | `filter_options`, `hud`, `provinces_index`, `rejection_reasons`, `contact_rules` |
 | `GET /pipeline` | `Pipeline/Index` | `view` (`kanban`\|`table`), `columns`, `filter_options`, `rejection_reasons`, `contact_rules` |
+| `GET /reports` | `Report/Index` | `filter_options` |
 | `GET /dashboard` | `Dashboard/Index` | `kpis`, `funnel`, `penetration`, `top_categories`, `whitespace_top`, `activity_by_user`, `scheduler_health`, `digest` |
 | `GET /impact` | `Impact/Index` | `assumptions`, `defaults`, `results` |
 | `GET /master/data-sources` | `Master/DataSources` | `sources[]` |
@@ -174,6 +175,10 @@ Query: filter yang sama dengan peta (tanpa bbox), `status`, `per_status` (defaul
 ### `GET /api/pipeline/table`
 Query: filter + `sort` (`score`, `last_contacted_at`, `name`), `dir`, `page`, `per_page` (≤100). Respons paginasi Laravel `{data:[Card], meta:{current_page,last_page,total,per_page}}`.
 
+### `GET /api/reports/prospects` (halaman Laporan)
+Query: filter yang sama + `sort` (`score`, `name`, `category`, `city`, `province`, `rating`, `review_count`, `status`, `last_contacted_at`, `distance`), `dir`, `page`, `per_page` (≤100). Nilai kosong selalu di akhir pada kolom opsional. Respons `{data:[Row], meta:{current_page,last_page,total,per_page}}`.
+`Row`: `{id, name, category, city, province, address, phone, phone_simulated, rating, review_count, score, score_band, pipeline_status, handled_by, last_contacted_at, distance_m}`. Telepon dengan `phone_simulated: true` wajib diberi badge "Simulasi" di UI.
+
 ## 6. Rute Kunjungan
 
 ### `POST /api/routes/plan`
@@ -192,6 +197,7 @@ Satu URL per ≤ 9 waypoint.
 | Endpoint | Keterangan |
 |---|---|
 | `GET /prospects/export.csv` | Query: filter yang sama; kolom: id, nama, kategori, kota, provinsi, alamat, telepon, simulasi_telepon, rating, jumlah_review, skor, status, ditangani_oleh, terakhir_dihubungi, jarak_outlet_m. Sel yang diawali `= + - @` diberi awalan `'` (CSV injection) |
+| `GET /prospects/export.xlsx` | Query: filter yang sama; kolom dan urutan identik dengan CSV; berkas Excel asli (OpenSpout, streaming). Teks selalu ditulis sebagai sel string sehingga nilai berawalan `=` tidak pernah menjadi rumus |
 | `GET /dashboard/export.csv` | KPI + funnel + penetrasi per provinsi |
 | `GET /api/digest?date=` | `digest` seperti di props dashboard |
 | `GET /api/settings`, `PUT /api/settings` | Body/respons: `{contact:{warn_days,min_interval_days,max_overrides}, digest:{email_to,hot_threshold,follow_up_days}, sync:{max_outlets_per_run}, scoring:{params}, enrichment:{simulated}, demo:{allow_simulated_whatsapp}}`; validasi rentang; dipakai halaman `Master/Settings` |

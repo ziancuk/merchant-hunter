@@ -16,20 +16,21 @@ Final project training Claude Code (Hacktiv8). Dokumen lengkap ada di [`docs/`](
 - **Pipeline**: Baru → Dihubungi → Demo → Deal / Ditolak; Kanban drag & drop, tabel, bulk action, peringatan dobel kontak, batas frekuensi, opt-out "Jangan hubungi lagi".
 - **Perencana rute**: urutan kunjungan (nearest-neighbor + 2-opt) dan tautan Google Maps multi-waypoint tanpa API key.
 - **Dashboard**: KPI, funnel, penetrasi provinsi (kartogram), kategori teratas, white space, aktivitas per akun, kesehatan scheduler, ringkasan harian, ekspor CSV.
+- **Laporan**: tabel prospek lengkap (nama, kategori, kota, provinsi, alamat, telepon, rating, skor, status, penanggung jawab, jarak) dengan filter, urutan kolom, paginasi, serta **unduh CSV dan Excel (.xlsx)** sesuai filter aktif.
 - **Estimasi Dampak & Biaya**: kalkulator dengan asumsi yang bisa diedit (Google vs OSM Rp0).
 - **Master**: Data Source (OSM Overpass, Mock, Google; API key terenkripsi; uji koneksi), Outlet (CRUD, impor CSV, geocoding + antrean verifikasi), Kategori (bobot skor, template pesan), Pengaturan, Riwayat Scheduler.
 - **Scheduler malam**: `hunter:sync` 01:00 WIB; dedupe, deteksi "baru buka" dan "tutup", retry dengan backoff.
 
 ## Prasyarat
 
-PHP ≥ 8.2 (ekstensi `pdo_sqlite`, `mbstring`, `intl`, `bcmath`), Composer 2, Node.js ≥ 22 (npm). Diuji dengan PHP 8.2.29 dan Node 22.19. Database SQLite bawaan; tanpa layanan eksternal. `npm install` dapat menampilkan peringatan `EBADENGINE` pada Node 22.19 (aman diabaikan, atau pakai Node ≥ 22.22).
+PHP ≥ 8.2 (ekstensi `pdo_sqlite`, `mbstring`, `intl`, `bcmath`, `zip`), Composer 2, Node.js ≥ 22 (npm). Diuji dengan PHP 8.2.29 dan Node 22.19. Database SQLite bawaan; tanpa layanan eksternal. `npm install` dapat menampilkan peringatan `EBADENGINE` pada Node 22.19 (aman diabaikan, atau pakai Node ≥ 22.22).
 
 ## Setup dari nol
 
 Panduan lengkap untuk laptop baru (install prasyarat per OS, troubleshooting): [docs/RUN-GUIDE.md](docs/RUN-GUIDE.md).
 
 ```bash
-git clone <URL-REPO> pos-merchant-hunter && cd pos-merchant-hunter
+git clone https://github.com/ziancuk/merchant-hunter.git pos-merchant-hunter && cd pos-merchant-hunter
 composer install
 cp .env.example .env
 php artisan key:generate
