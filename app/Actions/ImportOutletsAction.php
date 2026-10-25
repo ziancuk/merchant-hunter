@@ -9,9 +9,8 @@ use App\Exceptions\BusinessRuleException;
 use App\Jobs\GeocodeOutletJob;
 use App\Models\Outlet;
 use App\Models\Province;
-use App\Repositories\WhiteSpaceQuery;
 use App\Services\Master\ProspectReconciler;
-use Illuminate\Support\Facades\Cache;
+use App\Services\Sync\WhitespaceCache;
 
 /** CSV outlet import: code,name,address,city,province,lat,lng. Geocoding happens later through jobs. */
 final class ImportOutletsAction
@@ -130,7 +129,7 @@ final class ImportOutletsAction
 
         if ($withCoords !== []) {
             $this->reconciler->reconcile($withCoords);
-            Cache::forever(WhiteSpaceQuery::VERSION_KEY, (int) Cache::get(WhiteSpaceQuery::VERSION_KEY, 1) + 1);
+            WhitespaceCache::bump();
         }
 
         return $result;

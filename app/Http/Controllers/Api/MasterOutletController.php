@@ -41,9 +41,9 @@ class MasterOutletController extends Controller
     }
 
     /** Soft delete: the outlet stays for history but is no longer active. */
-    public function destroy(Outlet $outlet): JsonResponse
+    public function destroy(Outlet $outlet, SaveOutletAction $action): JsonResponse
     {
-        $outlet->forceFill(['is_active' => false])->save();
+        $outlet = $action->deactivate($outlet);
 
         return response()->json(OutletResource::make($outlet->load('province:id,name'))->resolve());
     }
