@@ -16,18 +16,17 @@ import {
 } from '@/Components/pipeline/pipeline';
 import { COLUMN_LABEL, skipReasonLabel } from '@/lib/labels';
 import { usePipelineBoard, usePipelineTable } from '@/Components/pipeline/usePipeline';
-import FilterPanel, { type FilterOptions } from '@/Components/prospect/FilterPanel.vue';
+import PipelineToolbar from '@/Components/pipeline/PipelineToolbar.vue';
+import type { FilterOptions } from '@/Components/prospect/FilterPanel.vue';
 import ProspectDrawer, { type RejectionReason } from '@/Components/prospect/ProspectDrawer.vue';
 import Button from '@/Components/ui/Button.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import ErrorState from '@/Components/ui/ErrorState.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { countActiveFilters, queryToFilter } from '@/composables/useFilters';
-import { useDismissable } from '@/composables/useDismissable';
 import { useToasts } from '@/composables/useToasts';
 import AppShell from '@/Layouts/AppShell.vue';
 import { api, normalizeError } from '@/lib/api';
-import { formatNumber } from '@/lib/format';
 import { PIPELINE_STATUSES, type PipelineStatus, type ProspectDetail, type ProspectFilter } from '@/types';
 
 /* eslint-disable vue/prop-name-casing -- Inertia props are snake_case (CONTRACTS §1) */
@@ -46,8 +45,6 @@ const filter = ref<ProspectFilter>(typeof window !== 'undefined' ? queryToFilter
 const board = usePipelineBoard(props.columns, filter);
 const table = usePipelineTable(filter);
 
-const filterOpen = ref(false);
-const filterRoot = ref<HTMLElement | null>(null);
 const openId = ref<number | null>(null);
 const selected = ref<number[]>([]);
 const announcement = ref('');
@@ -98,7 +95,6 @@ function resetFilter(): void {
 onMounted(() => {
     if (view.value === 'table') void table.fetch();
 });
-useDismissable(filterRoot, () => (filterOpen.value = false), { enabled: filterOpen });
 
 // Inertia revisits (e.g. clicking "Pipeline" in the dock) hand us fresh props.
 watch(
@@ -209,50 +205,16 @@ const boardRefreshing = computed(() => board.loading.value && boardHasCards.valu
     <AppShell>
         <Head title="Pipeline" />
         <div class="mx-auto w-full max-w-[1600px] space-y-4">
-            <header class="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                    <p class="hud-label">Pipeline penjualan</p>
-                    <h1 class="font-display text-2xl font-bold tracking-tight text-fg">Pipeline</h1>
-                    <p class="num mt-0.5 text-sm text-muted" data-testid="pipeline-total">{{ formatNumber(total) }} prospek sesuai filter</p>
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="glass inline-flex rounded-full p-1" role="group" aria-label="Tampilan pipeline">
-                        <button
-                            v-for="v in (['kanban', 'table'] as const)"
-                            :key="v"
-                            type="button"
-                            class="flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3.5 text-sm font-medium transition"
-                            :class="view === v ? 'bg-fg text-ink' : 'text-fg/80 hover:bg-fg/10 hover:text-fg'"
-                            :aria-pressed="view === v"
-                            :data-testid="`view-toggle-${v}`"
-                            @click="setView(v)"
-                        >
-                            <Icon v-if="v === 'kanban'" name="kanban" :size="15" />
-                            {{ v === 'kanban' ? 'Kanban' : 'Tabel' }}
-                        </button>
-                    </div>
-
-                    <div ref="filterRoot" class="relative">
-                        <Button variant="secondary" :aria-expanded="filterOpen" aria-controls="pipeline-filter" data-testid="filter-toggle" @click="filterOpen = !filterOpen">
-                            <Icon name="filter" :size="16" /> Filter
-                            <span v-if="activeFilters" class="num rounded-full bg-hot px-1.5 text-2xs text-on-hot" :aria-label="`${activeFilters} filter aktif`">{{ activeFilters }}</span>
-                        </Button>
-                        <div v-show="filterOpen" id="pipeline-filter" class="absolute right-0 top-full z-30 mt-2 max-h-[70dvh] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-panel shadow-float">
-                            <FilterPanel :model-value="filter" :options="filter_options" :collapsible="false" @update:model-value="onFilter" />
-                        </div>
-                    </div>
-
-                    <a
-                        :href="exportUrl"
-                        class="inline-flex h-10 items-center gap-2 rounded-chip border border-line bg-raised/70 px-4 text-sm font-medium text-fg transition hover:bg-raised"
-                        download
-                        data-testid="export-csv"
-                    >
-                        <Icon name="note" :size="16" /> Ekspor CSV
-                    </a>
-                </div>
-            </header>
+            <PipelineToolbar
+                :total="total"
+                :view="view"
+                :filter="filter"
+                :filter-options="filter_options"
+                :active-filters="activeFilters"
+                :export-url="exportUrl"
+                @view="setView"
+                @filter="onFilter"
+            />
 
             <p class="sr-only" role="status" aria-live="polite" data-testid="announcer">{{ announcement }}</p>
 
