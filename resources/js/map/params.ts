@@ -9,6 +9,16 @@ export interface MapUrlParams {
     prospect: number | null;
     /** `?route=ID,ID,...` deep link (unique positive ids, capped at MAX_ROUTE_STOPS). */
     route: number[];
+    /** `?lat=&lng=` camera target (valid ranges only). */
+    focus: { lat: number; lng: number } | null;
+    /** `?mode=` initial map mode. */
+    mode: 'prospects' | 'heatmap' | 'whitespace' | 'coverage' | null;
+}
+
+function toCoord(v: string | null, max: number): number | null {
+    if (v === null || v.trim() === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) && Math.abs(n) <= max ? n : null;
 }
 
 function toFlag(v: string | null): boolean | null {
@@ -32,7 +42,18 @@ export function parseMapParams(search: string | URLSearchParams): MapUrlParams {
         if (id !== null && !route.includes(id)) route.push(id);
         if (route.length >= MAX_ROUTE_STOPS) break;
     }
-    return { intro: toFlag(sp.get('intro')), motion: toFlag(sp.get('motion')), prospect: toId(sp.get('prospect')), route };
+    const lat = toCoord(sp.get('lat'), 90);
+    const lng = toCoord(sp.get('lng'), 180);
+    const m = sp.get('mode');
+    const mode = m === 'prospects' || m === 'heatmap' || m === 'whitespace' || m === 'coverage' ? m : null;
+    return {
+        intro: toFlag(sp.get('intro')),
+        motion: toFlag(sp.get('motion')),
+        prospect: toId(sp.get('prospect')),
+        route,
+        focus: lat !== null && lng !== null ? { lat, lng } : null,
+        mode,
+    };
 }
 
 export interface MotionFlags {
