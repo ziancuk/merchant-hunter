@@ -24,7 +24,7 @@ final class GenerateDigestAction
     public function handle(CarbonInterface $date, bool $force = false): array
     {
         $day = $date->format('Y-m-d');
-        $existing = DailyDigest::query()->whereDate('digest_date', $day)->first();
+        $existing = DailyDigest::query()->where('digest_date', $day)->first();
         $created = false;
 
         if ($existing === null) {

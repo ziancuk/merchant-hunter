@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Geo;
 
+use App\Enums\ScoreBand;
+
 /** Buckets points into square lat/lng cells for the low-zoom map payload. */
 final class GridAggregator
 {
@@ -36,7 +38,7 @@ final class GridAggregator
             $cells[$key] ??= ['lng' => $lng, 'lat' => $lat, 'count' => 0, 'sum' => 0, 'hot' => 0];
             $cells[$key]['count']++;
             $cells[$key]['sum'] += (int) $p['score'];
-            $cells[$key]['hot'] += $p['score'] >= 75 ? 1 : 0;
+            $cells[$key]['hot'] += $p['score'] >= ScoreBand::HOT_MIN ? 1 : 0;
         }
 
         return array_values(array_map(fn (array $c) => [

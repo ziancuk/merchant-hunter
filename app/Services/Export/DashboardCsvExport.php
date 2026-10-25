@@ -22,10 +22,11 @@ final class DashboardCsvExport
     public function rows(): array
     {
         $rows = [];
-        foreach ($this->dashboard->kpis() as $key => $value) {
+        $summary = $this->dashboard->kpisAndFunnel();
+        foreach ($summary['kpis'] as $key => $value) {
             $rows[] = ['KPI', $key, $value, '', '', ''];
         }
-        foreach ($this->dashboard->funnel() as $stage => $value) {
+        foreach ($summary['funnel'] as $stage => $value) {
             $rows[] = ['Funnel', $stage, $value, '', '', ''];
         }
         foreach ($this->dashboard->penetration() as $p) {

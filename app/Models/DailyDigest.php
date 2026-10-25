@@ -12,6 +12,6 @@ class DailyDigest extends Model
 
     protected function casts(): array
     {
-        return ['digest_date' => 'date', 'payload' => 'array', 'emailed_at' => 'datetime'];
+        return ['digest_date' => 'date:Y-m-d', 'payload' => 'array', 'emailed_at' => 'datetime'];
     }
 }
