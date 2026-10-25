@@ -6,6 +6,17 @@ import type { Activity } from '@/types';
 
 const props = defineProps<{ activities: Activity[] }>();
 
+/** Legacy rows stored an English internal "Status diubah: new → contacted" body; the labelled arrow already says it. */
+const LEGACY_STATUS_BODY = /^Status diubah:/;
+
+function showTransition(a: Activity): boolean {
+    return Boolean(a.from_status || a.to_status) && a.from_status !== a.to_status;
+}
+
+function showBody(a: Activity): boolean {
+    return Boolean(a.body) && !(a.type === 'status_change' && LEGACY_STATUS_BODY.test(a.body ?? ''));
+}
+
 const sorted = computed(() => [...props.activities].sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id - a.id));
 </script>
 
@@ -17,10 +28,10 @@ const sorted = computed(() => [...props.activities].sort((a, b) => b.created_at.
                 <span class="text-sm font-medium text-fg">{{ ACTIVITY_LABEL[a.type] }}</span>
                 <time :datetime="a.created_at" :title="formatDateTime(a.created_at)" class="num shrink-0 text-2xs text-muted">{{ relativeTime(a.created_at) }}</time>
             </div>
-            <p v-if="a.from_status || a.to_status" class="text-xs text-muted">
+            <p v-if="showTransition(a)" class="text-xs text-muted">
                 {{ a.from_status ? STATUS_LABEL[a.from_status] : '–' }} → {{ a.to_status ? STATUS_LABEL[a.to_status] : '–' }}
             </p>
-            <p v-if="a.body" class="whitespace-pre-line break-words text-sm text-fg/90">{{ a.body }}</p>
+            <p v-if="showBody(a)" class="whitespace-pre-line break-words text-sm text-fg/90">{{ a.body }}</p>
             <p v-if="a.user" class="text-2xs text-muted">oleh {{ a.user.name }}</p>
         </li>
     </ol>

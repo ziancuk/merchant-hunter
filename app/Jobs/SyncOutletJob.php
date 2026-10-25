@@ -8,6 +8,7 @@ use App\Models\Outlet;
 use App\Models\SchedulerRun;
 use App\Services\Sync\OutletSyncResult;
 use App\Services\Sync\SyncService;
+use App\Support\Redactor;
 use DateTimeInterface;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -83,7 +84,7 @@ class SyncOutletJob implements ShouldBeUnique, ShouldQueue
         $run = SchedulerRun::query()->find($this->runId);
         $outlet = Outlet::query()->find($this->outletId);
         if ($run !== null && $outlet !== null) {
-            app(SyncService::class)->recordOutlet($run, $outlet, new OutletSyncResult(status: 'failed', error: $e->getMessage()));
+            app(SyncService::class)->recordOutlet($run, $outlet, new OutletSyncResult(status: 'failed', error: Redactor::exception($e)));
         }
     }
 }
