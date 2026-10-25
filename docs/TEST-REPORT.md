@@ -114,4 +114,9 @@ FPS ≥ 40 pada TEST-PLAN adalah target GPU nyata; SwiftShader merasterisasi di 
 
 Batasan: HUD peta pada clone itu tidak dibuka di browser oleh pemeriksa (jumlah prospek diverifikasi lewat tinker; peta diuji E2E). Satu-satunya perubahan terlacak di clone adalah field `name` di `package-lock.json` karena nama folder clone berbeda (README mencatatnya).
 
-**Pemindaian secret akhir sebelum tag:** lihat bagian di bawah (diisi saat tagging).
+**Pemindaian secret akhir sebelum tag v1.0.0 (25 Oktober 2026):**
+- HEAD: `git grep -nIE` dengan pola `AKIA[0-9A-Z]{16}`, `AIza[0-9A-Za-z_-]{35}`, `sk-ant-…`, `sk-[A-Za-z0-9]{32,}`, `-----BEGIN … PRIVATE KEY-----`, `ghp_…` (di luar lockfile): **0 temuan**.
+- Riwayat: seluruh `git log --all -p` (79 commit, 66.103 baris diff) dipindai dengan skrip Python memakai pola yang sama ditambah token Slack (`xox[baprs]-…`): **0 temuan**. (Upaya pertama dengan `git log -G` gagal karena batas kompleksitas ugrep dan hasil 0-nya dibuang; pemindaian di atas yang valid.)
+- Berkas sensitif terlacak: hanya `.env.example` (sengaja). `.env`, `*.sqlite`, `.pem`, `.claude/` tidak pernah ditambahkan ke riwayat. Tidak ada remote, berkas, atau tautan GitLab.
+- Keterbatasan: pola tidak mencakup semua format token (mis. Stripe, token generik); gitleaks tidak terpasang. Nilai password demo (`demo-password-123`, `e2e-password-123`) memang ada di seeder/skrip lokal dan README, bukan rahasia.
+
