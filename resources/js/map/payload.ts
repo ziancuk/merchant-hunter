@@ -22,17 +22,22 @@ export function interleave(xs: ArrayLike<number>, ys: ArrayLike<number>, count =
     return out;
 }
 
+/** First `count` entries; skips the copy when the column already has exactly that length. */
+export function cut<T>(a: T[], count: number): T[] {
+    return a.length === count ? a : a.slice(0, count);
+}
+
 /** Columnar `points` payload → typed arrays. The shortest column bounds the count so corrupt payloads cannot overrun. */
 export function parsePoints(p: PointsPayload): PointData {
     const count = Math.min(p.ids.length, p.lng.length, p.lat.length, p.score.length, p.status.length, p.flags.length);
     return {
         count,
         truncated: !!p.truncated,
-        ids: Int32Array.from(p.ids.slice(0, count)),
+        ids: Int32Array.from(cut(p.ids, count)),
         positions: interleave(p.lng, p.lat, count),
-        scores: Uint8Array.from(p.score.slice(0, count)),
-        status: Uint8Array.from(p.status.slice(0, count)),
-        flags: Uint8Array.from(p.flags.slice(0, count)),
+        scores: Uint8Array.from(cut(p.score, count)),
+        status: Uint8Array.from(cut(p.status, count)),
+        flags: Uint8Array.from(cut(p.flags, count)),
     };
 }
 
@@ -61,11 +66,11 @@ export function parseOutlets(p: OutletsResponse): OutletData {
     const count = Math.min(p.ids.length, p.lng.length, p.lat.length);
     return {
         count,
-        ids: Int32Array.from(p.ids.slice(0, count)),
+        ids: Int32Array.from(cut(p.ids, count)),
         positions: interleave(p.lng, p.lat, count),
-        names: p.names.slice(0, count),
-        codes: p.codes.slice(0, count),
-        provinceIds: Int32Array.from((p.province_ids ?? []).slice(0, count)),
+        names: cut(p.names, count),
+        codes: cut(p.codes, count),
+        provinceIds: Int32Array.from(cut(p.province_ids ?? [], count)),
     };
 }
 
