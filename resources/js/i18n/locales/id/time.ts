@@ -1,0 +1,15 @@
+export default {
+    now: "baru saja",
+    minute: "{n} menit",
+    hour: "{n} jam",
+    day: "{n} hari",
+    week: "{n} minggu",
+    month: "{n} bulan",
+    year: "{n} tahun",
+    ago: "{value} lalu",
+    in: "dalam {value}",
+    tomorrow: "besok",
+    yesterday: "kemarin",
+    today: "hari ini",
+    tz: "WIB",
+};

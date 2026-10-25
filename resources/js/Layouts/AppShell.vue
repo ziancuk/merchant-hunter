@@ -12,6 +12,8 @@ import { shortcutHelpOpen, useShortcuts } from '@/composables/useShortcuts';
 import { useTheme } from '@/composables/useTheme';
 import { useToasts } from '@/composables/useToasts';
 import { isNavActive, NAV_ITEMS } from '@/lib/nav';
+import { useI18n } from '@/i18n';
+import LocaleSwitcher from '@/Components/ui/LocaleSwitcher.vue';
 import type { SharedProps } from '@/types';
 
 const props = withDefaults(
@@ -27,6 +29,7 @@ const props = withDefaults(
 );
 const emit = defineEmits<{ 'command-select': [item: CommandItem] }>();
 
+const { t } = useI18n();
 const page = usePage();
 const shared = computed(() => page.props as unknown as SharedProps);
 const { isDark, toggle: toggleTheme } = useTheme();
@@ -47,17 +50,17 @@ function logout(): void {
 }
 
 const paletteItems = computed<CommandItem[]>(() => [
-    ...NAV_ITEMS.map((n) => ({ id: `nav:${n.href}`, label: n.label, hint: n.hint, group: 'Navigasi', action: () => router.visit(n.href) })),
+    ...NAV_ITEMS.map((n) => ({ id: `nav:${n.href}`, label: n.label, hint: n.hint, group: t('shell.group_nav'), action: () => router.visit(n.href) })),
     ...props.commandItems,
-    { id: 'act:theme', label: isDark.value ? 'Ganti ke tema terang' : 'Ganti ke tema gelap', group: 'Aksi', action: toggleTheme },
-    { id: 'act:shortcuts', label: 'Lihat pintasan keyboard', hint: '?', group: 'Aksi', action: () => (shortcutHelpOpen.value = true) },
-    { id: 'act:logout', label: 'Keluar', group: 'Aksi', action: logout },
+    { id: 'act:theme', label: isDark.value ? t('shell.theme_to_light') : t('shell.theme_to_dark'), group: t('shell.group_action'), action: toggleTheme },
+    { id: 'act:shortcuts', label: t('shell.see_shortcuts'), hint: '?', group: t('shell.group_action'), action: () => (shortcutHelpOpen.value = true) },
+    { id: 'act:logout', label: t('shell.logout'), group: t('shell.group_action'), action: logout },
 ]);
 
 useShortcuts([
-    { keys: '?', description: 'Tampilkan pintasan keyboard', group: 'Umum', handler: () => (shortcutHelpOpen.value = !shortcutHelpOpen.value) },
-    { keys: '/', description: 'Cari (buka palet perintah)', group: 'Umum', handler: () => (paletteOpen.value = true) },
-    { keys: 't', description: 'Ganti tema gelap/terang', group: 'Umum', handler: toggleTheme },
+    { keys: '?', description: t('shell.kb_help'), group: t('shell.group_general'), handler: () => (shortcutHelpOpen.value = !shortcutHelpOpen.value) },
+    { keys: '/', description: t('shell.kb_search'), group: t('shell.group_general'), handler: () => (paletteOpen.value = true) },
+    { keys: 't', description: t('shell.kb_theme'), group: t('shell.group_general'), handler: toggleTheme },
 ]);
 
 watch(
@@ -76,7 +79,7 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
 
 <template>
     <div class="fixed inset-0 overflow-hidden bg-ink text-fg">
-        <a href="#main" class="sr-only-focusable glass absolute left-3 top-3 z-[90] rounded-chip px-3 py-2 text-sm">Lewati ke konten utama</a>
+        <a href="#main" class="sr-only-focusable glass absolute left-3 top-3 z-[90] rounded-chip px-3 py-2 text-sm">{{ t('shell.skip') }}</a>
 
         <main id="main" tabindex="-1" class="absolute inset-0 outline-none" :class="fullBleed ? '' : 'overflow-y-auto px-4 pb-28 pt-20 md:pb-10'">
             <slot />
@@ -96,7 +99,7 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
             </GlassPanel>
 
             <!-- Nav dock (desktop/tablet: top centre) -->
-            <nav aria-label="Navigasi utama" class="pointer-events-auto absolute left-1/2 top-3 hidden -translate-x-1/2 md:block">
+            <nav :aria-label="t('shell.nav_main')" class="pointer-events-auto absolute left-1/2 top-3 hidden -translate-x-1/2 md:block">
                 <GlassPanel as="ul" rounded="full" :padded="false" class="m-0 flex list-none items-center gap-1 p-1">
                     <li v-for="n in NAV_ITEMS" :key="n.href">
                         <Tooltip :text="n.hint ?? n.label" placement="bottom">
@@ -122,7 +125,7 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
             <div v-if="$slots['bottom-right']" class="pointer-events-auto absolute bottom-24 right-3 max-w-[calc(100vw-1.5rem)] md:bottom-3"><slot name="bottom-right" /></div>
 
             <!-- Nav dock (phone: bottom) -->
-            <nav aria-label="Navigasi utama (ponsel)" class="pointer-events-auto absolute inset-x-3 bottom-3 md:hidden">
+            <nav :aria-label="t('shell.nav_mobile')" class="pointer-events-auto absolute inset-x-3 bottom-3 md:hidden">
                 <GlassPanel as="ul" rounded="full" :padded="false" class="m-0 flex list-none items-center justify-between p-1">
                     <li v-for="n in NAV_ITEMS" :key="n.href" class="flex-1">
                         <Link
@@ -146,20 +149,21 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
                 <GlassPanel as="div" rounded="full" :padded="false" class="flex items-center gap-0.5 p-1">
                     <button type="button" class="flex h-10 cursor-pointer items-center gap-2 rounded-full px-3 text-sm text-fg/80 transition hover:bg-fg/10 hover:text-fg" @click="paletteOpen = true">
                         <Icon name="search" :size="16" />
-                        <span class="sr-only">Buka palet perintah</span>
+                        <span class="sr-only">{{ t('shell.open_palette') }}</span>
                         <span class="num hidden text-xs text-muted sm:inline" aria-hidden="false">{{ modKey }} K</span>
                     </button>
-                    <button type="button" :class="hudBtn" :aria-label="isDark ? 'Ganti ke tema terang' : 'Ganti ke tema gelap'" @click="toggleTheme">
+                    <LocaleSwitcher />
+                    <button type="button" :class="hudBtn" :aria-label="isDark ? t('shell.theme_to_light') : t('shell.theme_to_dark')" @click="toggleTheme">
                         <Icon :name="isDark ? 'sun' : 'moon'" />
                     </button>
-                    <button type="button" :class="hudBtn" aria-label="Pintasan keyboard" @click="shortcutHelpOpen = true">
+                    <button type="button" :class="hudBtn" :aria-label="t('shell.shortcuts')" @click="shortcutHelpOpen = true">
                         <Icon name="keyboard" />
                     </button>
                     <div v-if="user" ref="userMenuRoot" class="relative">
                         <button
                             type="button"
                             class="grid h-10 w-10 cursor-pointer place-items-center rounded-full bg-fg/10 font-display text-sm font-semibold transition hover:bg-fg/20"
-                            :aria-label="`Menu pengguna, ${user.name}`"
+                            :aria-label="t('shell.user_menu_named', { name: user.name })"
                             aria-haspopup="menu"
                             :aria-expanded="userMenuOpen"
                             @click="userMenuOpen = !userMenuOpen"
@@ -167,13 +171,13 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
                             {{ initial }}
                         </button>
                         <Transition name="pop">
-                            <div v-if="userMenuOpen" role="menu" aria-label="Menu pengguna" class="glass absolute right-0 top-12 w-60 rounded-panel p-2">
+                            <div v-if="userMenuOpen" role="menu" :aria-label="t('shell.user_menu')" class="glass absolute right-0 top-12 w-60 rounded-panel p-2">
                                 <div class="border-b border-line px-3 pb-2 pt-1">
                                     <p class="truncate text-sm font-medium">{{ user.name }}</p>
                                     <p class="truncate text-xs text-muted">{{ user.email }}</p>
                                 </div>
                                 <button type="button" role="menuitem" class="mt-1 flex w-full cursor-pointer items-center gap-2 rounded-chip px-3 py-2 text-left text-sm hover:bg-fg/10" @click="logout">
-                                    <Icon name="logout" :size="16" /> Keluar
+                                    <Icon name="logout" :size="16" /> {{ t('shell.logout') }}
                                 </button>
                             </div>
                         </Transition>

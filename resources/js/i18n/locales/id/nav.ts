@@ -1,0 +1,16 @@
+export default {
+    map: "Peta",
+    pipeline: "Pipeline",
+    report: "Laporan",
+    dashboard: "Dasbor",
+    impact: "Dampak",
+    master: "Master",
+    scheduler: "Penjadwal",
+    map_hint: "Radar prospek",
+    pipeline_hint: "Kanban & tabel",
+    report_hint: "Tabel prospek & ekspor",
+    dashboard_hint: "KPI & funnel",
+    impact_hint: "Estimasi biaya & hasil",
+    master_hint: "Sumber data, outlet, kategori",
+    scheduler_hint: "Riwayat sinkronisasi",
+};

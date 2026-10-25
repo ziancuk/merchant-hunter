@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { currentLocale } from '@/i18n';
 
 export interface ApiError {
     message: string;
@@ -12,6 +13,12 @@ export const api = axios.create({
     withCredentials: true,
     xsrfCookieName: 'XSRF-TOKEN',
     xsrfHeaderName: 'X-XSRF-TOKEN',
+});
+
+// Every request tells the server which language to answer in (validation errors, API messages).
+api.interceptors.request.use((config) => {
+    config.headers.set('X-Locale', currentLocale());
+    return config;
 });
 
 function fallbackMessage(status: number | null, hasResponse: boolean): string {
@@ -52,6 +59,7 @@ export async function postKeepalive<T>(url: string, body: unknown): Promise<T> {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
+        'X-Locale': currentLocale(),
     };
     const token = readXsrfToken();
     if (token) headers['X-XSRF-TOKEN'] = token;

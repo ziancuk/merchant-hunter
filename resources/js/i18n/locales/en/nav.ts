@@ -1,0 +1,16 @@
+export default {
+    map: "Map",
+    pipeline: "Pipeline",
+    report: "Report",
+    dashboard: "Dashboard",
+    impact: "Impact",
+    master: "Master",
+    scheduler: "Scheduler",
+    map_hint: "Prospect radar",
+    pipeline_hint: "Kanban & table",
+    report_hint: "Prospect table & export",
+    dashboard_hint: "KPIs & funnel",
+    impact_hint: "Cost & value estimate",
+    master_hint: "Data sources, outlets, categories",
+    scheduler_hint: "Sync history",
+};

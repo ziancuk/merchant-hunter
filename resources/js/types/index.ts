@@ -13,6 +13,7 @@ export const PIPELINE_STATUSES: PipelineStatus[] = ['new', 'contacted', 'demo', 
 export interface AuthUser { id: number; name: string; email: string }
 
 export interface SharedProps {
+    locale: 'id' | 'en';
     auth: { user: AuthUser | null };
     flash: { success?: string | null; error?: string | null };
     app: { name: string; basemap: 'openfreemap' | 'local'; ai_enabled: boolean; debug_hooks: boolean };

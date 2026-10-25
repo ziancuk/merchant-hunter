@@ -10,13 +10,14 @@ import { useFilters } from '@/composables/useFilters';
 import { useReducedMotion } from '@/composables/useReducedMotion';
 import { formatNumber } from '@/lib/format';
 import type { MapMode, SharedProps } from '@/types';
-import { ATTRIBUTION, COLOR_BY_STORAGE_KEY, COLUMN_ZOOM, GRID_ZOOM } from '@/map/constants';
+import { COLOR_BY_STORAGE_KEY, COLUMN_ZOOM, GRID_ZOOM } from '@/map/constants';
 import { parseMapParams, readIntroSkipped, readPref, resolveMotionFlags, withRouteParam, writeIntroSkipped } from '@/map/params';
 import { removeStop, moveStop } from '@/map/route';
 import type { MapEngine } from '@/map/engine';
 import { toMapPick, type MapPick } from '@/map/picking';
 import type { ColorBy, RouteStop, Viewport } from '@/map/types';
 import MapHud, { type HudProps } from '@/map/MapHud.vue';
+import MapAttribution from '@/map/MapAttribution.vue';
 import MapLegend from '@/map/MapLegend.vue';
 import MapOverlays from '@/map/MapOverlays.vue';
 import ModeSwitcher from '@/map/ModeSwitcher.vue';
@@ -335,15 +336,7 @@ const liveSummary = computed(() => (count.value === null ? '' : `${formatNumber(
         </template>
 
         <template #bottom-left>
-            <section v-if="ready" class="flex flex-col items-start gap-2" aria-label="Atribusi peta">
-                <p class="glass max-w-[calc(100vw-5.5rem)] rounded-chip px-2 py-1 text-2xs text-muted sm:max-w-[calc(100vw-21rem)]" data-testid="map-attribution">
-                    {{ ATTRIBUTION.text }} ·
-                    <template v-for="(l, i) in ATTRIBUTION.links" :key="l.href">
-                        <a :href="l.href" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2 hover:text-fg">{{ l.label }}</a
-                        ><span v-if="i < ATTRIBUTION.links.length - 1">, </span>
-                    </template>
-                </p>
-            </section>
+            <MapAttribution v-if="ready" />
         </template>
 
         <template #bottom-right>

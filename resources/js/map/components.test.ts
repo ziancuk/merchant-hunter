@@ -144,7 +144,7 @@ describe('MapHud', () => {
 describe('MapLegend', () => {
     it('lists score bands or statuses depending on the colouring and emits the toggle', async () => {
         const w = mount(MapLegend, { props: { colorBy: 'score' } });
-        expect(w.text()).toContain('Panas');
+        expect(w.text()).toContain('Bidik Utama');
         expect(w.text()).not.toContain('Dihubungi');
         await w.get('[data-testid="color-by-status"]').trigger('click');
         expect(w.emitted('update:colorBy')?.[0]).toEqual(['status']);

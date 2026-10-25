@@ -1,0 +1,41 @@
+export default {
+    band: {
+        hot: "Bidik Utama",
+        warm: "Menjanjikan",
+        medium: "Berpotensi",
+        cold: "Pantau",
+    },
+    status: {
+        new: "Baru",
+        contacted: "Dihubungi",
+        demo: "Demo",
+        won: "Deal",
+        lost: "Ditolak",
+    },
+    skip: {
+        not_found: "Prospek tidak ditemukan",
+        already_opted_out: "Sudah ditandai jangan hubungi",
+        same_status: "Status sudah sama",
+    },
+    activity: {
+        created: "Ditemukan",
+        status_change: "Status berubah",
+        contacted: "Dihubungi",
+        note: "Catatan",
+        opt_out: "Opt-out",
+        opt_in: "Opt-in kembali",
+        rejected: "Ditolak",
+        system: "Sistem",
+    },
+    run: {
+        success: "Berhasil",
+        completed: "Selesai",
+        ok: "Berhasil",
+        cached: "Dari cache",
+        partial: "Sebagian gagal",
+        failed: "Gagal",
+        running: "Berjalan",
+        skipped: "Dilewati",
+        never: "Belum pernah",
+    },
+};
