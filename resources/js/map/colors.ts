@@ -11,22 +11,26 @@ export function hexToRgb(hex: string): [number, number, number] {
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-const BAND_RGB = Object.fromEntries(Object.entries(BAND_HEX.dark).map(([k, v]) => [k, hexToRgb(v)])) as Record<keyof typeof BAND_HEX.dark, [number, number, number]>;
-const STATUS_RGB = Object.fromEntries(Object.entries(STATUS_HEX.dark).map(([k, v]) => [k, hexToRgb(v)])) as Record<keyof typeof STATUS_HEX.dark, [number, number, number]>;
+const BAND_RGB = Object.fromEntries(Object.entries(BAND_HEX.map).map(([k, v]) => [k, hexToRgb(v)])) as Record<keyof typeof BAND_HEX.map, [number, number, number]>;
+const STATUS_RGB = Object.fromEntries(Object.entries(STATUS_HEX.map).map(([k, v]) => [k, hexToRgb(v)])) as Record<keyof typeof STATUS_HEX.map, [number, number, number]>;
 
-/** Palette used on the canvas (the basemap is always dark, so the dark tokens apply in both themes). */
+/** Palette used on the canvas (the basemap is always light and colourful, so layers use saturated colours with dark/white outlines). */
 export const MAP_COLORS = {
-    outletCore: [232, 240, 235, 255] as Rgba,
-    outletHalo: [125, 227, 196, 70] as Rgba,
-    outletRing: [125, 227, 196, 200] as Rgba,
-    coverageFill: [125, 227, 196, 14] as Rgba,
-    coverageLine: [125, 227, 196, 110] as Rgba,
-    route: [125, 227, 196, 255] as Rgba,
-    selection: [255, 255, 255, 255] as Rgba,
-    routePick: [125, 227, 196, 255] as Rgba,
+    outletCore: [16, 42, 38, 255] as Rgba,
+    outletHalo: [0, 150, 125, 40] as Rgba,
+    outletRing: [0, 128, 108, 220] as Rgba,
+    coverageFill: [0, 128, 108, 22] as Rgba,
+    coverageLine: [0, 128, 108, 170] as Rgba,
+    route: [0, 98, 160, 255] as Rgba,
+    routeGlow: [0, 98, 160, 60] as Rgba,
+    routeText: [0, 60, 100, 255] as Rgba,
+    selection: [16, 24, 32, 255] as Rgba,
+    routePick: [0, 98, 160, 255] as Rgba,
     newOpen: [255, 106, 43, 255] as Rgba,
-    simulated: [232, 240, 235, 170] as Rgba,
-    whitespace: [125, 227, 196] as [number, number, number],
+    simulated: [40, 50, 60, 170] as Rgba,
+    whitespace: [0, 128, 108] as [number, number, number],
+    outline: [255, 255, 255, 230] as Rgba,
+    ink: [16, 24, 32, 255] as Rgba,
 };
 
 /** RGBA for one point. Closed / opted-out prospects are dimmed so they never look like live leads. */
@@ -92,13 +96,13 @@ export function gridColor(avgScore: number, hot: number): Rgba {
     return [c[0], c[1], c[2], 190];
 }
 
-/** Heatmap colour ramp: transparent teal to amber to flare orange (deck.gl `colorRange`). */
+/** Heatmap colour ramp: transparent yellow to orange to red (deck.gl `colorRange`). */
 export const HEAT_COLOR_RANGE: [number, number, number, number][] = [
-    [79, 195, 169, 0],
-    [79, 195, 169, 110],
-    [242, 182, 58, 170],
-    [255, 140, 50, 220],
-    [255, 106, 43, 255],
+    [255, 214, 10, 0],
+    [255, 214, 10, 120],
+    [255, 150, 0, 180],
+    [245, 80, 10, 225],
+    [200, 20, 20, 255],
 ];
 
 /** White space cell colour: more prospects, stronger teal. */

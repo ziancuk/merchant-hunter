@@ -1,4 +1,5 @@
-import { test, expect, freshData } from './support/fixtures';
+import { test, expect, freshData, loginAs, pickContactable } from './support/fixtures';
+import { openMap } from './support/map';
 import { PASSWORD, USERS } from './support/env';
 
 freshData();
@@ -37,5 +38,16 @@ test('1. login salah menampilkan galat, login benar masuk ke peta, logout kembal
 
     // Session is really gone: protected pages redirect again.
     await page.goto('/pipeline');
+    await expect(page).toHaveURL(/\/login$/);
+});
+
+test('menu pengguna dan tombol Keluar tidak tertutup drawer prospek', async ({ page, context }) => {
+    await loginAs(context, 'ayu');
+    await openMap(page, `prospect=${pickContactable(0).id}`);
+    await expect(page.getByRole('dialog')).toBeVisible();
+
+    await page.getByRole('button', { name: /Menu pengguna/ }).click();
+    // A plain click only succeeds when nothing (e.g. the drawer) sits on top of the button.
+    await page.getByRole('menuitem', { name: 'Keluar' }).click();
     await expect(page).toHaveURL(/\/login$/);
 });

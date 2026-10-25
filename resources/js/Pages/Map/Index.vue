@@ -288,6 +288,13 @@ const liveSummary = computed(() => (count.value === null ? '' : `${formatNumber(
             />
         </div>
 
+        <!-- Inside AppShell so the top-right controls (user menu) stack above the drawer. -->
+        <ProspectDrawer :prospect-id="selectedId" :loader="drawerLoader" :rejection-reasons="rejection_reasons" @close="closeDrawer" @updated="onProspectChanged" @contacted="onProspectChanged" @locate="locate">
+            <template #actions="{ prospect }">
+                <Button size="sm" variant="secondary" data-testid="add-to-route" @click="planner.addToRoute(prospect)"><Icon name="pin" :size="14" /> Tambah ke rute</Button>
+            </template>
+        </ProspectDrawer>
+
         <template #top-left>
             <section v-if="ready && !introActive" class="flex w-[min(22rem,calc(100vw-1.5rem))] flex-col gap-2" aria-label="Mode, filter, dan rute">
                 <ModeSwitcher v-model="mode" />
@@ -351,10 +358,4 @@ const liveSummary = computed(() => (count.value === null ? '' : `${formatNumber(
             </div>
         </template>
     </AppShell>
-
-    <ProspectDrawer :prospect-id="selectedId" :loader="drawerLoader" :rejection-reasons="rejection_reasons" @close="closeDrawer" @updated="onProspectChanged" @contacted="onProspectChanged" @locate="locate">
-        <template #actions="{ prospect }">
-            <Button size="sm" variant="secondary" data-testid="add-to-route" @click="planner.addToRoute(prospect)"><Icon name="pin" :size="14" /> Tambah ke rute</Button>
-        </template>
-    </ProspectDrawer>
 </template>

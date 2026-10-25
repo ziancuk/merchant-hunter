@@ -93,7 +93,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onWindowKeydown));
                 :aria-modal="modal ? 'true' : 'false'"
                 :aria-labelledby="titleId"
                 tabindex="-1"
-                class="glass fixed bottom-0 top-0 z-40 flex w-full flex-col overflow-hidden text-fg outline-none sm:bottom-3 sm:top-3 sm:rounded-panel"
+                class="glass fixed bottom-0 top-0 z-40 flex w-full flex-col overflow-hidden text-fg outline-none sm:bottom-3 sm:top-[4.5rem] sm:rounded-panel"
                 :class="[widthClass, side === 'left' ? 'left-0 sm:left-3' : 'right-0 sm:right-3']"
                 @keydown="onPanelKeydown"
             >

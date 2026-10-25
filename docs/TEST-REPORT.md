@@ -120,3 +120,21 @@ Batasan: HUD peta pada clone itu tidak dibuka di browser oleh pemeriksa (jumlah 
 - Berkas sensitif terlacak: hanya `.env.example` (sengaja). `.env`, `*.sqlite`, `.pem`, `.claude/` tidak pernah ditambahkan ke riwayat. Tidak ada remote, berkas, atau tautan GitLab.
 - Keterbatasan: pola tidak mencakup semua format token (mis. Stripe, token generik); gitleaks tidak terpasang. Nilai password demo (`demo-password-123`, `e2e-password-123`) memang ada di seeder/skrip lokal dan README, bukan rahasia.
 
+## 10. Pembaruan: basemap terang dan halaman Laporan (25 Oktober 2026)
+
+Perubahan: basemap OpenFreeMap `liberty` (terang, berwarna) untuk peta dan globe dengan warna kanvas disetel ulang (D-128); halaman **Laporan** dengan unduh CSV dan Excel (D-129, D-130). Dijalankan ulang pada perubahan ini:
+
+| Lapisan | Hasil |
+|---|---|
+| Pest | **465 lulus**, 7.836 assertion (10 tes baru di `ReportTest`: otorisasi, halaman, kolom, urutan + nilai kosong terakhir, validasi, filter, paginasi, isi berkas `.xlsx`) |
+| Vitest | **311 lulus**, 31 berkas (12 tes baru: URL, `useReportTable`, `ReportTable`) |
+| Pint, ESLint, `vue-tsc`, build | bersih / berhasil |
+| Playwright | **50 lulus, 1 gagal** dari 51 (4 tes baru Laporan lulus; `a11y` kini mencakup `/reports`, tanpa pelanggaran serius/kritis) |
+
+**Satu kegagalan: tes FPS `perf.spec.ts`** (pan 1,27 fps melawan ambang 2). Beban mesin saat run: load average 12 sampai 15 (proses lain: PHP Language Server 97% CPU, Spotlight, dll.), dan SwiftShader merasterisasi di CPU. **Pembanding yang diukur:** kode `main` sebelum perubahan ini, dijalankan di worktree terpisah pada beban yang sama, juga gagal pada tes yang sama (pan 1,68 fps, zoom 0,82 fps). Jadi kegagalan ini **bukan regresi dari perubahan ini**, melainkan flaky pada mesin sibuk, sama seperti catatan di §4.1. Ambang tidak diubah; tes belum dijalankan ulang pada mesin tenang.
+
+**Bug yang ditemukan saat pengujian dan statusnya:**
+- Ekspor Excel: pustaka OpenSpout mengubah teks berawalan `=` menjadi sel rumus (injeksi rumus). **Diperbaiki** dengan sel string eksplisit; tes regresi memeriksa tidak ada `<f>` di sheet (D-130).
+- Hasil ekspor 14.639 baris dibuka ulang dengan `openpyxl` (15 kolom, header benar, nilai kosong tertulis kosong), 1,1 MB.
+
+**Tidak teruji:** berkas `.xlsx` di Microsoft Excel/Numbers/LibreOffice sungguhan (hanya `openpyxl`); halaman Laporan dan peta terang di HP/layar sentuh asli (hanya emulasi viewport 375 px); kontras warna titik pada basemap terang secara menyeluruh; FPS peta pada GPU nyata.

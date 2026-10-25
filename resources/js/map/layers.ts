@@ -154,7 +154,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
                     const k = whitespaceColor(c.prospects, max);
                     return [k[0], k[1], k[2], Math.round(k[3] * 0.4)];
                 },
-                getLineColor: [125, 227, 196, 220],
+                getLineColor: [0, 110, 92, 230],
                 lineWidthUnits: 'pixels',
                 getLineWidth: 1,
                 stroked: true,
@@ -170,7 +170,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 getRadius: 8,
                 getFillColor: (c: { prospects: number }) => whitespaceColor(c.prospects, max),
                 stroked: true,
-                getLineColor: [232, 240, 235, 230],
+                getLineColor: MAP_COLORS.outline,
                 lineWidthUnits: 'pixels',
                 getLineWidth: 1.5,
                 pickable: true,
@@ -242,7 +242,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
                     radiusUnits: 'pixels',
                     opacity: dim,
                     stroked: true,
-                    getLineColor: [7, 13, 12, 160],
+                    getLineColor: MAP_COLORS.outline,
                     lineWidthUnits: 'pixels',
                     getLineWidth: 1,
                     pickable: true,
@@ -353,7 +353,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 parameters: ON_TOP,
                 data: pathData(path),
                 getPath: (d: { path: [number, number][] }) => d.path,
-                getColor: [125, 227, 196, 70],
+                getColor: MAP_COLORS.routeGlow,
                 widthUnits: 'pixels',
                 getWidth: 12,
                 capRounded: true,
@@ -384,9 +384,9 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 getPosition: (s: RouteStop) => [s.lng, s.lat],
                 radiusUnits: 'pixels',
                 getRadius: 11,
-                getFillColor: [125, 227, 196, 255],
+                getFillColor: [255, 255, 255, 255],
                 stroked: true,
-                getLineColor: [7, 13, 12, 255],
+                getLineColor: MAP_COLORS.route,
                 lineWidthUnits: 'pixels',
                 getLineWidth: 2,
                 pickable: false,
@@ -398,7 +398,7 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 getPosition: (s: RouteStop) => [s.lng, s.lat],
                 getText: (s: { label: string }) => s.label,
                 getSize: 12,
-                getColor: [7, 13, 12, 255],
+                getColor: MAP_COLORS.routeText,
                 fontFamily: "'JetBrains Mono', ui-monospace, monospace",
                 fontWeight: 700,
                 getTextAnchor: 'middle',
@@ -430,13 +430,13 @@ export function buildLayers(i: LayerInputs): Layer[] {
 
     // --- outlets (always on top: glowing markers, clearly different from prospects) ---------------------------------
     if (i.focusOutlet) {
-        layers.push(ringLayer('outlet-focus-ring', i.focusOutlet, COVERAGE_RADIUS_M, [125, 227, 196, 255], [125, 227, 196, 26], 2));
+        layers.push(ringLayer('outlet-focus-ring', i.focusOutlet, COVERAGE_RADIUS_M, MAP_COLORS.outletRing, [0, 128, 108, 30], 2));
     }
     if (i.outlets && i.outlets.count > 0) {
         const od = positionsData(i.outlets.positions);
         layers.push(
-            new ScatterplotLayer({ id: 'outlet-halo', parameters: ON_TOP, data: od, radiusUnits: 'pixels', getRadius: 17, getFillColor: [125, 227, 196, 34], pickable: false }),
-            new ScatterplotLayer({ id: 'outlet-glow', parameters: ON_TOP, data: od, radiusUnits: 'pixels', getRadius: 10, getFillColor: [125, 227, 196, 90], pickable: false }),
+            new ScatterplotLayer({ id: 'outlet-halo', parameters: ON_TOP, data: od, radiusUnits: 'pixels', getRadius: 17, getFillColor: MAP_COLORS.outletHalo, pickable: false }),
+            new ScatterplotLayer({ id: 'outlet-glow', parameters: ON_TOP, data: od, radiusUnits: 'pixels', getRadius: 10, getFillColor: [0, 150, 125, 90], pickable: false }),
             new ScatterplotLayer({
                 id: 'outlet-core',
                 parameters: ON_TOP,
@@ -445,12 +445,12 @@ export function buildLayers(i: LayerInputs): Layer[] {
                 getRadius: 5,
                 getFillColor: MAP_COLORS.outletCore,
                 stroked: true,
-                getLineColor: [7, 13, 12, 255],
+                getLineColor: [255, 255, 255, 255],
                 lineWidthUnits: 'pixels',
-                getLineWidth: 1.5,
+                getLineWidth: 2,
                 pickable: true,
                 autoHighlight: true,
-                highlightColor: [125, 227, 196, 255],
+                highlightColor: [0, 200, 165, 255],
                 ...emit('outlet', i.handlers),
             }),
         );

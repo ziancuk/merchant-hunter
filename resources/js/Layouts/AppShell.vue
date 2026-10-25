@@ -107,14 +107,40 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
                                 :aria-current="isNavActive(page.url, n.href) ? 'page' : undefined"
                             >
                                 <Icon :name="n.icon as IconName" :size="16" />
-                                <span class="hidden lg:inline">{{ n.label }}</span>
-                                <span class="sr-only lg:hidden">{{ n.label }}</span>
+                                <span class="hidden xl:inline">{{ n.label }}</span>
+                                <span class="sr-only xl:hidden">{{ n.label }}</span>
                             </Link>
                         </Tooltip>
                     </li>
                 </GlassPanel>
             </nav>
 
+            <!-- Corner HUD slots -->
+            <div v-if="$slots['top-left']" class="pointer-events-auto absolute left-3 top-[4.5rem] z-10 max-w-[calc(100vw-1.5rem)]"><slot name="top-left" /></div>
+            <div v-if="$slots['top-right']" class="pointer-events-auto absolute right-3 top-[4.5rem] max-w-[calc(100vw-1.5rem)]"><slot name="top-right" /></div>
+            <div v-if="$slots['bottom-left']" class="pointer-events-auto absolute bottom-24 left-3 max-w-[calc(100vw-1.5rem)] md:bottom-3"><slot name="bottom-left" /></div>
+            <div v-if="$slots['bottom-right']" class="pointer-events-auto absolute bottom-24 right-3 max-w-[calc(100vw-1.5rem)] md:bottom-3"><slot name="bottom-right" /></div>
+
+            <!-- Nav dock (phone: bottom) -->
+            <nav aria-label="Navigasi utama (ponsel)" class="pointer-events-auto absolute inset-x-3 bottom-3 md:hidden">
+                <GlassPanel as="ul" rounded="full" :padded="false" class="m-0 flex list-none items-center justify-between p-1">
+                    <li v-for="n in NAV_ITEMS" :key="n.href" class="flex-1">
+                        <Link
+                            :href="n.href"
+                            class="flex h-12 flex-col items-center justify-center gap-0.5 rounded-full text-2xs transition"
+                            :class="isNavActive(page.url, n.href) ? 'bg-fg text-ink' : 'text-fg/80'"
+                            :aria-current="isNavActive(page.url, n.href) ? 'page' : undefined"
+                        >
+                            <Icon :name="n.icon as IconName" :size="18" />
+                            <span>{{ n.label }}</span>
+                        </Link>
+                    </li>
+                </GlassPanel>
+            </nav>
+        </div>
+
+        <!-- Top-right controls live in their own layer so side drawers (z-40, desktop) never cover the user menu. -->
+        <div class="pointer-events-none absolute inset-0 z-20 sm:z-50">
             <!-- Controls (top right) -->
             <div class="pointer-events-auto absolute right-3 top-3 flex items-center gap-2">
                 <GlassPanel as="div" rounded="full" :padded="false" class="flex items-center gap-0.5 p-1">
@@ -154,29 +180,6 @@ const hudBtn = 'grid h-10 w-10 cursor-pointer place-items-center rounded-full te
                     </div>
                 </GlassPanel>
             </div>
-
-            <!-- Corner HUD slots -->
-            <div v-if="$slots['top-left']" class="pointer-events-auto absolute left-3 top-[4.5rem] z-10 max-w-[calc(100vw-1.5rem)]"><slot name="top-left" /></div>
-            <div v-if="$slots['top-right']" class="pointer-events-auto absolute right-3 top-[4.5rem] max-w-[calc(100vw-1.5rem)]"><slot name="top-right" /></div>
-            <div v-if="$slots['bottom-left']" class="pointer-events-auto absolute bottom-24 left-3 max-w-[calc(100vw-1.5rem)] md:bottom-3"><slot name="bottom-left" /></div>
-            <div v-if="$slots['bottom-right']" class="pointer-events-auto absolute bottom-24 right-3 max-w-[calc(100vw-1.5rem)] md:bottom-3"><slot name="bottom-right" /></div>
-
-            <!-- Nav dock (phone: bottom) -->
-            <nav aria-label="Navigasi utama (ponsel)" class="pointer-events-auto absolute inset-x-3 bottom-3 md:hidden">
-                <GlassPanel as="ul" rounded="full" :padded="false" class="m-0 flex list-none items-center justify-between p-1">
-                    <li v-for="n in NAV_ITEMS" :key="n.href" class="flex-1">
-                        <Link
-                            :href="n.href"
-                            class="flex h-12 flex-col items-center justify-center gap-0.5 rounded-full text-2xs transition"
-                            :class="isNavActive(page.url, n.href) ? 'bg-fg text-ink' : 'text-fg/80'"
-                            :aria-current="isNavActive(page.url, n.href) ? 'page' : undefined"
-                        >
-                            <Icon :name="n.icon as IconName" :size="18" />
-                            <span>{{ n.label }}</span>
-                        </Link>
-                    </li>
-                </GlassPanel>
-            </nav>
         </div>
 
         <CommandPalette v-model:open="paletteOpen" :items="paletteItems" :search="search" @select="emit('command-select', $event)" />

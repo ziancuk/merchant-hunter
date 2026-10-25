@@ -26,15 +26,15 @@ export function graticule(stepDeg = 10): GeoJSON.FeatureCollection {
     return { type: 'FeatureCollection', features };
 }
 
-/** Local style: dark background + faint graticule, no network access (D-23). */
+/** Local style: light background + faint graticule, no network access (D-23). */
 export function createLocalStyle(): LocalStyle {
     return {
         version: 8,
-        name: 'hunter-local-dark',
+        name: 'hunter-local-light',
         sources: { graticule: { type: 'geojson', data: graticule(5) } },
         layers: [
-            { id: 'bg', type: 'background', paint: { 'background-color': '#0b1412' } },
-            { id: 'graticule', type: 'line', source: 'graticule', paint: { 'line-color': '#7de3c4', 'line-opacity': 0.1, 'line-width': 0.6 } },
+            { id: 'bg', type: 'background', paint: { 'background-color': '#e9efe9' } },
+            { id: 'graticule', type: 'line', source: 'graticule', paint: { 'line-color': '#0a7a66', 'line-opacity': 0.22, 'line-width': 0.6 } },
         ],
     };
 }

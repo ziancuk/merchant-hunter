@@ -28,11 +28,14 @@ export const STATUS_VAR: Record<PipelineStatus, string> = {
 export const BAND_HEX = {
     dark: { hot: '#ff6a2b', warm: '#f2b63a', medium: '#4fc3a9', cold: '#8ca4b8' },
     light: { hot: '#c23b00', warm: '#8a5f00', medium: '#08705d', cold: '#4a6277' },
+    /** Saturated set for the (always light, colourful) basemap canvas and the map legend. */
+    map: { hot: '#e8350e', warm: '#f59e0b', medium: '#0e9f8e', cold: '#6b7f91' },
 } as const;
 
 export const STATUS_HEX = {
     dark: { new: '#8fa3b0', contacted: '#4db6e8', demo: '#e6a93b', won: '#5fd07a', lost: '#e0768a' },
     light: { new: '#52667a', contacted: '#0b6e99', demo: '#8a5f00', won: '#1b7a38', lost: '#b0304b' },
+    map: { new: '#64748b', contacted: '#0284c7', demo: '#d97706', won: '#16a34a', lost: '#c2415f' },
 } as const;
 
 /** Tailwind class sets (literal strings so the scanner keeps them). */

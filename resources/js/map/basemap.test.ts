@@ -3,9 +3,9 @@ import { BasemapGuard, createLocalStyle, graticule, resolveStyle } from './basem
 import { OPENFREEMAP_STYLE_URL } from './constants';
 
 describe('resolveStyle', () => {
-    it('uses the OpenFreeMap dark style URL for the openfreemap basemap', () => {
+    it('uses the OpenFreeMap Liberty (light) style URL for the openfreemap basemap', () => {
         expect(resolveStyle('openfreemap')).toBe(OPENFREEMAP_STYLE_URL);
-        expect(OPENFREEMAP_STYLE_URL).toBe('https://tiles.openfreemap.org/styles/dark');
+        expect(OPENFREEMAP_STYLE_URL).toBe('https://tiles.openfreemap.org/styles/liberty');
     });
 
     it('uses the local style for basemap=local and once the remote one failed', () => {
@@ -17,7 +17,7 @@ describe('resolveStyle', () => {
 describe('createLocalStyle', () => {
     const style = createLocalStyle();
 
-    it('is a valid minimal style: dark background first, then the graticule', () => {
+    it('is a valid minimal style: light background first, then the graticule', () => {
         expect(style.version).toBe(8);
         expect(style.layers[0]).toMatchObject({ id: 'bg', type: 'background' });
         expect(style.layers.map((l) => l.id)).toContain('graticule');

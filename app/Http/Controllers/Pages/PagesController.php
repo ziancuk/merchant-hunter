@@ -38,6 +38,11 @@ class PagesController extends Controller
         ]);
     }
 
+    public function reports(): Response
+    {
+        return Inertia::render('Report/Index', ['filter_options' => $this->props->filterOptions()]);
+    }
+
     public function dashboard(DashboardQuery $dashboard): Response
     {
         return Inertia::render('Dashboard/Index', $dashboard->all());

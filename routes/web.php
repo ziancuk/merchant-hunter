@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\MasterDataSourceController;
 use App\Http\Controllers\Api\MasterOutletController;
 use App\Http\Controllers\Api\PipelineController;
 use App\Http\Controllers\Api\ProspectController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RouteController;
 use App\Http\Controllers\Api\SchedulerController;
 use App\Http\Controllers\Api\SettingsController;
@@ -26,6 +27,7 @@ Route::middleware('auth')->group(function () {
     // Inertia pages (CONTRACTS §1)
     Route::get('/', [PagesController::class, 'map'])->name('map');
     Route::get('/pipeline', [PagesController::class, 'pipeline'])->name('pipeline');
+    Route::get('/reports', [PagesController::class, 'reports'])->name('reports');
     Route::get('/dashboard', [PagesController::class, 'dashboard'])->name('dashboard');
     Route::get('/impact', [PagesController::class, 'impact'])->name('impact');
     Route::get('/master/data-sources', [PagesController::class, 'dataSources'])->name('master.data-sources');
@@ -37,6 +39,7 @@ Route::middleware('auth')->group(function () {
 
     // CSV exports
     Route::get('/prospects/export.csv', [ExportController::class, 'prospects'])->middleware('throttle:10,1,export');
+    Route::get('/prospects/export.xlsx', [ExportController::class, 'prospectsXlsx'])->middleware('throttle:10,1,export');
     Route::get('/dashboard/export.csv', [ExportController::class, 'dashboard'])->middleware('throttle:10,1,export');
 
     // JSON API (session + CSRF, not tokens)
@@ -61,6 +64,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/pipeline/cards', [PipelineController::class, 'cards']);
         Route::get('/pipeline/table', [PipelineController::class, 'table']);
+        Route::get('/reports/prospects', [ReportController::class, 'prospects']);
         Route::post('/routes/plan', [RouteController::class, 'plan']);
         Route::get('/digest', [DigestController::class, 'show']);
 
