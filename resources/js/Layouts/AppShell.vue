@@ -58,9 +58,9 @@ const paletteItems = computed<CommandItem[]>(() => [
 ]);
 
 useShortcuts([
-    { keys: '?', description: t('shell.kb_help'), group: t('shell.group_general'), handler: () => (shortcutHelpOpen.value = !shortcutHelpOpen.value) },
-    { keys: '/', description: t('shell.kb_search'), group: t('shell.group_general'), handler: () => (paletteOpen.value = true) },
-    { keys: 't', description: t('shell.kb_theme'), group: t('shell.group_general'), handler: toggleTheme },
+    { keys: '?', description: () => t('shell.kb_help'), group: () => t('shell.group_general'), handler: () => (shortcutHelpOpen.value = !shortcutHelpOpen.value) },
+    { keys: '/', description: () => t('shell.kb_search'), group: () => t('shell.group_general'), handler: () => (paletteOpen.value = true) },
+    { keys: 't', description: () => t('shell.kb_theme'), group: () => t('shell.group_general'), handler: toggleTheme },
 ]);
 
 watch(
