@@ -66,6 +66,8 @@ Cadangan bila internet mati: jalankan dengan `HUNTER_BASEMAP=local` (basemap lok
 | `09-estimasi-biaya.png` | Adopsi | "Estimasi dampak & biaya dengan asumsi eksplisit." |
 | `10`–`15` | Cadangan | heatmap, command palette, composer WhatsApp, tema terang, ponsel, riwayat scheduler |
 
+> **Catatan transparansi data screenshot:** semuanya diambil dari data seed dummy. Agar dasbor dan Kanban bermakna, status pipeline (18 Dihubungi, 10 Demo, 5 Deal, 6 Ditolak) diatur lewat aksi aplikasi pada database demo terpisah, dan halaman Riwayat Scheduler berisi 6 baris run contoh bertanda "Demo:" yang disisipkan manual. Bukan hasil sinkronisasi nyata ke Overpass/Google.
+
 ## 7. Screenshot proses di Claude — ambil manual (tidak bisa diambil agen)
 
 Ambil dari layar Claude Code milik Anda sendiri. Saran urutan dan caption:
