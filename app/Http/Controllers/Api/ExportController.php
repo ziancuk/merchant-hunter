@@ -16,16 +16,16 @@ class ExportController extends Controller
 {
     public function prospects(ProspectExportRequest $request, CsvExporter $csv, ProspectCsvExport $export): StreamedResponse
     {
-        return $csv->download($export->filename(), ProspectCsvExport::HEADERS, $export->rows($request->filter()));
+        return $csv->download($export->filename(), ProspectCsvExport::headers(), $export->rows($request->filter()));
     }
 
     public function prospectsXlsx(ProspectExportRequest $request, XlsxExporter $xlsx, ProspectCsvExport $export): StreamedResponse
     {
-        return $xlsx->download(str_replace('.csv', '.xlsx', $export->filename()), 'Prospek', ProspectCsvExport::HEADERS, $export->rows($request->filter()));
+        return $xlsx->download(str_replace('.csv', '.xlsx', $export->filename()), __('export.prospects.sheet'), ProspectCsvExport::headers(), $export->rows($request->filter()));
     }
 
     public function dashboard(CsvExporter $csv, DashboardCsvExport $export): StreamedResponse
     {
-        return $csv->download($export->filename(), DashboardCsvExport::HEADERS, $export->rows());
+        return $csv->download($export->filename(), DashboardCsvExport::headers(), $export->rows());
     }
 }

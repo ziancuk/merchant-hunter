@@ -88,7 +88,7 @@ class ReconcileProspectsAction
                 'prospect_id' => $p->id,
                 'user_id' => null,
                 'type' => ActivityType::System,
-                'body' => sprintf('Ditutup otomatis: cocok dengan merchant Hitachi %s (%s).', $outlet->name, $outlet->code),
+                'body' => __('api.activity.auto_closed', ['name' => $outlet->name, 'code' => $outlet->code]),
                 'meta' => [
                     'reason' => self::REASON,
                     'outlet_id' => $outlet->id,

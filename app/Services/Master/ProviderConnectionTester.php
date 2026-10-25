@@ -20,7 +20,7 @@ final class ProviderConnectionTester implements ConnectionTester
     {
         $provider = $this->registry->make($source->key);
         if ($provider === null) {
-            return new ConnectionStatus(false, 'Penyedia tidak dikenal.');
+            return new ConnectionStatus(false, __('api.connection.unknown_provider'));
         }
 
         try {
@@ -29,7 +29,7 @@ final class ProviderConnectionTester implements ConnectionTester
             // Never echo exception text to the client: it may carry URLs or upstream error bodies.
             Log::warning('Provider connection test crashed', ['source' => $source->key, 'exception' => $e::class, 'reason' => Redactor::exception($e)]);
 
-            return new ConnectionStatus(false, 'Uji koneksi gagal. Detail ada di log server.');
+            return new ConnectionStatus(false, __('api.connection.test_failed'));
         }
     }
 }

@@ -13,14 +13,15 @@ use Illuminate\Support\Carbon;
 /** Prospect CSV rows streamed straight from a joined query (no Eloquent hydration, constant memory). */
 final class ProspectCsvExport
 {
-    public const HEADERS = [
-        'id', 'nama', 'kategori', 'kota', 'provinsi', 'alamat', 'telepon', 'simulasi_telepon', 'rating',
-        'jumlah_review', 'skor', 'status', 'ditangani_oleh', 'terakhir_dihubungi', 'jarak_outlet_m',
-    ];
+    /** Column headers in the request language (lang/{id,en}/export.php). @return list<string> */
+    public static function headers(): array
+    {
+        return array_values((array) __('export.prospects.columns'));
+    }
 
     public function filename(): string
     {
-        return 'prospek-'.now()->format('Ymd').'.csv';
+        return __('export.prospects.filename').'-'.now()->format('Ymd').'.csv';
     }
 
     /**

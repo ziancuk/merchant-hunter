@@ -78,7 +78,7 @@ class ProspectController extends Controller
 
     public function messageAi(AiMessageRequest $request, Prospect $prospect, AiMessageService $ai): JsonResponse
     {
-        abort_unless($ai->enabled(), 404, 'Fitur AI tidak aktif.');
+        abort_unless($ai->enabled(), 404, __('api.ai_disabled'));
 
         return response()->json([
             'message' => $ai->generate($prospect, $request->user()->name, $request->validated()['tone'] ?? 'ramah'),

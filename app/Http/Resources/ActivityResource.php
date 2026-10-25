@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\ProspectActivity;
+use App\Support\ActivityText;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -20,7 +21,7 @@ class ActivityResource extends JsonResource
             'id' => $this->id,
             'type' => $this->type->value,
             'user' => $this->user ? ['id' => $this->user->id, 'name' => $this->user->name] : null,
-            'body' => $this->body,
+            'body' => $this->type->value === 'note' ? $this->body : ActivityText::localize($this->body),
             'created_at' => Support::iso($this->created_at),
             'from_status' => $this->from_status,
             'to_status' => $this->to_status,

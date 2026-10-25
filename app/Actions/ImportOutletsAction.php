@@ -31,18 +31,18 @@ final class ImportOutletsAction
     {
         $handle = fopen($path, 'r');
         if ($handle === false) {
-            throw new BusinessRuleException('Berkas CSV tidak dapat dibaca.', 'unreadable_file');
+            throw new BusinessRuleException(__('api.import.unreadable'), 'unreadable_file');
         }
 
         try {
             $header = fgetcsv($handle, 0, ',', '"', '');
             if ($header === false || $header === [null]) {
-                throw new BusinessRuleException('Berkas CSV kosong.', 'empty_file');
+                throw new BusinessRuleException(__('api.import.empty'), 'empty_file');
             }
             $header = array_map(fn ($h) => strtolower(trim(ltrim((string) $h, "\xEF\xBB\xBF"))), $header);
             $missing = array_diff(self::REQUIRED, $header);
             if ($missing !== []) {
-                throw new BusinessRuleException('Kolom wajib tidak ditemukan: '.implode(', ', $missing).'.', 'missing_columns');
+                throw new BusinessRuleException(__('api.import.missing_columns', ['columns' => implode(', ', $missing)]), 'missing_columns');
             }
 
             return $this->process($handle, $header);
@@ -71,7 +71,7 @@ final class ImportOutletsAction
                 continue;
             }
             if ($line - 1 > self::MAX_ROWS) {
-                $result['errors'][] = ['row' => $line, 'message' => 'Melebihi batas '.self::MAX_ROWS.' baris; sisanya diabaikan.'];
+                $result['errors'][] = ['row' => $line, 'message' => __('api.import.row_limit', ['max' => self::MAX_ROWS])];
                 $result['failed']++;
                 break;
             }
@@ -179,30 +179,30 @@ final class ImportOutletsAction
     {
         foreach (self::REQUIRED as $field) {
             if (($row[$field] ?? '') === '') {
-                return 'Kolom '.$field.' wajib diisi.';
+                return __('api.import.required', ['field' => $field]);
             }
         }
         if (mb_strlen($row['code']) > 20) {
-            return 'Kode maksimal 20 karakter.';
+            return __('api.import.code_max');
         }
         if (mb_strlen($row['name']) > 160) {
-            return 'Nama maksimal 160 karakter.';
+            return __('api.import.name_max');
         }
         if (mb_strlen($row['city']) > 80) {
-            return 'Kota maksimal 80 karakter.';
+            return __('api.import.city_max');
         }
         if (! isset($provinces[mb_strtolower($row['province'])])) {
-            return 'Provinsi "'.$row['province'].'" tidak dikenal.';
+            return __('api.import.unknown_province', ['province' => $row['province']]);
         }
 
         $lat = $row['lat'] ?? '';
         $lng = $row['lng'] ?? '';
         if (($lat === '') !== ($lng === '')) {
-            return 'Isi lat dan lng bersamaan, atau kosongkan keduanya.';
+            return __('api.import.latlng_pair');
         }
         if ($lat !== '') {
             if (! is_numeric($lat) || ! is_numeric($lng) || abs((float) $lat) > 90 || abs((float) $lng) > 180) {
-                return 'Koordinat tidak valid.';
+                return __('api.import.bad_coordinates');
             }
         }
 
