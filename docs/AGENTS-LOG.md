@@ -35,3 +35,21 @@ Catatan orkestrasi subagent (bahan slide "Proses Pengerjaan").
 | 5.3 | Orkestrator | Merge 3 cabang `--no-ff` tanpa konflik; perbaiki normalizer simulasi, backdrop-filter, 3 temuan axe di AppShell/Drawer | app/Services/Contact, Resources, css, AppShell, Drawer | 399 Pest + 273 Vitest, Pint, ESLint, build hijau | — |
 | 5.3 | QA-E2E (worktree; sempat terhenti oleh rate limit lalu dilanjutkan) | Suite Playwright: 15 skenario TEST-PLAN, axe di 12 halaman, performa 14,6 ribu titik, keamanan (rate limit, XSS, CSRF), skrip server/seed E2E, job CI e2e | tests/e2e, playwright.config.ts, scripts/e2e-*.sh, .github/workflows/ci.yml, package.json (skrip) | 40 lulus + 2 fixme, lalu 42/42 hijau setelah perbaikan; 2 kali berturut-turut stabil | Temuan a11y F-001/F-002 (diperbaiki orkestrator); job CI e2e belum divalidasi di GitHub; reset data per file lewat salinan snapshot SQLite |
 | 5.3 | Orkestrator | Deep link `?lat&lng&mode` peta; perbaikan F-001/F-002; Pint pada helper PHP E2E; merge `--no-ff`; tag `v0.3-app` | resources/js/map, Cartogram, ProspectCard, DataSourceRow, AppShell | Pest 399, Vitest 274, ESLint, Pint, build, E2E 42/42 | — |
+
+## Sesi 4 (Fase 6–8)
+
+| Fase | Subagen | Tugas | File disentuh | Hasil | Masalah |
+|---|---|---|---|---|---|
+| 6 | Review-Backend (read-only) | Review app/, routes/, database/ | — (laporan) | 1 bug 500, 9 mayor, 14 minor: indeks, cache settings, LIKE MySQL, race kontak, ekspor | Tidak menjalankan Pest |
+| 6 | Review-Frontend (read-only) | Review resources/js | — (laporan) | 2 mayor (Map/Index 843 baris, istilah status), 10 minor; tanpa kebocoran memori | Vitest tidak dijalankan reviewer |
+| 6 | Review-Performa (read-only) | Ukur dengan 14,6 ribu dan 103 ribu baris | — (laporan, DB scratch) | Ekspor CSV 0,80 dtk, tanpa indeks komposit, bundel eager, denyut idle | HTTP/FPS nyata tidak diukur |
+| 6 | Refactor-Backend (worktree) | K1, M1, M2, M4, M6–M9, ekspor CSV, dashboard, minor | app/, database/migrations, tests/Feature, DECISIONS | 455 tes Pest (+56); CSV 10× lebih cepat; Kanban 12 → 0,3 ms | `lockForUpdate` tak efektif di SQLite |
+| 6 | Refactor-Frontend (worktree) | labels.ts, pecah Map/Index, lazy page, useDismissable | resources/js, vite.config.ts | 289 Vitest; bundel `app` 525 → 284 kB | Peta belum dilihat di browser oleh agen (diverifikasi lewat E2E orkestrator) |
+| 6 | Orkestrator | Merge `--no-ff`, `composer ci`, E2E 42/42, REFACTORING.md | docs/ | Hijau | — |
+| 7 | QA-Browser | Telusur alur nyata, 15 screenshot, catat bug | docs/screenshots, docs/qa-browser-notes.md | 0 kritis, 1 mayor, 14 minor | FPS GPU nyata, sync nyata tak teruji |
+| 7 | Reviewer-Keamanan (read-only) | Audit auth, enkripsi, input, CSP, secret git | — (laporan) | 0 kritis, 2 mayor (CSP, env), 8 minor; scan secret 0 temuan | `npm audit` 13 transitif (deck.gl) |
+| 7 | Fix-QA-Security (worktree) | Perbaiki bug QA + temuan keamanan, CSP enforce teruji di browser | app/, resources/, tests/ | Pest 455, Vitest 299, E2E 46 | Tes FPS flaky saat mesin sibuk |
+| 7 | Screenshot-Final | Ambil ulang 15 screenshot dari versi akhir | docs/screenshots | 15 berhasil | Data status pipeline dan run scheduler disiapkan manual (dicatat) |
+| 8 | Cek-Setup-Bersih | Setup dari clone kosong mengikuti README | — (clone scratch) | lihat TEST-REPORT §9 | — |
+| 8 | Pembuat-Slide | Kerangka PPTX | FinalProject_NamaLengkap.pptx, tools/deck | lihat catatan rilis | — |
+| 7–8 | Orkestrator | README, SLIDE-NOTES, TEST-REPORT, merge, verifikasi ulang, scan secret, tag | docs/, README | `composer ci` + E2E hijau | PHP coverage tak terukur (tanpa pcov) |
