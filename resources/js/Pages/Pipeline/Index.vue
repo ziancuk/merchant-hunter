@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import BulkBar from '@/Components/pipeline/BulkBar.vue';
 import KanbanBoard from '@/Components/pipeline/KanbanBoard.vue';
@@ -23,6 +23,7 @@ import EmptyState from '@/Components/ui/EmptyState.vue';
 import ErrorState from '@/Components/ui/ErrorState.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { countActiveFilters, queryToFilter } from '@/composables/useFilters';
+import { useDismissable } from '@/composables/useDismissable';
 import { useToasts } from '@/composables/useToasts';
 import AppShell from '@/Layouts/AppShell.vue';
 import { api, normalizeError } from '@/lib/api';
@@ -96,20 +97,8 @@ function resetFilter(): void {
 
 onMounted(() => {
     if (view.value === 'table') void table.fetch();
-    document.addEventListener('click', onDocClick);
-    document.addEventListener('keydown', onDocKey);
 });
-onBeforeUnmount(() => {
-    document.removeEventListener('click', onDocClick);
-    document.removeEventListener('keydown', onDocKey);
-});
-
-function onDocClick(e: MouseEvent): void {
-    if (filterOpen.value && filterRoot.value && !filterRoot.value.contains(e.target as Node)) filterOpen.value = false;
-}
-function onDocKey(e: KeyboardEvent): void {
-    if (e.key === 'Escape' && filterOpen.value) filterOpen.value = false;
-}
+useDismissable(filterRoot, () => (filterOpen.value = false), { enabled: filterOpen });
 
 // Inertia revisits (e.g. clicking "Pipeline" in the dock) hand us fresh props.
 watch(
