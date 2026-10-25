@@ -9,6 +9,7 @@ import Button from '@/Components/ui/Button.vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { countActiveFilters, queryToFilter } from '@/composables/useFilters';
 import { useDismissable } from '@/composables/useDismissable';
+import { useI18n } from '@/i18n';
 import AppShell from '@/Layouts/AppShell.vue';
 import { formatNumber } from '@/lib/format';
 import type { ProspectFilter } from '@/types';
@@ -16,6 +17,7 @@ import type { ProspectFilter } from '@/types';
 /* eslint-disable vue/prop-name-casing -- Inertia props are snake_case (CONTRACTS §1) */
 defineProps<{ filter_options: FilterOptions }>();
 
+const { t } = useI18n();
 const filter = ref<ProspectFilter>(typeof window !== 'undefined' ? queryToFilter(window.location.search) : {});
 const table = useReportTable(filter);
 
@@ -51,32 +53,32 @@ const linkBtn =
 
 <template>
     <AppShell>
-        <Head title="Laporan" />
+        <Head :title="t('report.title')" />
         <div class="mx-auto w-full max-w-[1600px] space-y-4">
             <header class="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                    <p class="hud-label">Laporan prospek</p>
-                    <h1 class="font-display text-2xl font-bold tracking-tight text-fg">Laporan</h1>
-                    <p class="num mt-0.5 text-sm text-muted" data-testid="report-total">{{ formatNumber(table.meta.value.total) }} prospek sesuai filter</p>
+                    <p class="hud-label">{{ t('report.eyebrow') }}</p>
+                    <h1 class="font-display text-2xl font-bold tracking-tight text-fg">{{ t('report.title') }}</h1>
+                    <p class="num mt-0.5 text-sm text-muted" data-testid="report-total">{{ t('report.total', { count: formatNumber(table.meta.value.total) }) }}</p>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
                     <div ref="filterRoot" class="relative">
                         <Button variant="secondary" :aria-expanded="filterOpen" aria-controls="report-filter" data-testid="filter-toggle" @click="filterOpen = !filterOpen">
-                            <Icon name="filter" :size="16" /> Filter
-                            <span v-if="activeFilters" class="num rounded-full bg-hot px-1.5 text-2xs text-on-hot" :aria-label="`${activeFilters} filter aktif`">{{ activeFilters }}</span>
+                            <Icon name="filter" :size="16" /> {{ t('report.filter') }}
+                            <span v-if="activeFilters" class="num rounded-full bg-hot px-1.5 text-2xs text-on-hot" :aria-label="t('report.activeFilters', { n: activeFilters })">{{ activeFilters }}</span>
                         </Button>
                         <div v-show="filterOpen" id="report-filter" class="absolute right-0 top-full z-30 mt-2 max-h-[70dvh] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-panel shadow-float">
                             <FilterPanel :model-value="filter" :options="filter_options" :collapsible="false" @update:model-value="onFilter" />
                         </div>
                     </div>
 
-                    <a :href="csvUrl" :class="linkBtn" download data-testid="export-csv"><Icon name="download" :size="16" /> Unduh CSV</a>
-                    <a :href="xlsxUrl" :class="linkBtn" download data-testid="export-xlsx"><Icon name="download" :size="16" /> Unduh Excel</a>
+                    <a :href="csvUrl" :class="linkBtn" download data-testid="export-csv"><Icon name="download" :size="16" /> {{ t('report.downloadCsv') }}</a>
+                    <a :href="xlsxUrl" :class="linkBtn" download data-testid="export-xlsx"><Icon name="download" :size="16" /> {{ t('report.downloadXlsx') }}</a>
                 </div>
             </header>
 
-            <p class="text-sm text-muted">Unduhan mengikuti filter yang sedang aktif. Telepon berlabel "Simulasi" hanyalah data contoh, bukan nomor nyata.</p>
+            <p class="text-sm text-muted">{{ t('report.note') }}</p>
 
             <ReportTable
                 :rows="table.rows.value"

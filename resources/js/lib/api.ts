@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { currentLocale } from '@/i18n';
+import { currentLocale, t } from '@/i18n';
 
 export interface ApiError {
     message: string;
@@ -22,14 +22,14 @@ api.interceptors.request.use((config) => {
 });
 
 function fallbackMessage(status: number | null, hasResponse: boolean): string {
-    if (status === 401) return 'Sesi berakhir. Silakan masuk kembali.';
-    if (status === 403) return 'Anda tidak punya akses.';
-    if (status === 404) return 'Data tidak ditemukan.';
-    if (status === 429) return 'Terlalu banyak permintaan. Coba lagi sebentar lagi.';
-    return hasResponse ? 'Terjadi kesalahan pada server.' : 'Tidak dapat terhubung ke server.';
+    if (status === 401) return t('ui.api.unauthorized');
+    if (status === 403) return t('ui.api.forbidden');
+    if (status === 404) return t('ui.api.notFound');
+    if (status === 429) return t('ui.api.tooMany');
+    return hasResponse ? t('ui.api.server') : t('ui.api.offline');
 }
 
-/** Turns anything thrown by axios/fetch into `{message, errors, status}` (Indonesian fallbacks). */
+/** Turns anything thrown by axios/fetch into `{message, errors, status}` (localised fallbacks). */
 export function normalizeError(error: unknown): ApiError {
     if (axios.isAxiosError(error)) {
         const err = error as AxiosError<{ message?: string; errors?: Record<string, string[]> }>;
@@ -41,7 +41,7 @@ export function normalizeError(error: unknown): ApiError {
         const e = error as ApiError;
         return { message: e.message, errors: e.errors ?? {}, status: e.status ?? null };
     }
-    return { message: error instanceof Error ? error.message : 'Terjadi kesalahan.', errors: {}, status: null };
+    return { message: error instanceof Error ? error.message : t('ui.api.generic'), errors: {}, status: null };
 }
 
 export function readXsrfToken(): string | null {
@@ -78,7 +78,7 @@ export async function postKeepalive<T>(url: string, body: unknown): Promise<T> {
     }
     if (!response.ok) {
         const d = (data ?? {}) as { message?: string; errors?: Record<string, string[]> };
-        const err: ApiError = { message: d.message || 'Gagal mencatat kontak.', errors: d.errors ?? {}, status: response.status };
+        const err: ApiError = { message: d.message || t('ui.api.contactLog'), errors: d.errors ?? {}, status: response.status };
         throw err;
     }
     return data as T;

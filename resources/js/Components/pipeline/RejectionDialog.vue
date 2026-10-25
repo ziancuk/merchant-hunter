@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nextTick, ref, useId, watch } from 'vue';
 import Button from '@/Components/ui/Button.vue';
+import { useI18n } from '@/i18n';
 import type { RejectionReason } from '@/Components/prospect/ProspectDrawer.vue';
 
 const props = withDefaults(
@@ -11,8 +12,9 @@ const props = withDefaults(
         description?: string;
         busy?: boolean;
     }>(),
-    { title: 'Alasan penolakan', description: 'Pilih alasan terstandar. Alasan ini dicatat di riwayat prospek.', busy: false },
+    { title: undefined, description: undefined, busy: false },
 );
+const { t } = useI18n();
 const emit = defineEmits<{ confirm: [reasonId: number]; cancel: [] }>();
 
 const titleId = `rej-title-${useId()}`;
@@ -75,11 +77,11 @@ function onKeydown(e: KeyboardEvent): void {
             data-testid="rejection-dialog"
         >
             <div>
-                <h2 :id="titleId" class="font-display text-lg font-semibold text-fg">{{ title }}</h2>
-                <p class="mt-1 text-sm text-muted">{{ description }}</p>
+                <h2 :id="titleId" class="font-display text-lg font-semibold text-fg">{{ title ?? t('pipeline.reject.title') }}</h2>
+                <p class="mt-1 text-sm text-muted">{{ description ?? t('pipeline.reject.description') }}</p>
             </div>
             <div>
-                <label :for="selectId" class="hud-label mb-1 block">Alasan (wajib)</label>
+                <label :for="selectId" class="hud-label mb-1 block">{{ t('pipeline.reject.reasonLabel') }}</label>
                 <select
                     :id="selectId"
                     ref="select"
@@ -87,13 +89,13 @@ function onKeydown(e: KeyboardEvent): void {
                     class="h-11 w-full rounded-chip border border-line bg-ink/60 px-2 text-base text-fg sm:text-sm"
                     data-testid="rejection-select"
                 >
-                    <option value="">Pilih alasan…</option>
+                    <option value="">{{ t('pipeline.reject.choose') }}</option>
                     <option v-for="r in reasons" :key="r.id" :value="r.id">{{ r.label }}</option>
                 </select>
             </div>
             <div class="flex justify-end gap-2">
-                <Button variant="ghost" data-testid="rejection-cancel" @click="emit('cancel')">Batal</Button>
-                <Button variant="danger" :disabled="reasonId === ''" :loading="busy" data-testid="rejection-confirm" @click="submit">Tandai ditolak</Button>
+                <Button variant="ghost" data-testid="rejection-cancel" @click="emit('cancel')">{{ t('ui.cancel') }}</Button>
+                <Button variant="danger" :disabled="reasonId === ''" :loading="busy" data-testid="rejection-confirm" @click="submit">{{ t('pipeline.reject.confirm') }}</Button>
             </div>
         </div>
     </div>

@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, useId } from 'vue';
 import Icon from '@/Components/ui/Icon.vue';
 import { useDismissable } from '@/composables/useDismissable';
+import { useI18n } from '@/i18n';
 import { STATUS_CLASSES } from '@/lib/colors';
 import { PIPELINE_STATUSES, type PipelineStatus } from '@/types';
 import { COLUMN_LABEL } from '@/lib/labels';
@@ -9,6 +10,7 @@ import { COLUMN_LABEL } from '@/lib/labels';
 const props = defineProps<{ prospectId: number; name: string; current: PipelineStatus }>();
 const emit = defineEmits<{ move: [to: PipelineStatus] }>();
 
+const { t } = useI18n();
 const open = ref(false);
 const trigger = ref<HTMLButtonElement | null>(null);
 const menu = ref<HTMLElement | null>(null);
@@ -91,7 +93,7 @@ onBeforeUnmount(() => hide());
             ref="trigger"
             type="button"
             class="grid h-8 w-8 cursor-pointer place-items-center rounded-full text-muted transition hover:bg-fg/10 hover:text-fg"
-            :aria-label="`Pindahkan ${name} ke…`"
+            :aria-label="t('pipeline.move.label', { name })"
             aria-haspopup="menu"
             :aria-expanded="open"
             :aria-controls="open ? menuId : undefined"
@@ -106,12 +108,12 @@ onBeforeUnmount(() => hide());
                 :id="menuId"
                 ref="menu"
                 role="menu"
-                :aria-label="`Pindahkan ${name} ke`"
+                :aria-label="t('pipeline.move.menu', { name })"
                 class="glass fixed z-50 w-48 rounded-chip p-1 shadow-pop"
                 :style="{ top: `${pos.top}px`, left: `${pos.left}px` }"
                 @keydown="onKeydown"
             >
-                <p class="hud-label px-2 py-1.5" aria-hidden="true">Pindahkan ke…</p>
+                <p class="hud-label px-2 py-1.5" aria-hidden="true">{{ t('pipeline.move.heading') }}</p>
                 <button
                     v-for="s in targets"
                     :key="s"
