@@ -1,6 +1,6 @@
 # POS Merchant Hunter
 
-[![CI](https://github.com/USERNAME/pos-merchant-hunter/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/pos-merchant-hunter/actions/workflows/ci.yml)
+[![CI](https://github.com/ziancuk/merchant-hunter/actions/workflows/ci.yml/badge.svg)](https://github.com/ziancuk/merchant-hunter/actions/workflows/ci.yml)
 
 Aplikasi "mission control" untuk tim sales dan manajemen **PT Hitachi Channel Solutions Indonesia**: memetakan semua outlet Hitachi POS di peta 3D interaktif, mencari bisnis potensial dalam radius 2 km dari tiap outlet secara otomatis tiap malam, memberi skor prospek, dan memudahkan menghubungi mereka lewat WhatsApp.
 
@@ -25,6 +25,8 @@ Final project training Claude Code (Hacktiv8). Dokumen lengkap ada di [`docs/`](
 PHP ≥ 8.2 (ekstensi `pdo_sqlite`, `mbstring`, `intl`, `bcmath`), Composer 2, Node.js ≥ 22 (npm). Diuji dengan PHP 8.2.29 dan Node 22.19. Database SQLite bawaan; tanpa layanan eksternal. `npm install` dapat menampilkan peringatan `EBADENGINE` pada Node 22.19 (aman diabaikan, atau pakai Node ≥ 22.22).
 
 ## Setup dari nol
+
+Panduan lengkap untuk laptop baru (install prasyarat per OS, troubleshooting): [docs/RUN-GUIDE.md](docs/RUN-GUIDE.md).
 
 ```bash
 git clone <URL-REPO> pos-merchant-hunter && cd pos-merchant-hunter
@@ -98,10 +100,9 @@ Agen tidak melakukan `git push`. Setelah memastikan `git status` bersih:
 1. Buat repo **kosong** di GitHub (tanpa README/.gitignore/lisensi), mis. `pos-merchant-hunter`.
 2. Hubungkan dan kirim:
    ```bash
-   git remote add origin https://github.com/USERNAME/pos-merchant-hunter.git
+   git remote add origin https://github.com/ziancuk/merchant-hunter.git
    git push -u origin main --tags
    ```
-3. Ganti `USERNAME` pada badge CI di README ini (`sed -i '' 's/USERNAME/nama-anda/g' README.md` di macOS), commit, dan push.
 4. Akses trainer: **Settings → General → Danger Zone → Change visibility → Public**, atau **Settings → Collaborators → Add people** untuk menambahkan trainer.
 5. Aktifkan **Actions** (tab Actions → "I understand my workflows, go ahead and enable them") dan pastikan CI hijau (job backend, frontend, e2e). CI belum pernah dijalankan di GitHub; periksa log bila ada kegagalan.
 6. Aktifkan Dependabot dan Secret scanning bila tersedia (Settings → Code security).
