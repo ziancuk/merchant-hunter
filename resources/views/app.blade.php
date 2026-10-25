@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#070d0c">
     {{-- Apply the saved theme before first paint to avoid a flash (dark-first). --}}
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         (function () {
             var theme = 'dark';
             try {

@@ -1,6 +1,6 @@
 import { test, expect, api, freshData, loginAs, pickContactable } from './support/fixtures';
 import { sql, USERS } from './support/env';
-import { flyTo, openMap, pixelOf } from './support/map';
+import { flyTo, openMap, pixelOf, waitMapReady } from './support/map';
 
 freshData();
 
@@ -97,5 +97,46 @@ test.describe('Keamanan', () => {
         await page.waitForTimeout(500);
         expect(collected.dialogs, 'no alert()/confirm()/prompt() may fire').toEqual([]);
         expect(collected.pageErrors).toEqual([]);
+    });
+
+    test('CSP ditegakkan: header ada, halaman utama tanpa pelanggaran, dan inline script asing diblokir', async ({ page, context }) => {
+        await loginAs(context, 'ayu');
+        await page.addInitScript(() => {
+            (window as unknown as { __csp: string[] }).__csp = [];
+            document.addEventListener('securitypolicyviolation', (e) => (window as unknown as { __csp: string[] }).__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
+        });
+        const violations = async () => page.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
+
+        const res = await page.goto('/?intro=0&motion=0');
+        const headers = res!.headers();
+        expect(headers['content-security-policy']).toMatch(/script-src 'self' 'nonce-[^']+'/);
+        expect(headers['content-security-policy']).toContain("frame-ancestors 'self'");
+        expect(headers['permissions-policy']).toContain('geolocation=()');
+        expect(headers['strict-transport-security']).toBeUndefined(); // plain HTTP in E2E
+        await waitMapReady(page);
+        await page.waitForTimeout(1000);
+        expect(await violations()).toEqual([]);
+
+        for (const url of ['/pipeline', '/dashboard', '/master/settings']) {
+            await page.goto(url);
+            await page.waitForTimeout(800);
+            expect(await violations(), url).toEqual([]);
+        }
+
+        // An injected inline script must not run.
+        await page.evaluate(() => {
+            const s = document.createElement('script');
+            s.textContent = 'window.__pwned = true';
+            document.head.appendChild(s);
+        });
+        expect(await page.evaluate(() => (window as unknown as { __pwned?: boolean }).__pwned)).toBeUndefined();
+        expect((await violations()).some((v) => v.startsWith('script-src'))).toBe(true);
+    });
+
+    test('halaman 404 berbahasa Indonesia', async ({ page }) => {
+        const res = await page.goto('/halaman-tak-ada');
+        expect(res!.status()).toBe(404);
+        await expect(page.getByRole('heading', { name: 'Halaman tidak ditemukan' })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Kembali ke peta' })).toBeVisible();
     });
 });

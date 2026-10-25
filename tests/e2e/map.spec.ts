@@ -144,4 +144,31 @@ test.describe('Perencana rute', () => {
         await expect(links.first()).toHaveAttribute('target', '_blank');
         await expect(links.first()).toHaveAttribute('rel', /noopener/);
     });
+
+    test('B-01: panel filter di ponsel bisa digulir dan checkbox terakhir dapat diklik', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await openMap(page);
+        await page.getByTestId('filter-toggle').click();
+        const scroller = page.getByTestId('filter-scroll');
+        await expect(scroller).toBeVisible();
+        expect(await scroller.evaluate((el) => getComputedStyle(el).overflowY)).toBe('auto');
+        await scroller.evaluate((el) => (el.scrollTop = el.scrollHeight));
+        // Used to be covered by the attribution box and zoom controls (pointer events intercepted).
+        await page.getByTestId('f-phone').check({ timeout: 5_000 });
+        await page.getByTestId('f-newopen').check({ timeout: 5_000 });
+        await expect(page.getByTestId('f-newopen')).toBeChecked();
+    });
+
+    test('B-05: mengosongkan rute menghapus ?route= dari URL', async ({ page }) => {
+        const from = pickContactable(0);
+        const stops = nearbyProspects(from, 3);
+        await openMap(page, `route=${stops.map((s) => s.id).join(',')}`);
+        await expect(page.getByTestId('route-count')).toContainText(`${stops.length}/`, { timeout: 30_000 });
+        await page.getByTestId('route-clear').click();
+        await expect(page.getByTestId('route-empty')).toBeVisible();
+        await expect.poll(() => new URL(page.url()).searchParams.has('route')).toBe(false);
+        await page.reload();
+        await waitMapReady(page);
+        await expect(page.getByTestId('route-panel')).toHaveCount(0);
+    });
 });

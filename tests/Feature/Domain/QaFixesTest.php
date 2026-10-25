@@ -107,6 +107,35 @@ it('does not share APP_ENV and exposes a server-side debug_hooks flag (security 
     $this->get('/dashboard')->assertInertia(fn ($p) => $p->where('app.debug_hooks', false)->missing('app.env'));
 });
 
+it('sends an enforced CSP whose nonce matches the inline theme script (security a)', function () {
+    $r = $this->get('/dashboard')->assertOk();
+
+    $csp = $r->headers->get('Content-Security-Policy');
+    expect($csp)->toContain("default-src 'self'")->toContain("object-src 'none'")->toContain("frame-ancestors 'self'")
+        ->toContain('worker-src')->toContain('blob:')->toContain('https://tiles.openfreemap.org')->toContain('https://fonts.gstatic.com');
+    expect($r->headers->has('Content-Security-Policy-Report-Only'))->toBeFalse();
+    expect($r->headers->get('Permissions-Policy'))->toContain('geolocation=()')->toContain('camera=()');
+
+    preg_match("/'nonce-([^']+)'/", (string) $csp, $m);
+    expect($m[1] ?? null)->not->toBeNull();
+    $r->assertSee('<script nonce="'.$m[1].'">', false);
+});
+
+it('can run the CSP in report-only mode or switch it off', function () {
+    config(['hunter.csp' => 'report-only']);
+    $r = $this->get('/dashboard');
+    expect($r->headers->has('Content-Security-Policy'))->toBeFalse()->and($r->headers->has('Content-Security-Policy-Report-Only'))->toBeTrue();
+
+    config(['hunter.csp' => 'off']);
+    $r = $this->get('/dashboard');
+    expect($r->headers->has('Content-Security-Policy'))->toBeFalse()->and($r->headers->has('Content-Security-Policy-Report-Only'))->toBeFalse();
+});
+
+it('sends HSTS only on secure requests', function () {
+    expect($this->get('http://localhost/dashboard')->headers->has('Strict-Transport-Security'))->toBeFalse();
+    expect($this->get('https://localhost/dashboard')->headers->get('Strict-Transport-Security'))->toContain('max-age=31536000');
+});
+
 it('limits export downloads to 10 per minute per user (security f)', function () {
     foreach (range(1, 10) as $_) {
         $this->get('/dashboard/export.csv')->assertOk();
