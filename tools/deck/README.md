@@ -21,3 +21,7 @@ Identitas aplikasi memakai Bricolage Grotesque, Instrument Sans, dan JetBrains M
 ## Yang diisi pemilik manual
 
 Nama peserta (slide 1 dan 12), tiga kotak screenshot proses Claude (slide 7), `USERNAME` pada link GitHub (slide 12), dan nama berkas PPTX.
+
+## Deck presentasi manajemen (28 slide)
+
+`build-presentation.mjs` menghasilkan `POS-Merchant-Hunter_Presentasi-Manajemen.pptx` (transisi fade, agenda dan footer bertaut, speaker notes). Gambar berasal dari JPEG di folder `DECK_JPG`: 7 screenshot aplikasi (`01-peta`, `03-drawer`, `04-kanban`, `05-dashboard`, `07-rute`, `07-laporan`, `10-heatmap`) dan 4 cuplikan berkas asli (`ev-prompt`, `ev-prd`, `ev-agents`, `ev-git`). Variabel: `DECK_NAME` (nama peserta), `DECK_OUT`, `DECK_DEPS`. Ekspor PDF dilakukan manual dari PowerPoint (File → Export → PDF).
