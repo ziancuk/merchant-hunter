@@ -17,7 +17,8 @@ const TOTAL = 28;
 
 const C = { bg: 'F6F3EE', surface: 'FFFFFF', raised: 'EFEAE1', line: 'DAD3C6', text: '14213D', muted: '5A6478',
   hot: 'D9481C', warm: 'A66A0A', ok: '0F8B7D', focus: '0F7A6E', cold: '5B6B82', danger: 'B83227', onHot: 'FFFFFF', navy: '14213D' };
-const SH = { type: 'outer', blur: 8, offset: 2, angle: 90, color: '1B2A4A', opacity: 0.10 };
+// pptxgenjs mutates shadow objects in place, so every shape needs a fresh one.
+const SH = () => ({ type: 'outer', blur: 8, offset: 2, angle: 90, color: '1B2A4A', opacity: 0.10 });
 const FH = 'Georgia';
 const F = 'Arial';
 const W = 13.333, MX = 0.6;
@@ -53,12 +54,12 @@ function slide(label, title, { notes = '', bare = false } = {}) {
   return s;
 }
 
-const card = (s, x, y, w, h, o = {}) => s.addShape('roundRect', { x, y, w, h, rectRadius: 0.08, fill: { color: o.fill || C.surface }, line: { color: o.line || C.line, width: 0.75 }, shadow: SH });
+const card = (s, x, y, w, h, o = {}) => s.addShape('roundRect', { x, y, w, h, rectRadius: 0.08, fill: { color: o.fill || C.surface }, line: { color: o.line || C.line, width: 0.75 }, shadow: SH() });
 
 function img(s, name, x, y, w, o = {}) {
   const [pw, ph] = dim[name];
   const h = w * ph / pw;
-  s.addShape('roundRect', { x: x - 0.05, y: y - 0.05, w: w + 0.1, h: h + 0.1, rectRadius: 0.06, fill: { color: C.surface }, line: { color: o.line || C.line, width: 1 }, shadow: SH });
+  s.addShape('roundRect', { x: x - 0.05, y: y - 0.05, w: w + 0.1, h: h + 0.1, rectRadius: 0.06, fill: { color: C.surface }, line: { color: o.line || C.line, width: 1 }, shadow: SH() });
   s.addImage({ path: path.join(JPG, name + '.jpg'), x, y, w, h });
   return h;
 }
