@@ -142,12 +142,19 @@ function steps(s, items, y, h, col = C.hot) {
 // ---------- 5 Target ----------
 {
   const s = slide('Ringkasan PRD', 'Target pilot 90 hari', { notes: 'PRD §2. Konversi 3% adalah asumsi awal yang bisa diubah di kalkulator. Semua angka dibaca dari Dasbor.' });
-  [['≥ 25', 'calon per outlet', C.hot], ['−50%', 'waktu riset sales', C.focus], ['0', 'kontak ganda tanpa peringatan', C.warm], ['≥ 3%', 'Dihubungi jadi Deal', C.cold], ['Rp0', 'biaya data (OpenStreetMap)', C.ok], ['≥ 80%', 'akun aktif tiap minggu', C.navy]].forEach(([b, t, col], i) => {
-    const x = MX + (i % 3) * 4.1, y = 1.8 + Math.floor(i / 3) * 2.5;
-    card(s, x, y, 3.9, 2.3);
-    T(s, b, x + 0.3, y + 0.2, 3.3, 1.2, 54, { head: true, bold: true, color: col, valign: 'middle' });
-    T(s, t, x + 0.3, y + 1.5, 3.3, 0.7, 18, { color: C.muted });
+  [['≥ 25', 'Calon aktif per outlet', 'Tiap outlet punya minimal 25 calon unik yang layak dihubungi.', C.hot],
+    ['−50%', 'Waktu riset sales', 'Waktu menyusun daftar kunjungan mingguan turun separuh dari kondisi awal.', C.focus],
+    ['0', 'Kontak ganda', 'Tidak ada calon yang dihubungi dua orang tanpa peringatan di layar.', C.warm],
+    ['≥ 3%', 'Calon jadi Deal', 'Dari calon yang dihubungi, minimal 3 dari 100 jadi deal (asumsi awal).', C.cold],
+    ['Rp0', 'Biaya data', 'Memakai OpenStreetMap yang gratis. Google hanya opsional.', C.ok],
+    ['≥ 80%', 'Akun aktif', 'Minimal 8 dari 10 akun terdaftar dipakai setiap minggu.', C.navy]].forEach(([b, t, d, col], i) => {
+    const x = MX + (i % 3) * 4.1, y = 1.7 + Math.floor(i / 3) * 2.4;
+    card(s, x, y, 3.9, 2.25);
+    T(s, b, x + 0.3, y + 0.12, 3.3, 0.85, 44, { head: true, bold: true, color: col, valign: 'middle' });
+    T(s, t, x + 0.3, y + 1.0, 3.3, 0.4, 20, { bold: true, color: C.navy });
+    T(s, d, x + 0.3, y + 1.45, 3.35, 0.75, 15, { color: C.muted });
   });
+  T(s, 'Diukur selama pilot 90 hari dan dibaca langsung dari Dasbor.', MX, 6.55, 12, 0.35, 16, { italic: true, color: C.muted });
 }
 
 // ---------- 6 Lingkup ----------
