@@ -4,21 +4,17 @@ declare(strict_types=1);
 
 namespace App\Services\Geocoding;
 
-use App\Services\Geo\BoundingBox;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
 /**
  * Nominatim (D-40..D-45): reverse (jsonv2, zoom 18, Indonesian) and forward (countrycodes=id, limit 5,
- * bounded viewbox, MatchScorer). Shares one 4 req/min limit; stops on 403/429; feature flag
+ * results must name the outlet's city, MatchScorer). Shares one 4 req/min limit; stops on 403/429; feature flag
  * `hunter.geocoding.enabled`.
  */
 class NominatimGeocoder implements DetailedReverseGeocoder, GeocoderInterface
 {
-    /** Half-width of the forward-search viewbox around the reference point. */
-    public const VIEWBOX_RADIUS_M = 25_000;
-
     public function __construct(private readonly NominatimRateLimiter $limiter) {}
 
     public function enabled(): bool
@@ -56,28 +52,113 @@ class NominatimGeocoder implements DetailedReverseGeocoder, GeocoderInterface
             'q' => trim($name.', '.$city), 'format' => 'jsonv2', 'addressdetails' => 1, 'limit' => 5,
             'countrycodes' => 'id', 'accept-language' => 'id',
         ];
-        if ($nearLat !== null && $nearLng !== null) {
-            $box = BoundingBox::around($nearLat, $nearLng, self::VIEWBOX_RADIUS_M);
-            $query['viewbox'] = sprintf('%.6f,%.6f,%.6f,%.6f', $box->west, $box->north, $box->east, $box->south);
-            $query['bounded'] = 1;
-        }
 
-        $results = $this->get('/search', $query);
+        // No viewbox: the reference point is only a province centre, so a box around it missed most outlets.
+        // The city is the boundary instead: a hit that does not name it is some other branch or shop.
+        $bare = self::bareCity($city);
         $out = [];
-        foreach ($results as $r) {
+        foreach ($this->get('/search', $query) as $r) {
             if (! is_array($r) || ! isset($r['lat'], $r['lon'])) {
                 continue;
             }
+            $display = (string) ($r['display_name'] ?? '');
+            $inCity = $bare === '' ? null : mb_stripos($display, $bare) !== false;
+            if ($inCity === false) {
+                continue;
+            }
             $out[] = [
-                'display_name' => mb_substr((string) ($r['display_name'] ?? ''), 0, 300),
+                'display_name' => mb_substr($display, 0, 300),
                 'lat' => (float) $r['lat'],
                 'lng' => (float) $r['lon'],
-                'score' => MatchScorer::score($name, $r, $nearLat, $nearLng),
+                'score' => MatchScorer::score($name, $r, $nearLat, $nearLng, $inCity),
             ];
         }
         usort($out, fn (array $a, array $b) => $b['score'] <=> $a['score']);
 
         return $out;
+    }
+
+    public function forwardStreet(string $street, string $city): ?array
+    {
+        if (! $this->enabled()) {
+            return null;
+        }
+        $city = self::bareCity($city);
+        $results = $this->get('/search', [
+            'q' => str_replace('.', '', $street).', '.$city, 'format' => 'jsonv2', 'limit' => 5, 'countrycodes' => 'id', 'accept-language' => 'id',
+        ]);
+        $words = self::streetWords($street);
+        foreach ($results as $r) {
+            if (! is_array($r) || ! isset($r['lat'], $r['lon'])) {
+                continue;
+            }
+            $category = (string) ($r['category'] ?? $r['class'] ?? '');
+            $display = (string) ($r['display_name'] ?? '');
+            // A real street, or something named after it (OSM often returns the MRT line or a bridge of "Jalan X"). Never a
+            // city/district polygon: its centroid is no better than the city we already know.
+            $onStreet = $category === 'highway' || (
+                ! in_array($category, ['boundary', 'place'], true)
+                && ($city === '' || mb_stripos($display, $city) !== false)
+                && self::mentionsAll($display, $words)
+            );
+            if ($onStreet) {
+                return ['display_name' => mb_substr($display, 0, 300), 'lat' => (float) $r['lat'], 'lng' => (float) $r['lon']];
+            }
+        }
+
+        return null;
+    }
+
+    /** @return list<string> the distinctive words of "Jalan RS. Fatmawati Raya" => ['rs', 'fatmawati'] */
+    private static function streetWords(string $street): array
+    {
+        $words = preg_split('/\s+/u', mb_strtolower(str_replace('.', '', $street))) ?: [];
+
+        return array_values(array_filter($words, fn (string $w) => mb_strlen($w) >= 2 && ! in_array($w, ['jalan', 'gang', 'raya'], true)));
+    }
+
+    /** @param list<string> $words */
+    private static function mentionsAll(string $display, array $words): bool
+    {
+        $display = mb_strtolower(str_replace('.', '', $display));
+
+        return $words !== [] && array_reduce($words, fn (bool $all, string $w) => $all && str_contains($display, $w), true);
+    }
+
+    public function forwardPlace(string $text, string $city, string $kind): ?array
+    {
+        if (! $this->enabled()) {
+            return null;
+        }
+        $city = self::bareCity($city);
+        $results = $this->get('/search', [
+            'q' => $text.', '.$city, 'format' => 'jsonv2', 'limit' => 5, 'countrycodes' => 'id', 'accept-language' => 'id',
+        ]);
+        foreach ($results as $r) {
+            if (! is_array($r) || ! isset($r['lat'], $r['lon'])) {
+                continue;
+            }
+            $category = (string) ($r['category'] ?? $r['class'] ?? '');
+            $isArea = in_array($category, ['boundary', 'place'], true);
+            $display = (string) ($r['display_name'] ?? '');
+            if ($category === 'highway' || $isArea !== ($kind === 'area') || ($city !== '' && mb_stripos($display, $city) === false)) {
+                continue;
+            }
+            // The hit has to carry the place's own first word, not just sit in the same city.
+            if ($kind === 'landmark' && mb_stripos($display, (string) strtok($text, ' ')) === false) {
+                continue;
+            }
+
+            return ['display_name' => mb_substr($display, 0, 300), 'lat' => (float) $r['lat'], 'lng' => (float) $r['lon']];
+        }
+
+        return null;
+    }
+
+    /** "KOTA JAKARTA PUSAT" => "JAKARTA PUSAT": the form OSM display names use. */
+    private static function bareCity(string $city): string
+    {
+        return trim((string) preg_replace('/\b(KOTA|KABUPATEN|KAB\.?)\s+/i', '', $city));
     }
 
     public function userAgent(): string

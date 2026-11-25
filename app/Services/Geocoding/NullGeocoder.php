@@ -16,4 +16,14 @@ final class NullGeocoder implements GeocoderInterface
     {
         return [];
     }
+
+    public function forwardStreet(string $street, string $city): ?array
+    {
+        return null;
+    }
+
+    public function forwardPlace(string $text, string $city, string $kind): ?array
+    {
+        return null;
+    }
 }

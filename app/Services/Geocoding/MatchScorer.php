@@ -18,10 +18,11 @@ final class MatchScorer
 
     /**
      * score = 0.5 name similarity + 0.3 distance score (1 - km/20) + 0.1 type fit + 0.1 importance.
+     * A hit already confirmed to be in the outlet's city ($inCity) takes the full distance score.
      *
      * @param  array<string, mixed>  $result  one Nominatim jsonv2 search result
      */
-    public static function score(string $queryName, array $result, ?float $nearLat = null, ?float $nearLng = null): int
+    public static function score(string $queryName, array $result, ?float $nearLat = null, ?float $nearLng = null, ?bool $inCity = null): int
     {
         $candidateName = (string) ($result['name'] ?? '');
         if ($candidateName === '') {
@@ -29,8 +30,8 @@ final class MatchScorer
         }
         $name = Similarity::names($queryName, $candidateName);
 
-        $distance = 0.5; // unknown reference point: neutral
-        if ($nearLat !== null && $nearLng !== null && isset($result['lat'], $result['lon'])) {
+        $distance = $inCity === true ? 1.0 : 0.5; // unknown reference point: neutral
+        if ($inCity !== true && $nearLat !== null && $nearLng !== null && isset($result['lat'], $result['lon'])) {
             $km = Haversine::distance($nearLat, $nearLng, (float) $result['lat'], (float) $result['lon']) / 1000;
             $distance = max(0.0, 1 - $km / 20);
         }

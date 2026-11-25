@@ -68,10 +68,12 @@ export default {
         manual: 'Manual',
         needs_review: 'Needs review',
         failed: 'Failed',
+        approx: 'Approximate',
+        approx_hint: 'Pinned on the street from the address; OSM does not list this place by name.',
     },
     import: {
         title: 'CSV import',
-        hint: 'Columns: code, name, address, city, province, lat, lng. Max 2 MB. Rows without coordinates are geocoded in the background.',
+        hint: 'Columns: code, name, address, city, province, lat, lng. Max 2 MB. Rows without coordinates are geocoded in the background. The POS merchant export (outlet_id, outlet_name, …) is also accepted as is.',
         sample: 'Download sample format',
         file_label: 'CSV file',
         submit: 'Import',

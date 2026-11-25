@@ -56,6 +56,16 @@ describe('ProspectDrawer', () => {
         expect(w.findAll('[data-testid="simulasi-badge"]').length).toBeGreaterThanOrEqual(3);
     });
 
+    it('links to Google Maps for ratings and reviews', async () => {
+        const w = mountDrawer(async () => prospectFixture({ name: 'Kopi Senja', address: 'Jl. Melati 1' }));
+        await flushPromises();
+        const a = w.get('[data-testid="open-google-maps"]');
+        expect(a.attributes('href')).toBe('https://www.google.com/maps/search/?api=1&query=Kopi%20Senja%2C%20Jl.%20Melati%201');
+        expect(a.attributes('target')).toBe('_blank');
+        expect(a.attributes('rel')).toContain('noopener');
+        expect(a.text()).toContain('Google Maps');
+    });
+
     it('shows coordinates and "Alamat belum tersedia" when the address is missing', async () => {
         const w = mountDrawer(async () => prospectFixture({ address: null, address_source: 'none' }));
         await flushPromises();

@@ -198,7 +198,10 @@ async function onImported(r: ImportResult): Promise<void> {
                                         </td>
                                         <td class="py-2.5 pr-3 text-muted">{{ o.city }} · {{ o.province ?? '–' }}</td>
                                         <td class="num py-2.5 pr-3 text-xs">{{ o.lat !== null && o.lng !== null ? formatCoordinates(o.lat, o.lng) : '–' }}</td>
-                                        <td class="py-2.5 pr-3"><Badge :tone="STATUS[o.geocode_status]?.tone ?? 'neutral'">{{ STATUS[o.geocode_status]?.label ?? o.geocode_status }}</Badge></td>
+                                        <td class="py-2.5 pr-3">
+                                            <Badge v-if="o.geocode_status === 'ok' && o.geocode_source?.startsWith('nominatim_')" tone="warm" :title="t('master.geocode.approx_hint')" data-testid="geocode-approx">{{ t('master.geocode.approx') }}</Badge>
+                                            <Badge v-else :tone="STATUS[o.geocode_status]?.tone ?? 'neutral'">{{ STATUS[o.geocode_status]?.label ?? o.geocode_status }}</Badge>
+                                        </td>
                                         <td class="py-2.5 text-right">
                                             <div class="flex flex-wrap justify-end gap-1">
                                                 <Button v-if="o.geocode_status === 'failed'" size="sm" :loading="busyId === o.id" :data-testid="`outlet-retry-${o.code}`" @click="retry(o)">{{ t('master.outlets.retry_geocode') }}</Button>

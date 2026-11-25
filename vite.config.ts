@@ -23,7 +23,7 @@ export default defineConfig({
             },
         },
     },
-    server: { watch: { ignored: ['**/storage/framework/views/**', '**/database/*.sqlite'] } },
+    server: { host: '127.0.0.1', watch: { ignored: ['**/storage/framework/views/**', '**/database/*.sqlite'] } },
     test: {
         environment: 'jsdom',
         include: ['resources/js/**/*.{test,spec}.ts'],

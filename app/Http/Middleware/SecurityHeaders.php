@@ -61,9 +61,9 @@ class SecurityHeaders
             'font-src' => ["'self'", 'data:', 'https://fonts.gstatic.com', ...($dev !== null ? [$dev] : [])],
             'img-src' => ["'self'", 'data:', 'blob:', self::BASEMAP_HOST],
             'connect-src' => ["'self'", self::BASEMAP_HOST, ...($dev !== null ? [$dev, (string) $devWs] : [])],
-            // MapLibre runs its tile workers from a blob: URL.
-            'worker-src' => ["'self'", 'blob:'],
-            'child-src' => ["'self'", 'blob:'],
+            // MapLibre runs its tile workers from a blob: URL (in dev, from the Vite origin).
+            'worker-src' => ["'self'", 'blob:', ...($dev !== null ? [$dev] : [])],
+            'child-src' => ["'self'", 'blob:', ...($dev !== null ? [$dev] : [])],
             'object-src' => ["'none'"],
             'base-uri' => ["'self'"],
             'form-action' => ["'self'"],

@@ -68,10 +68,12 @@ export default {
         manual: 'Manual',
         needs_review: 'Perlu tinjau',
         failed: 'Gagal',
+        approx: 'Perkiraan',
+        approx_hint: 'Dipasang di jalan sesuai alamat; OSM tidak punya tempat ini berdasarkan nama.',
     },
     import: {
         title: 'Impor CSV',
-        hint: 'Kolom: code, name, address, city, province, lat, lng. Maks. 2 MB. Baris tanpa koordinat di-geocode di latar belakang.',
+        hint: 'Kolom: code, name, address, city, province, lat, lng. Maks. 2 MB. Baris tanpa koordinat di-geocode di latar belakang. Ekspor merchant POS (outlet_id, outlet_name, …) juga bisa diunggah apa adanya.',
         sample: 'Unduh contoh format',
         file_label: 'Berkas CSV',
         submit: 'Impor',

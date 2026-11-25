@@ -13,7 +13,12 @@ use App\Services\Master\ProspectReconciler;
 use App\Services\Sync\WhitespaceCache;
 use Illuminate\Support\Facades\DB;
 
-/** CSV outlet import: code,name,address,city,province,lat,lng. Geocoding happens later through jobs. */
+/**
+ * CSV outlet import. Two layouts are accepted:
+ *  - simple: code,name,address,city,province,lat,lng
+ *  - POS merchant export (outlet_id,outlet_name,outlet_address,outlet_city,outlet_province,... one row per subscription).
+ * Geocoding happens later through jobs.
+ */
 final class ImportOutletsAction
 {
     public const MAX_ROWS = 5000;
@@ -21,6 +26,8 @@ final class ImportOutletsAction
     private const CHUNK = 200;
 
     private const REQUIRED = ['code', 'name', 'city', 'province'];
+
+    private const EXPORT_REQUIRED = ['outlet_id', 'outlet_name'];
 
     public function __construct(private readonly ProspectReconciler $reconciler) {}
 
@@ -40,12 +47,13 @@ final class ImportOutletsAction
                 throw new BusinessRuleException(__('api.import.empty'), 'empty_file');
             }
             $header = array_map(fn ($h) => strtolower(trim(ltrim((string) $h, "\xEF\xBB\xBF"))), $header);
-            $missing = array_diff(self::REQUIRED, $header);
+            $export = in_array('outlet_id', $header, true);
+            $missing = array_diff($export ? self::EXPORT_REQUIRED : self::REQUIRED, $header);
             if ($missing !== []) {
                 throw new BusinessRuleException(__('api.import.missing_columns', ['columns' => implode(', ', $missing)]), 'missing_columns');
             }
 
-            return $this->process($handle, $header);
+            return $this->process($handle, $header, $export);
         } finally {
             fclose($handle);
         }
@@ -55,7 +63,7 @@ final class ImportOutletsAction
      * @param  resource  $handle
      * @param  list<string>  $header
      */
-    private function process($handle, array $header): array
+    private function process($handle, array $header, bool $export): array
     {
         $provinces = $this->provinceIndex();
         $result = ['created' => 0, 'updated' => 0, 'geocoded' => 0, 'needs_review' => 0, 'failed' => 0, 'queued' => 0, 'errors' => []];
@@ -63,6 +71,7 @@ final class ImportOutletsAction
         $withCoords = [];
         $touched = [];
         $chunk = [];
+        $seen = [];
 
         $line = 1;
         while (($cells = fgetcsv($handle, 0, ',', '"', '')) !== false) {
@@ -79,6 +88,14 @@ final class ImportOutletsAction
             $row = [];
             foreach ($header as $i => $name) {
                 $row[$name] = isset($cells[$i]) ? trim((string) $cells[$i]) : '';
+            }
+
+            if ($export) {
+                $row = $this->fromExport($row);
+                if (isset($seen[$row['code']])) {
+                    continue; // the export repeats an outlet once per subscription
+                }
+                $seen[$row['code']] = true;
             }
 
             $error = $this->validate($row, $provinces);
@@ -144,7 +161,7 @@ final class ImportOutletsAction
 
                 $outlet = $byCode[$row['code']] ?? null;
                 if ($outlet === null) {
-                    $outlet = new Outlet(['code' => $row['code'], 'is_active' => true, 'is_simulated' => false, 'geocode_status' => GeocodeStatus::Ok->value] + $attributes);
+                    $outlet = new Outlet(['code' => $row['code'], 'is_active' => ($row['active'] ?? '1') !== '0', 'is_simulated' => false, 'geocode_status' => GeocodeStatus::Ok->value] + $attributes);
                     $result['created']++;
                 } else {
                     $outlet->fill($attributes);
@@ -169,6 +186,30 @@ final class ImportOutletsAction
                 }
             }
         });
+    }
+
+    /**
+     * Maps a POS merchant export row onto the simple layout. Outlet location falls back to the merchant's;
+     * an outlet (or its merchant) marked inactive is imported as deactivated.
+     *
+     * @param  array<string, string>  $row
+     * @return array<string, string>
+     */
+    private function fromExport(array $row): array
+    {
+        $pick = fn (string $outlet, string $merchant): string => ($row[$outlet] ?? '') !== '' ? $row[$outlet] : ($row[$merchant] ?? '');
+        $inactive = ($row['outlet_status'] ?? '') === 'inactive' || ($row['merchant_status'] ?? '') === 'inactive';
+
+        return [
+            'code' => $row['outlet_id'] ?? '',
+            'name' => $row['outlet_name'] ?? '',
+            'address' => $pick('outlet_address', 'merchant_address'),
+            'city' => $pick('outlet_city', 'merchant_city'),
+            'province' => $pick('outlet_province', 'merchant_province'),
+            'lat' => '',
+            'lng' => '',
+            'active' => $inactive ? '0' : '1',
+        ];
     }
 
     /**

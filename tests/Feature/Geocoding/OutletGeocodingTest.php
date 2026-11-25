@@ -111,3 +111,105 @@ it('geocodes one outlet through GeocodeOutletJob (also for outlets in review)', 
     dispatch(new GeocodeOutletJob($o->id));
     expect($this->geo->forwardCalls)->toHaveCount(1);
 });
+
+it('extracts a street from a messy address', function (string $address, ?string $street) {
+    expect(App\Services\Geocoding\OutletGeocoder::street($address))->toBe($street);
+})->with([
+    ['Jl. Pramuka No. 5, Kec. Laweyan, Kota Surakarta', 'Jalan Pramuka'],
+    ['Jl.Brajaya, Sleman', 'Jalan Brajaya'],
+    ['Jl. Jend. Sudirman No.Kav 40-41, RT.9/RW.1', 'Jalan Jenderal Sudirman'],
+    ['Gg. Melati 3 Blok A', 'Gang Melati 3'],
+    ['Jl. Lingkaran1 No.454, 15 Ilir', 'Jalan Lingkaran 1'],
+    ['Jl Ap Pettarani ruko bosnis center B25', 'Jalan Ap Pettarani'],
+    ['Jl. Tj. Duren Bar. 2 No. 16 A', 'Jalan Tanjung Duren Bar. 2'],
+    ['Jl. Angkasa Kavling B6 MGK, Lantai GF', 'Jalan Angkasa'],
+    ['Sahid Sudirman Residence LG 10A OFF, Jl. Jenderal Sudirman No.86, RT.10', 'Jalan Jenderal Sudirman'],
+    ['Kota Jakarta, Kec. Cilandak', null],
+    ['Pasar Santa Lantai 1', null],
+    ['.', null],
+    ['', null],
+]);
+
+it('falls back to the street from the address when the name is not found, flagging the pin as approximate', function () {
+    $o = pendingOutlet('S', ['address' => 'Jl. Pramuka No. 5, Kec. X']);
+    $this->geo->forwardAnswer = [];
+    $this->geo->streetAnswer = ['display_name' => 'Jalan Pramuka, Bandung', 'lat' => -6.92, 'lng' => 107.62];
+
+    $this->artisan('hunter:geocode-outlets')->assertSuccessful();
+
+    $o->refresh();
+    expect($o->lat)->toBe(-6.92)->and($o->geocode_status->value)->toBe('ok')->and($o->geocode_source)->toBe('nominatim_street')
+        ->and($this->geo->streetCalls)->toBe([['Jalan Pramuka', 'Bandung']]);
+});
+
+it('stays failed when the street is not found either, or the address has no street', function () {
+    $miss = pendingOutlet('M', ['address' => 'Jl. Tidak Ada']);
+    $none = pendingOutlet('X', ['address' => 'Pasar Santa Lantai 1']);
+
+    $this->artisan('hunter:geocode-outlets')->assertSuccessful();
+
+    expect($miss->refresh()->geocode_status->value)->toBe('failed')->and($none->refresh()->geocode_status->value)->toBe('failed')
+        ->and($this->geo->streetCalls)->toHaveCount(1);
+});
+
+it('re-tries failed outlets with --retry-failed, name search included', function () {
+    $o = pendingOutlet('F', ['address' => 'Jl. Pramuka 1', 'geocode_status' => 'failed']);
+    $this->geo->streetAnswer = ['display_name' => 'Jalan Pramuka', 'lat' => -6.9, 'lng' => 107.6];
+
+    $this->artisan('hunter:geocode-outlets', ['--retry-failed' => true])->assertSuccessful();
+
+    expect($o->refresh()->geocode_status->value)->toBe('ok')->and($this->geo->forwardCalls)->toHaveCount(1);
+});
+
+it('loosens the name by dropping branch words, the city and a trailing number', function (string $name, string $city, ?string $loose) {
+    expect(App\Services\Geocoding\OutletGeocoder::looseName($name, $city))->toBe($loose);
+})->with([
+    ['I Am Geprek Bensu Palembang', 'PALEMBANG', 'I Am Geprek Bensu'],
+    ['PSI Cabang Lampung', 'KOTA BANDAR LAMPUNG', null],
+    ['Djon Seafood 2', 'BANTUL', 'Djon Seafood'],
+    ['Kopi Outlet Surabaya (Cabang Tunjungan)', 'Kota Surabaya', null],
+    ['Merchant A', 'Bandung', null],
+]);
+
+it('searches again with the loosened name when the full name finds nothing usable', function () {
+    $o = pendingOutlet('L2', ['name' => 'Geprek Bensu Bandung']);
+    $geo = new class extends FakeGeocoder
+    {
+        public function forward(string $name, string $city, ?float $nearLat = null, ?float $nearLng = null): array
+        {
+            $this->forwardCalls[] = [$name, $city];
+
+            return $name === 'Geprek Bensu' ? [['display_name' => 'Geprek Bensu, Bandung', 'lat' => -6.91, 'lng' => 107.61, 'score' => 88]] : [];
+        }
+    };
+    app()->instance(GeocoderInterface::class, $geo);
+
+    $this->artisan('hunter:geocode-outlets')->assertSuccessful();
+
+    expect($o->refresh()->geocode_status->value)->toBe('ok')->and($o->lat)->toBe(-6.91)->and($o->geocode_source)->toBe('nominatim')
+        ->and($geo->forwardCalls)->toBe([['Geprek Bensu Bandung', 'Bandung'], ['Geprek Bensu', 'Bandung']]);
+});
+
+it('extracts a landmark and a kecamatan from an address', function () {
+    $g = App\Services\Geocoding\OutletGeocoder::class;
+    expect($g::landmark('Kota Kasablanka Mall. Barang yang sudah dibeli'))->toBe('Kota Kasablanka Mall')
+        ->and($g::landmark('Thamrin City Lantai Dasar 1 Blok A10, Kebon Melati'))->toBe('Thamrin City')
+        ->and($g::landmark('Jl. Pramuka No. 5'))->toBeNull()
+        ->and($g::landmark('Menara BCA'))->toBe('Menara BCA')
+        ->and($g::landmark('Bandung'))->toBeNull()->and($g::landmark('Pucang Anom Timur no. 41'))->toBeNull()
+        ->and($g::area('G Walk, Kecamatan Jl. Citraland, Lidah Kulon, Kec. Lakarsantri, Surabaya'))->toBe('Kecamatan Lakarsantri')
+        ->and($g::area('Jl. A, Kel. Sukabumi Selatan, Jakarta'))->toBe('Kelurahan Sukabumi Selatan')
+        ->and($g::area('Jl. A, Kec. Pd'))->toBeNull();
+});
+
+it('falls through street, landmark and area, flagging each source', function () {
+    $o = pendingOutlet('L', ['address' => 'Kota Kasablanka Mall. Barang tidak dapat dikembalikan']);
+    $this->geo->placeAnswers['landmark'] = ['display_name' => 'Kota Kasablanka, Jakarta Selatan', 'lat' => -6.22, 'lng' => 106.84];
+    $a = pendingOutlet('K', ['address' => 'Jl. Panjang, Kec. Serpong Utara']);
+    $this->geo->placeAnswers['area'] = ['display_name' => 'Serpong Utara', 'lat' => -6.25, 'lng' => 106.67];
+
+    $this->artisan('hunter:geocode-outlets')->assertSuccessful();
+
+    expect($o->refresh()->geocode_source)->toBe('nominatim_landmark')->and($o->lat)->toBe(-6.22)
+        ->and($a->refresh()->geocode_source)->toBe('nominatim_area')->and($a->lat)->toBe(-6.25);
+});

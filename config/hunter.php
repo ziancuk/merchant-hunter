@@ -24,7 +24,7 @@ return [
         'enabled' => env('GEOCODING_ENABLED', true),
         'driver' => env('HUNTER_GEOCODER', 'nominatim_public'),
         'nominatim_url' => env('HUNTER_NOMINATIM_URL', 'https://nominatim.openstreetmap.org'),
-        'requests_per_minute' => 4,
+        'requests_per_minute' => (int) env('HUNTER_NOMINATIM_RPM', 4),
         'max_per_run' => 100,
     ],
 

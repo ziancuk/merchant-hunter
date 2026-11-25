@@ -113,6 +113,7 @@ export default {
         location: "Lokasi",
         no_address: "Alamat belum tersedia",
         view_on_map: "Lihat di peta",
+        open_gmaps: "Buka di Google Maps",
         nearest_outlet: "Outlet terdekat:",
         no_nearest: "Belum ada outlet terdekat.",
         neighbors_suffix: "prospek lain dalam 500 m.",

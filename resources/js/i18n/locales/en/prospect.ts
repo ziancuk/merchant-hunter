@@ -113,6 +113,7 @@ export default {
         location: "Location",
         no_address: "Address not available yet",
         view_on_map: "Show on map",
+        open_gmaps: "Open in Google Maps",
         nearest_outlet: "Nearest outlet:",
         no_nearest: "No nearest outlet yet.",
         neighbors_suffix: "other prospects within 500 m.",

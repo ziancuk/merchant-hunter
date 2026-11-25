@@ -80,29 +80,49 @@ it('falls back to display_name when no structured address is usable', function (
     expect(AddressFormatter::city([]))->toBeNull();
 });
 
-it('forward geocodes with q, countrycodes, limit and a bounded viewbox, best match first', function () {
+it('forward geocodes with q, countrycodes and limit, keeps only hits in the city, best match first and no viewbox', function () {
     nominatimFake(['nominatim.test/*' => Http::response([
         ['lat' => '-6.3000', 'lon' => '106.9000', 'category' => 'highway', 'importance' => 0.1, 'display_name' => 'Jalan Jauh, Bekasi', 'name' => 'Jalan Jauh'],
-        ['lat' => '-6.2001', 'lon' => '106.8001', 'category' => 'amenity', 'importance' => 0.5, 'display_name' => 'Kopi Senja, Jalan Merdeka, Jakarta', 'name' => 'Kopi Senja'],
+        ['lat' => '-6.2001', 'lon' => '106.8001', 'category' => 'amenity', 'importance' => 0.5, 'display_name' => 'Kopi Senja, Jalan Merdeka, Jakarta Pusat', 'name' => 'Kopi Senja'],
+        ['lat' => '-7.2', 'lon' => '112.7', 'category' => 'amenity', 'importance' => 0.5, 'display_name' => 'Kopi Senja, Surabaya', 'name' => 'Kopi Senja'],
     ])]);
 
-    $r = app(NominatimGeocoder::class)->forward('Kopi Senja', 'Jakarta Pusat', -6.2, 106.8);
+    $r = app(NominatimGeocoder::class)->forward('Kopi Senja', 'KOTA Jakarta Pusat', -6.2, 106.8);
 
-    expect($r)->toHaveCount(2)->and($r[0]['display_name'])->toContain('Kopi Senja')->and($r[0]['lat'])->toBe(-6.2001)
-        ->and($r[0]['score'])->toBeGreaterThanOrEqual(80)->and($r[1]['score'])->toBeLessThan(50);
+    expect($r)->toHaveCount(1)->and($r[0]['display_name'])->toContain('Kopi Senja')->and($r[0]['lat'])->toBe(-6.2001)
+        ->and($r[0]['score'])->toBeGreaterThanOrEqual(80);
     Http::assertSent(function (Request $req) {
         parse_str((string) parse_url($req->url(), PHP_URL_QUERY), $q);
 
         return str_starts_with($req->url(), 'https://nominatim.test/search?')
-            && $q['q'] === 'Kopi Senja, Jakarta Pusat' && $q['countrycodes'] === 'id' && $q['limit'] === '5'
-            && $q['bounded'] === '1' && count(explode(',', $q['viewbox'])) === 4 && $q['format'] === 'jsonv2';
+            && $q['q'] === 'Kopi Senja, KOTA Jakarta Pusat' && $q['countrycodes'] === 'id' && $q['limit'] === '5'
+            && ! isset($q['viewbox']) && ! isset($q['bounded']) && $q['format'] === 'jsonv2';
     });
 });
 
-it('omits the viewbox without a reference point and skips malformed results', function () {
+it('skips malformed results', function () {
     nominatimFake(['nominatim.test/*' => Http::response([['display_name' => 'no coords'], 'junk'])]);
     expect(app(NominatimGeocoder::class)->forward('Kopi', 'Jakarta'))->toBe([]);
-    Http::assertSent(fn (Request $r) => ! str_contains($r->url(), 'viewbox'));
+});
+
+it('accepts a non-highway hit named after the street in the right city, but never a district', function () {
+    nominatimFake(['nominatim.test/*' => Http::response([
+        ['lat' => '-6.29', 'lon' => '106.79', 'category' => 'boundary', 'display_name' => 'Fatmawati, Cilandak, Jakarta Selatan'],
+        ['lat' => '-6.30', 'lon' => '106.80', 'category' => 'railway', 'display_name' => 'MRT Jakarta, Jalan RS Fatmawati, Cilandak, Jakarta Selatan'],
+    ])]);
+
+    $hit = app(NominatimGeocoder::class)->forwardStreet('Jalan RS. Fatmawati Raya', 'JAKARTA SELATAN');
+    expect($hit['lat'])->toBe(-6.30);
+    Http::assertSent(function (Request $req) {
+        parse_str((string) parse_url($req->url(), PHP_URL_QUERY), $q);
+
+        return $q['q'] === 'Jalan RS Fatmawati Raya, JAKARTA SELATAN';
+    });
+
+    nominatimFake(['nominatim.test/*' => Http::response([
+        ['lat' => '-7', 'lon' => '110', 'category' => 'railway', 'display_name' => 'Jalan RS Fatmawati, Surabaya'],
+    ])]);
+    expect(app(NominatimGeocoder::class)->forwardStreet('Jalan RS. Fatmawati Raya', 'JAKARTA SELATAN'))->toBeNull();
 });
 
 it('scores matches per D-45 and classifies them', function () {

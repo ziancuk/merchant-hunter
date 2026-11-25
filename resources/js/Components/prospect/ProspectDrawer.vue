@@ -14,6 +14,7 @@ import ScoreBreakdown from './ScoreBreakdown.vue';
 import SimulasiBadge from './SimulasiBadge.vue';
 import { useI18n } from '@/i18n';
 import { api, normalizeError } from '@/lib/api';
+import { googleMapsUrl } from '@/lib/maps';
 import { formatCoordinates, formatDateTime, formatDistance, formatNumber, relativeTime } from '@/lib/format';
 import type { Activity, PipelineStatus, ProspectDetail } from '@/types';
 
@@ -207,6 +208,15 @@ const title = computed(() => detail.value?.name ?? (loadError.value ? t('prospec
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <Button size="sm" variant="secondary" @click="emit('locate', { lat: detail.lat, lng: detail.lng })"><Icon name="navigation" :size="14" /> {{ t('prospect.drawer.view_on_map') }}</Button>
+                    <a
+                        :href="googleMapsUrl(detail)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex h-9 items-center justify-center gap-1.5 rounded-chip border border-line bg-raised/70 px-3 text-sm font-medium text-fg transition hover:bg-raised"
+                        data-testid="open-google-maps"
+                    >
+                        <Icon name="pin" :size="14" /> {{ t('prospect.drawer.open_gmaps') }}
+                    </a>
                     <!-- Extra page-specific actions (e.g. "Tambah ke rute" on the map page). -->
                     <slot name="actions" :prospect="detail" />
                 </div>

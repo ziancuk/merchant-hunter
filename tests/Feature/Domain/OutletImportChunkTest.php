@@ -55,3 +55,20 @@ it('keeps importing later rows after a row fails validation', function () {
 
     oi_import($this, $csv)->assertOk()->assertJsonPath('created', 2)->assertJsonPath('failed', 1)->assertJsonPath('queued', 1);
 });
+
+it('imports the POS merchant export layout, one outlet per outlet_id, falling back to merchant location', function () {
+    $csv = <<<'CSV'
+"merchant_id","merchant_name","merchant_address","merchant_status","merchant_province","merchant_city","outlet_id","outlet_name","outlet_address","outlet_status","outlet_province","outlet_city","subscription_id"
+1,"M1","Jl A",active,Bali,DENPASAR,10,"Kopi Satu","Jl Satu",active,BALI,DENPASAR,100
+1,"M1","Jl A",active,Bali,DENPASAR,10,"Kopi Satu","Jl Satu",active,BALI,DENPASAR,101
+2,"M2","Jl B",active,Bali,UBUD,11,"Kopi Dua",,inactive,,,102
+3,"M3","Jl C",active,,,12,"Tanpa Lokasi","Jl C",active,,,103
+CSV;
+
+    oi_import($this, $csv)->assertOk()->assertJsonPath('created', 2)->assertJsonPath('failed', 1);
+
+    $two = Outlet::query()->where('code', '11')->first();
+    expect(Outlet::query()->count())->toBe(2)
+        ->and($two->address)->toBe('Jl B')->and($two->city)->toBe('UBUD')->and($two->is_active)->toBeFalse()
+        ->and(Outlet::query()->where('code', '10')->value('is_active'))->toBeTrue();
+});

@@ -45,6 +45,35 @@ class FakeGeocoder implements DetailedReverseGeocoder, GeocoderInterface
         return $this->reverseAnswer;
     }
 
+    /** @var array{display_name: string, lat: float, lng: float}|Throwable|null */
+    public mixed $streetAnswer = null;
+
+    /** @var list<array{string, string}> */
+    public array $streetCalls = [];
+
+    /** @var array<string, array{display_name: string, lat: float, lng: float}|null> by kind */
+    public array $placeAnswers = [];
+
+    /** @var list<array{string, string, string}> */
+    public array $placeCalls = [];
+
+    public function forwardPlace(string $text, string $city, string $kind): ?array
+    {
+        $this->placeCalls[] = [$text, $city, $kind];
+
+        return $this->placeAnswers[$kind] ?? null;
+    }
+
+    public function forwardStreet(string $street, string $city): ?array
+    {
+        $this->streetCalls[] = [$street, $city];
+        if ($this->streetAnswer instanceof Throwable) {
+            throw $this->streetAnswer;
+        }
+
+        return $this->streetAnswer;
+    }
+
     public function forward(string $name, string $city, ?float $nearLat = null, ?float $nearLng = null): array
     {
         $this->forwardCalls[] = [$name, $city, $nearLat, $nearLng];

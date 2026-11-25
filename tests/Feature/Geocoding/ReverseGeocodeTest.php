@@ -187,6 +187,16 @@ it('works with a geocoder that only implements the plain interface', function ()
         {
             return [];
         }
+
+        public function forwardStreet(string $street, string $city): ?array
+        {
+            return null;
+        }
+
+        public function forwardPlace(string $text, string $city, string $kind): ?array
+        {
+            return null;
+        }
     };
     app()->instance(GeocoderInterface::class, $plain);
     $item = queued(5);
