@@ -48,7 +48,7 @@ return [
             'contact.max_overrides' => 'Maksimum override per prospek',
             'digest' => 'Digest',
             'digest.email_to' => 'Email penerima digest',
-            'digest.hot_threshold' => 'Ambang skor bidik utama',
+            'digest.hot_threshold' => 'Ambang skor prioritas',
             'digest.follow_up_days' => 'Hari tindak lanjut',
             'sync' => 'Sinkronisasi',
             'sync.max_outlets_per_run' => 'Maksimum outlet per run',

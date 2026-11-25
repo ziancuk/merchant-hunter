@@ -63,7 +63,7 @@ describe('map chrome in English', () => {
         setLocale('id');
         await flushPromises();
         expect(legend.text()).toContain('Warna menurut');
-        expect(legend.text()).toContain('Bidik Utama');
+        expect(legend.text()).toContain('Prioritas');
     });
 
     it('RoutePanel is translated, including planning hints', () => {

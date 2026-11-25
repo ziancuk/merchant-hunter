@@ -211,8 +211,8 @@ it('re-translates the stored breakdown when a prospect detail is read', function
         ->and($en[6]['label'])->toBe('Area density')->and($en[6]['reason'])->toBe('Teks lama');
 });
 
-it('names the score bands Bidik Utama, Menjanjikan, Berpotensi and Pantau (Prime Target ...)', function () {
-    expect(ScoreBand::Hot->label())->toBe('Bidik Utama')
+it('names the score bands Prioritas, Menjanjikan, Berpotensi and Pantau (Prime Target ...)', function () {
+    expect(ScoreBand::Hot->label())->toBe('Prioritas')
         ->and(ScoreBand::Warm->label())->toBe('Menjanjikan')
         ->and(ScoreBand::Medium->label())->toBe('Berpotensi')
         ->and(ScoreBand::Cold->label())->toBe('Pantau');
@@ -255,10 +255,10 @@ it('builds the digest e-mail and command summary in the active language', functi
     Setting::write('digest.email_to', 'boss@hunter.test');
     config(['mail.default' => 'array']);
 
-    $this->artisan('hunter:digest')->expectsOutputToContain('Digest 2026-10-24 dibuat: 0 baru buka, 1 bidik utama, 0 follow-up.')->assertSuccessful();
+    $this->artisan('hunter:digest')->expectsOutputToContain('Digest 2026-10-24 dibuat: 0 baru buka, 1 prioritas, 0 follow-up.')->assertSuccessful();
     $id = app('mailer')->getSymfonyTransport()->messages()->last()->getOriginalMessage();
     expect($id->getSubject())->toBe('Ringkasan harian prospek 2026-10-24')
-        ->and($id->getTextBody())->toContain('Prospek Bidik Utama (1)')->toContain('- Panas Satu (skor 90)');
+        ->and($id->getTextBody())->toContain('Prospek Prioritas (1)')->toContain('- Panas Satu (skor 90)');
 
     app()->setLocale('en');
     $this->artisan('hunter:digest', ['--date' => '2026-10-23'])->expectsOutputToContain('Digest 2026-10-23 created: 0 newly opened, 1 prime target, 0 follow-up.')->assertSuccessful();

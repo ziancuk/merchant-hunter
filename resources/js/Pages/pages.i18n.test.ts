@@ -57,7 +57,7 @@ describe('English rendering of the dashboard / impact / master / scheduler / aut
         };
         wrapper = mount(Dashboard, { props });
         expect(wrapper.text()).toContain('Corong penjualan');
-        expect(wrapper.text()).toContain('Bidik Utama');
+        expect(wrapper.text()).toContain('Prioritas');
         setLocale('en');
         await nextTick();
         const text = wrapper.text();

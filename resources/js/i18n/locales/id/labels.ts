@@ -1,6 +1,6 @@
 export default {
     band: {
-        hot: "Bidik Utama",
+        hot: "Prioritas",
         warm: "Menjanjikan",
         medium: "Berpotensi",
         cold: "Pantau",

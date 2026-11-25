@@ -24,7 +24,7 @@ enum ScoreBand: string
         };
     }
 
-    /** Display name in the request language (hot = Bidik Utama / Prime Target, ...). */
+    /** Display name in the request language (hot = Prioritas / Prime Target, ...). */
     public function label(): string
     {
         return __('scoring.bands.'.$this->value);
